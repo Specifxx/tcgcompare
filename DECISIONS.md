@@ -60,3 +60,14 @@ offers are read from `o/<id / 1024>.json.gz`, and only `store:` rows with no con
 currency and an `updatedAt` inside 72 hours are taken (a card of the same range is never read). The store list is
 `src/lib/stores.ts` on OP Compare's `main`, checked out beside it. On the 14 November snapshot: 5,258 store rows on
 187 One Piece products from 291 stores. Riftbound still waits: Rift Compare's public data carries no TCGplayer id.
+
+## 2026-11-14: The product page's prices in markup and prose are one market's, never eBay
+
+The Product JSON-LD counted every in-stock US-dollar offer, eBay's reused listings included (69 products had an eBay
+`lowPrice`), and the "Is it worth it?" sentence named the first in-stock offer, which is ordered by raw cents across
+currencies (a pound price called the cheapest on 626 products, eBay on 104). Both now go through
+`src/lib/product-page.ts`: the AggregateOffer leaves out eBay and Amazon (`jsonLdOffers`), and the sentence names the
+US market's cheapest in-stock store or TCGplayer price in dollars (`usCheapestQuoted`), said as "US price", and is left
+out when there is none. The eBay search now adds the game's words unless the name holds the whole phrase as words
+(`ebayQueryFor`): "Starter" no longer stands for "Star Wars Unlimited", and the Japanese Pokemon line keeps "japanese".
+`tests/product-page.test.ts`.
