@@ -32,3 +32,22 @@ engine with BandaiCompare's `SITE.lines`.
   none belongs to a new all-games site, and an empty forum is a thin page.
 - **Ops monitor schedule off** until the domain serves the site.
 - **Review gate.** 31 January 2027: under 50 visitors a day or nothing earned, freeze it.
+
+## 2026-11-14: The 2050 layer, dark by default, and the site's own mark
+
+Owner: "make the site as aesthetic as possible, with scrolling animations and everything super duper cool - like what
+you'd expect of a year 2050 website". The minimal layout stays exactly as it was (same blocks, same order, no product in
+the hero); the look on top of it changes (`globals.css`, "The 2050 layer"):
+
+- Dark is the default (`SITE.theme.defaultMode`), a deeper ground, three lights (cyan, electric blue, violet) as a fixed
+  sky, and a floor of lines running to the horizon under the hero.
+- Motion: the headline's sheen, a ring of light around the search, every game drifting past in one line
+  (`GameMarquee.tsx`), cards that arrive as they scroll in, the hero sinking back as the page moves on, a progress
+  line along the top, price rows arriving one after another, and cross-fades between pages (`@view-transition`).
+- One script, `components/Neo.tsx` (20 lines): it tells a tile where the pointer is so its spotlight can follow.
+- Rules kept: CSS only otherwise; nothing shifts layout; anything hidden until scrolled sits inside
+  `@supports (animation-timeline: view())`, so a crawler or an older browser gets the finished page; all of it is off
+  under `prefers-reduced-motion`; the loud button stays at 5.3:1 or better.
+- The icon, favicon and share image are this site's own (a box drawn in the three lights); they were YGO Compare's.
+- Tested against a production build: 342 page loads across every page type on desktop and phone, all 200, one h1 each,
+  no script error, no sideways scroll.

@@ -129,7 +129,7 @@ export const SITE: SiteConfig = {
     inkDark: ["#08090c", "#0f1116", "#151820", "#1d212b", "#2c3240", "#434a5c"],
     wordmarkGradient: "linear-gradient(90deg, #818cf8 0%, #4f46e5 100%)",
     displayFont: "Plus Jakarta Sans",
-    defaultMode: "light",
+    defaultMode: "dark",
     pageLight: "#fbfbfd",
   },
   halloween: { headline: "Spooky season pulls", blurb: "Find the cheapest booster boxes before the next drop." },

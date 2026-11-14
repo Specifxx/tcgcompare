@@ -57,7 +57,10 @@ on `main` and ride the next import. Previews are off.
 ## Design
 
 The minimal look (owner, 2026-11-13): the hero is words, the search and six ways in, never a product; one tabbed
-shelf; the game list; one ad block. Three colours, no pop-ups, default region US. `tests/minimal-look.test.ts`.
+shelf; the game list; one ad block. No pop-ups, default region US. `tests/minimal-look.test.ts`. On top of it sits the
+2050 layer (owner, 2026-11-14; `globals.css`, `Neo.tsx`, `GameMarquee.tsx`): dark by default, three lights, scroll
+animations. Keep its rules: CSS only, no layout shift, hidden-until-scrolled only inside `@supports` for scroll
+timelines, everything off under reduced motion, never a product in the hero.
 
 ## The site watches itself
 

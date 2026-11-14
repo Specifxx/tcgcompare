@@ -93,7 +93,7 @@ test("the hero: a section of words, a pill, a search and ways in; server markup,
       React.createElement(WaysIn, { label: "Popular pages", links: [{ href: "/sealed/booster-box", label: "Booster boxes", icon: "box" }, { href: "/tools/deal-finder", label: "Deals", icon: "tag" }] }),
     ),
   );
-  assert.match(html, /^<section class="hero"><div class="hero-bg" aria-hidden="true"><\/div><div class="hero-in">/);
+  assert.match(html, /^<section class="hero"><div class="hero-bg" aria-hidden="true"><span class="hero-orb"><\/span><span class="hero-floor"><\/span><\/div><div class="hero-in">/);
   assert.match(html, /<a (?=[^>]*class="hero-pill rise")(?=[^>]*href="\/preorders\/glorious-victors")[^>]*><span class="hero-pill-dot" aria-hidden="true"><\/span>Glorious Victors pre-orders/);
   assert.match(html, /<ul class="ways rise" style="--i:4" aria-label="Popular pages">/);
   assert.match(html, /<li class="flex"><a (?=[^>]*class="way flex-1")(?=[^>]*href="\/sealed\/booster-box")[^>]*><span class="way-icon" aria-hidden="true"><svg /);
