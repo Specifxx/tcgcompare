@@ -21,7 +21,9 @@ import { focusCatalog } from "@/lib/import/focus";
 import { loadSisterOffers, MAX_AGE_H as SISTER_MAX_AGE_H } from "@/lib/import/sisters";
 import { carryDownSisters, groupsToKeep, heldForDownSisters, updateCulled, type CulledMap, type SisterMemo } from "@/lib/import/continuity";
 import { OFFER_FLOOR, vetStores, type Refusal } from "@/lib/import/vet";
-import { buildIndex, handleOf, isForeign, isPreorder, isUnfitListing, looksSealed, matchCard, matchSealed, printingOf } from "@/lib/import/match";
+import { carryCrawl, crawlStoreKeys, storeIdentity, takeCrawl, type CrawlRun, type CrawlStore } from "@/lib/import/crawl";
+import type { CrawlMeta } from "@/lib/site-types";
+import { buildIndex, type MatchIndex, handleOf, isForeign, isPreorder, isUnfitListing, looksSealed, matchCard, matchSealed, printingOf } from "@/lib/import/match";
 import {
   ebayCredentials,
   ebayRemaining,
@@ -124,6 +126,8 @@ async function main() {
   let refused: Refusal[] = [];
   let sisterEbay = new Map<number, Offer[]>();
   let downStores = new Set<string>();
+  let crawlMeta: CrawlMeta | undefined;
+  const crawlOffers = new WeakSet<Offer>();
   if (process.env.SISTER_DIR) {
     // Store rows come from our sister sites' published data, by TCGplayer product id (lib/import/sisters.ts).
     const res = loadSisterOffers(process.env.SISTER_DIR, now);
@@ -145,6 +149,10 @@ async function main() {
     downStores = carry.downStores;
     for (const [id, st] of Object.entries(carry.status)) if (!st.ok) console.warn(`[sister] ${id} down: ${st.carried ?? 0} rows carried from the previous import (data of ${st.at ?? "unknown"})`);
     sisterStatus = carry.status;
+    // Our own crawl of the games no sister covers (lib/import/crawl.ts): scripts/crawl-uncovered.ts ran just before
+    // and left its listings in data/crawl/listings.json. Each is taken only by the TCGplayer id it carries, then goes
+    // through the same vetting and price band as a sister's row below.
+    crawlMeta = mergeOwnCrawl({ res, products, sets, prevMeta, prevById: prevPrices.byId, now, crawlOffers });
     sisterStores = res.stores;
     sisterEbay = res.ebay;
     // Store vetting (lib/import/vet.ts): a blocked, domain-less or too-cheap-to-be-true store shows no row at all.
@@ -163,6 +171,7 @@ async function main() {
         const usd = o.cents / (fx[o.currency] ?? 1);
         if (ref != null && ref >= 300 && (usd < ref * OFFER_FLOOR || usd > ref * 4)) { dropped++; continue; }
         addOffer(id, o);
+        if (crawlMeta && crawlOffers.has(o)) crawlMeta.offers++;
         const st = (storeStatus[o.source] ??= { ok: true, products: 0, matched: 0, at: now.toISOString() });
         st.products++;
         st.matched++;
@@ -421,6 +430,7 @@ async function main() {
     ebay: ebayMeta,
     ...(SITE.catalogFocus ? { sealedFocused: true } : {}),
     ...(sisterStatus ? { sisters: sisterStatus } : {}),
+    ...(crawlMeta ? { crawl: crawlMeta } : {}),
     counts: {
       cards: products.filter((p) => p.kind === "card").length,
       sealed: products.filter((p) => p.kind === "sealed").length,
@@ -449,6 +459,98 @@ async function main() {
   writeJson(path.join(STATE, "ebay.json"), ebayState);
   writeJson(path.join(STATE, "ebay-usage.json"), usage);
   console.log(`[done] ${meta.counts.cards} cards, ${meta.counts.sealed} sealed, ${offerCount} offers`);
+}
+
+const CRAWL_RUN_MAX_AGE_H = 6; // a listings file older than this is not today's crawl
+const CRAWL_CARRY_H = 72;
+
+/** Adds our own crawl's offers (and the rows carried for its stores not read this run) to the sisters' result. */
+function mergeOwnCrawl(a: {
+  res: { offers: Map<number, Offer[]>; stores: StoreConfig[] };
+  products: Catalog["products"];
+  sets: Catalog["sets"];
+  prevMeta: Meta | null;
+  prevById: Prices["byId"];
+  now: Date;
+  crawlOffers: WeakSet<Offer>;
+}): CrawlMeta {
+  const { res, products, sets, prevMeta, now } = a;
+  const entries = readJson<CrawlStore[]>(path.join(process.cwd(), "data", "crawl", "stores.json"), []);
+  let run = readJson<CrawlRun | null>(path.join(process.cwd(), "data", "crawl", "listings.json"), null);
+  if (run && !(now.getTime() - Date.parse(run.at) <= CRAWL_RUN_MAX_AGE_H * 3_600_000)) {
+    console.warn(`[crawl] data/crawl/listings.json is from ${run.at}: not this run's, ignored`);
+    run = null;
+  }
+  const crawlLines = new Set((SITE.lines ?? []).filter((l) => l.crawl).map((l) => l.id));
+  const lineOfSet = new Map(sets.map((st) => [st.id, st.line]));
+  const all = new Map(products.map((p) => [p.id, p]));
+  const lineOf = (p: { setId: number }) => lineOfSet.get(p.setId);
+  const indexes = new Map<string, MatchIndex>();
+  const indexOf = (line: string) => {
+    if (!indexes.has(line)) {
+      const ss = sets.filter((st) => st.line === line);
+      const ids = new Set(ss.map((st) => st.id));
+      indexes.set(line, buildIndex(products.filter((p) => ids.has(p.setId)), ss, SITE.numberStyle, { rarityMustAgree: SITE.rarityMustAgree, rarityAliases: SITE.rarityAliases, setEditions: SITE.setEditions }));
+    }
+    return indexes.get(line)!;
+  };
+  const storesOf = [...new Map([...entries, ...(run?.stores ?? [])].map((s) => [storeIdentity(s.base, s.market), s])).values()];
+  const { keyOf, added } = crawlStoreKeys(res.stores, storesOf);
+  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf }, keyOf) : { offers: new Map<number, Offer[]>(), taken: 0, refused: {}, listings: 0 };
+  const readOk = new Set((run?.stores ?? []).filter((s) => s.ok).map((s) => storeIdentity(s.base, s.market)));
+  const seen: Record<string, string> = { ...(prevMeta?.crawl?.seen ?? {}) };
+  for (const id of readOk) seen[id] = run!.at;
+  // Forget stores no longer in the probe's list.
+  const listed = new Set(storesOf.map((s) => storeIdentity(s.base, s.market)));
+  for (const id of Object.keys(seen)) if (!listed.has(id)) delete seen[id];
+  const prevKeyOf = new Map(readJson<StoreConfig[]>(path.join(PUBLIC, "stores.json"), []).map((s) => [storeIdentity(s.base, s.market), s.key]));
+  const carry = carryCrawl({
+    stores: storesOf,
+    readOk,
+    seen,
+    keyOf,
+    prevById: a.prevById,
+    prevKeyOf,
+    crawledProduct: (id) => {
+      const p = all.get(id);
+      const line = p && lineOf(p);
+      return !!line && crawlLines.has(line);
+    },
+    now,
+    maxAgeH: CRAWL_CARRY_H,
+  });
+  const used = new Set<string>();
+  for (const src of [got.offers, carry.offers])
+    for (const [id, list] of src) {
+      if (!res.offers.has(id)) res.offers.set(id, []);
+      for (const o of list) {
+        a.crawlOffers.add(o);
+        used.add(o.source);
+        res.offers.get(id)!.push(o);
+      }
+    }
+  for (const st of added) if (used.has(st.key)) res.stores.push(st);
+  res.stores.sort((x, y) => x.key.localeCompare(y.key));
+  const stopped: Record<string, number> = {};
+  for (const s of run?.stores ?? []) if (!s.ok) { const r = (s.reason ?? "unknown").split(":")[0]; stopped[r] = (stopped[r] ?? 0) + 1; }
+  const meta: CrawlMeta = {
+    at: run?.at ?? prevMeta?.crawl?.at ?? null,
+    ran: !!run,
+    listed: entries.length,
+    stores: storesOf.length,
+    read: readOk.size,
+    stopped,
+    requests: run?.requests ?? 0,
+    budget: run?.budget ?? 0,
+    listings: got.listings,
+    taken: got.taken,
+    refused: got.refused,
+    offers: 0,
+    carried: carry.carried,
+    seen,
+  };
+  console.log(`[crawl] ${run ? `run of ${run.at}: ${meta.read} of ${meta.stores} stores read, ${meta.requests} requests, ${got.listings} listings, ${got.taken} taken` : "no crawl run this import"}; ${carry.carried} rows carried; refused ${JSON.stringify(got.refused)}`);
+  return meta;
 }
 
 main().catch((e) => {

@@ -68,6 +68,9 @@ export interface GameLine {
    *  word of one `any` phrase and no whole `not` phrase. A title that names no game, or another game too, is refused.
    *  Left out, the game's products are never matched on Amazon. */
   amazon?: { any: string[]; not?: string[] };
+  /** Our own crawl (lib/import/crawl.ts), only for a game no sister site covers: the words a store's collection handle
+   *  or title uses for this game (every word of one `any` phrase, no whole `not` phrase). Left out, never crawled. */
+  crawl?: { any: string[]; not?: string[] };
 }
 
 /** The sealed focus (lib/import/focus.ts): which sealed products keep a page. */
@@ -405,6 +408,32 @@ export interface Meta {
   /** `stores`: the store keys its rows carried; a sister that is down keeps `at` (its last fresh data) and says how many
    *  rows were `carried` from the previous import and how many products were `held` from the cull (lib/import/continuity.ts). */
   sisters?: Record<string, { ok: boolean; offers: number; products: number; at: string | null; error?: string; stores?: string[]; carried?: number; held?: number }>;
+  /** Our own crawl of the games no sister covers (lib/import/crawl.ts): the run the import read, and what came of it. */
+  crawl?: CrawlMeta;
+}
+
+export interface CrawlMeta {
+  /** When the last crawl run an import read was made, or null when there never was one. */
+  at: string | null;
+  /** Whether this import read a crawl run of its own (false: the crawl step failed or was skipped; `at` is the last one). */
+  ran: boolean;
+  /** Store-game entries in data/crawl/stores.json, and distinct stores among them. */
+  listed: number;
+  stores: number;
+  /** Stores read to the end this run, and stopped (blocked, challenge, robots, budget…) by reason. */
+  read: number;
+  stopped: Record<string, number>;
+  requests: number;
+  budget: number;
+  listings: number;
+  taken: number;
+  /** Listings refused, by pickId's reason. */
+  refused: Record<string, number>;
+  /** Offers kept after vetting and the price band, and rows carried for stores not read this run. */
+  offers: number;
+  carried: number;
+  /** "host|market" → the last time the crawl read that store to the end. */
+  seen: Record<string, string>;
 }
 
 export interface EbayPick {

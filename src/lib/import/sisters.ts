@@ -36,18 +36,20 @@ export interface SisterSource {
   data: string;
   /** The store list: src/content/stores.ts (engine) or src/data/stores.json (sealed). A snapshot sister's is a path under SISTER_DIR; a rift sister's rows carry their store, so it has none. */
   stores: string;
+  /** The games (SITE.lines ids) whose store rows this sister publishes. Our own crawl never reads these (lib/import/crawl.ts). */
+  lines: string[];
 }
 
 export const SISTERS: SisterSource[] = [
-  { id: "dex", dir: "CompareEmpire", kind: "sealed", data: "apps/dexcompare-sealed/data/public", stores: "apps/dexcompare-sealed/src/data/stores.json" },
-  { id: "mtg", dir: "mtgcompare", kind: "sealed", data: "data/public", stores: "src/data/stores.json" },
-  { id: "ygo", dir: "ygocompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts" },
-  { id: "lorcana", dir: "lorcanacompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts" },
-  { id: "gundam", dir: "GundamCompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts" },
-  { id: "bandai", dir: "bandaicompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts" },
-  { id: "cyberpunk", dir: "cyberpunkcompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts" },
-  { id: "op", dir: "OpCompare-snapshot", kind: "snapshot", data: ".", stores: "../OpCompare/src/lib/stores.ts" },
-  { id: "rift", dir: "TCGEmpire", kind: "rift", data: "data/public", stores: "" },
+  { id: "dex", dir: "CompareEmpire", kind: "sealed", data: "apps/dexcompare-sealed/data/public", stores: "apps/dexcompare-sealed/src/data/stores.json", lines: ["pkm", "pkj"] },
+  { id: "mtg", dir: "mtgcompare", kind: "sealed", data: "data/public", stores: "src/data/stores.json", lines: ["mtg"] },
+  { id: "ygo", dir: "ygocompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts", lines: ["ygo"] },
+  { id: "lorcana", dir: "lorcanacompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts", lines: ["lor"] },
+  { id: "gundam", dir: "GundamCompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts", lines: ["gun"] },
+  { id: "bandai", dir: "bandaicompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts", lines: ["ua", "fw", "dg"] },
+  { id: "cyberpunk", dir: "cyberpunkcompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts", lines: ["cp"] },
+  { id: "op", dir: "OpCompare-snapshot", kind: "snapshot", data: ".", stores: "../OpCompare/src/lib/stores.ts", lines: ["op"] },
+  { id: "rift", dir: "TCGEmpire", kind: "rift", data: "data/public", stores: "", lines: ["rb"] },
 ];
 
 export const MAX_AGE_H = 72;

@@ -63,6 +63,30 @@ const AMAZON: Record<string, GameLine["amazon"]> = {
   ac: { any: ["alpha clash"] },
 };
 
+// Our own crawl (lib/import/crawl.ts): ONLY the games no sister site covers (lib/import/sisters.ts `lines`;
+// tests/crawl.test.ts fails on an overlap). The words a store's collection handle or title uses for the game. A
+// collection two games' words fit is read for neither. Naruto has no product yet and is left out.
+const CRAWL: Record<string, GameLine["crawl"]> = {
+  swu: { any: ["star wars unlimited", "swu"] },
+  fab: { any: ["flesh and blood", "flesh blood", "fab tcg", "fab"] },
+  ws: { any: ["weiss schwarz", "weis schwarz", "weiss"] },
+  cfv: { any: ["cardfight vanguard", "vanguard", "cfv"], not: ["shadowverse"] },
+  sor: { any: ["sorcery contested realm", "sorcery tcg", "sorcery"] },
+  ga: { any: ["grand archive"] },
+  holo: { any: ["hololive"], not: ["weiss"] },
+  gz: { any: ["godzilla card game", "godzilla tcg"], not: ["magic", "mtg", "universus"] },
+  ff: { any: ["final fantasy tcg", "final fantasy trading card", "fftcg", "fftcg"], not: ["magic", "mtg"] },
+  dbs: { any: ["dragon ball super card game", "dragon ball super masters", "dbs masters", "dbscg", "dragon ball super"], not: ["fusion world", "fusion"] },
+  sve: { any: ["shadowverse"] },
+  uvs: { any: ["universus", "uvs"] },
+  ele: { any: ["elestrals"] },
+  cr: { any: ["cookierun", "cookie run", "braverse"] },
+  pal: { any: ["palworld"] },
+  wx: { any: ["wixoss"] },
+  bss: { any: ["battle spirits"] },
+  ac: { any: ["alpha clash"] },
+};
+
 const LINES: GameLine[] = [
   g("mtg", 1, "Magic: The Gathering", "Magic", "magic-the-gathering", "magic", "magic the gathering", "#b8742a", "Play Booster and Collector Booster boxes, bundles, Commander decks and Secret Lair-era sealed product."),
   g("pkm", 3, "Pokémon", "Pokémon", "pokemon", "pokemon", "pokemon", "#d9a514", "Booster boxes, Elite Trainer Boxes, booster bundles, tins and premium collections from every current set."),
@@ -95,7 +119,7 @@ const LINES: GameLine[] = [
   g("wx", 67, "WIXOSS", "WIXOSS", "wixoss", "all", "wixoss", "#9a5a9a", "English booster boxes and starter decks."),
   g("bss", 72, "Battle Spirits Saga", "Battle Spirits", "battle-spirits-saga", "all", "battle spirits saga", "#b0553c", "Booster boxes and starter decks."),
   g("ac", 78, "Alpha Clash", "Alpha Clash", "alpha-clash", "all", "alpha clash tcg", "#5a8a4a", "Booster boxes and starter decks."),
-].map((l) => ({ ...l, ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}) }));
+].map((l) => ({ ...l, ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}) }));
 
 export const SITE: SiteConfig = {
   // The affiliate sub-id prefix (eBay customid, Impact subId1): `tcgprices-us-card_pinned-1234`.

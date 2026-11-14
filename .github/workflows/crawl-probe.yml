@@ -1,0 +1,74 @@
+name: Crawl probe
+
+# Once a week: which collections at each store we know hold a game no sister site covers (scripts/crawl-probe.ts,
+# lib/import/crawl.ts). It reads robots.txt and /collections.json only (no products, no prices), politely
+# (lib/import/polite-http.ts), and commits data/crawl/stores.json to main. The commit carries no deploy marker: the list
+# changes nothing on the site until the next scheduled import reads it. The sisters' store lists are checked out
+# only for each store's platform (a WooCommerce or ShadowPOS shop is never asked for /collections.json).
+
+on:
+  schedule:
+    - cron: "15 4 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: crawl-probe
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/CompareEmpire, path: sisters/CompareEmpire, sparse-checkout: "apps/dexcompare-sealed/src/data" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/mtgcompare, path: sisters/mtgcompare, sparse-checkout: "src/data" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/ygocompare, path: sisters/ygocompare, sparse-checkout: "src/content" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/lorcanacompare, path: sisters/lorcanacompare, sparse-checkout: "src/content" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/GundamCompare, path: sisters/GundamCompare, sparse-checkout: "src/content" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/bandaicompare, path: sisters/bandaicompare, sparse-checkout: "src/content" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/cyberpunkcompare, path: sisters/cyberpunkcompare, sparse-checkout: "src/content" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/OpCompare, path: sisters/OpCompare, sparse-checkout: "src/lib/stores.ts", sparse-checkout-cone-mode: false }
+      - name: Probe
+        env:
+          SISTER_DIR: sisters
+        run: npx tsx scripts/crawl-probe.ts
+      - name: Commit the store list (no deploy)
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/crawl/stores.json
+          git diff --cached --quiet && { echo "No changes."; exit 0; }
+          git commit -m "data: crawl probe $(date -u +%F)" -m "Written by crawl-probe.yml. Not a release: the next scheduled import reads it."
+          for i in 1 2 3 4; do
+            git push origin HEAD:main && exit 0
+            sleep $((2 ** i)); git pull --rebase origin main
+          done
+          exit 1
