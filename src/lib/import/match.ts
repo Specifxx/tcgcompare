@@ -334,7 +334,7 @@ export const isUnfitListing = (title: string) => UNFIT.test(title);
 // Multiples: "(Pair)", "Bundle of 2", "Set of 4", "x2". A title and a product
 // must agree on whether they are a multiple.
 const MULTI = /\b(pair|bundle of \d+|set of \d+|\d+\s*x|x\s*\d+|\d+[- ]pack bundle|lot of)\b/i;
-const isMulti = (s: string) => MULTI.test(s.replace(/\b\d+\s*packs?\)/i, ""));
+export const isMulti = (s: string) => MULTI.test(s.replace(/\b\d+\s*packs?\)/i, ""));
 
 /** Titles that give the card's number in the set but not "n/total":
  *    "99 Puppies (3-024)"            set code - number

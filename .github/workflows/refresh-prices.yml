@@ -23,7 +23,7 @@ permissions:
 jobs:
   import:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 170
     steps:
       - uses: actions/checkout@v4
         with:
@@ -128,6 +128,14 @@ jobs:
             data/public/sealed-listings.json
             data/public/meta.json
           sparse-checkout-cone-mode: false
+      # Our own crawl of the games no sister covers (lib/import/crawl.ts): reads the collections data/crawl/stores.json
+      # names (robots.txt, one request a second per store, two stores at a time, a 401/403/429 or challenge stops the
+      # store) and leaves its listings in the git-ignored data/crawl/listings.json for the import. A no-op until the
+      # weekly Crawl probe has found stores; never fatal: without it the import carries the last rows for 72 hours.
+      - name: Own crawl (games no sister covers)
+        continue-on-error: true
+        timeout-minutes: 55
+        run: npx tsx scripts/crawl-uncovered.ts
       - name: Import
         env:
           SISTER_DIR: sisters

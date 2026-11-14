@@ -12,6 +12,7 @@ import { SITE } from "@/site.config";
 import type { Meta } from "@/lib/site-types";
 import { SITE_HOST } from "@/lib/site";
 import { readKitFile } from "@/lib/kit-store";
+import { crawlVerdict } from "@/lib/import/crawl";
 
 type Result = { name: string; status: "ok" | "warn" | "fail"; detail: string };
 const site = (process.env.NEXT_PUBLIC_SITE_URL || `https://${SITE_HOST}`).replace(/\/$/, "");
@@ -65,6 +66,15 @@ async function main() {
       const age = (Date.now() - new Date(meta.ebay.at).getTime()) / 3_600_000;
       if (age > 30) return { status: "warn", detail: `last eBay run ${age.toFixed(0)}h ago` };
       return { status: "ok", detail: `${meta.ebay.calls}/${meta.ebay.budget} calls on ${meta.ebay.day}, ${meta.ebay.eligible} eligible` };
+    }),
+    // Our own crawl of the games no sister covers (scripts/crawl-uncovered.ts, before every import; lib/import/crawl.ts).
+    check("Own store crawl", async () => {
+      let listed: unknown[] = [];
+      try {
+        listed = JSON.parse(fs.readFileSync(path.join(process.cwd(), "data/crawl/stores.json"), "utf8")) as unknown[];
+      } catch {}
+      if (!Array.isArray(listed) || !listed.length) return { status: "ok", detail: "no stores probed yet (data/crawl/stores.json empty): run the Crawl probe workflow" };
+      return crawlVerdict(meta, listed.length, Date.now());
     }),
     // The Compare Empire network feed (scripts/family-sync.ts): sisters' "Also in this cluster"
     // blocks read it from GitHub, so a stale one silently empties their tiles for this site.

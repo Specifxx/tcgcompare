@@ -167,3 +167,64 @@ store matcher:
 Same simulation after: 1,930 of 1,938 searched products match themselves, none matches another product. Still open:
 the page's Amazon search link and `amazonCarries` (US file and a one-game type list), and the credentials, which the
 owner has not set.
+
+## 2026-11-14: Our own crawl, for the 18 games no sister covers
+
+19 of the 30 games with pages had no store row at all: 853 products, 23% of the catalogue, because no sister site
+prices them (Riftbound has since come from Rift Compare). The owner asked for many more stores, with scam vetting.
+Every one of the 1,163 stores in `data/public/stores.json` is already read by some sister for another game, so this
+site now reads those same stores for the uncovered games itself (Star Wars: Unlimited, Flesh and Blood, Weiß Schwarz,
+Vanguard, Sorcery, Grand Archive, hololive, Godzilla, Final Fantasy, DBS Masters, Shadowverse, UniVersus, Elestrals,
+CookieRun, Palworld, WIXOSS, Battle Spirits, Alpha Clash; Naruto has no product yet and is left out).
+
+- **The key is the TCGplayer id in the listing, never the title.** `matchSealed` measured against the sisters' own
+  id-matched titles was wrong about 3% of the time (Collector's Booster Display read as the Set Booster Display), too
+  many to be a primary key. TCGplayer-synced shops carry TCGplayer's id in the listing: in the handle it agreed with
+  the sisters' truth 99.1% of the time, in the copied photo filename 98.6%. So a listing is taken only when exactly one
+  catalogue id appears across handle, SKUs and photos and nothing contradicts it: another catalogue id or TCGplayer
+  photo id, another game, a different product type in the title (a shifted handle: the pack's title on the box's id),
+  a foreign, unfit or multiple listing, or the one-game matcher naming another product. The matcher only refuses.
+  SKUs count only when the whole SKU is the id (optionally `TCG-` before, a condition after): a store's own codes and
+  barcodes are not ids.
+- **A probe first, weekly.** The stores' collection handles in the sister lists are all for the sisters' games, so
+  `crawl-probe.yml` reads each store's `/collections.json` once a week and keeps at most four collections per game whose
+  name fits that game's words and no other's. The import never reads a store the probe has not listed.
+- **A stricter client than the sisters'.** `http.ts` retries 429s and sends a browser User-Agent; the crawl's own
+  `polite-http.ts` does neither: robots.txt first (with `*` and `$`), our own User-Agent and `From`, a second between
+  requests, two stores at a time, and a 401/403/429 or challenge stops the store for the run. The dormant store pass in
+  `import-all.ts` (8 workers, retries, no robots check, one index for all games) is not reused.
+- **Network apart from matching.** The crawl is its own workflow step before the import (never fatal; 45 minutes and
+  6,000 requests at most, stores least recently read first) and writes only listings with the ids they carry
+  (`data/crawl/listings.json`, git-ignored). The import decides with the whole catalogue, so the "no other game's id"
+  rule sees every game, and its offers meet the same vetting, offer floor and 4x band as a sister's. A store not read
+  in a run keeps its rows 72 hours after its last good read, the sisters' freshness rule.
+
+The yield cannot be known from local data (0.8 to 4% of listings carry an id on Magic and Pokémon stores); the first
+probe and `meta.json` `crawl.refused` will tell. Until the probe has run, `data/crawl/stores.json` is empty and the
+crawl is a no-op.
+
+
+## 2026-11-14: the crawl, tightened after review
+
+- **A shop is its host.** A store listed in two markets (danireon, hobbiesville, themythicstore, npcollectibles,
+  chonkycollectibles) was two sessions run side by side: two robots.txt reads and two requests in flight. The crawl and
+  the probe now group by host: one session, one robots.txt, one queue a second apart, the markets read in turn; the cap
+  is the per-store cap times the shop's markets, counted in that one session. The probe asks such a shop once.
+- **A stopped store keeps what it finished.** A cap, budget or deadline stop used to throw every page away, and the
+  store, never read to the end, went first again next run. Collections read to the end are now kept (`partial`); the
+  store's other rows are carried under the 72-hour rule; the order is "least recently tried" (`crawl.tried`), not
+  "least recently read". The probe keeps at most eight collections a store in all, so a full read (8 × 4 pages,
+  robots.txt, the currency) fits the 40-request cap.
+- **A failed page is not an empty one.** A 5xx, timeout or unreadable JSON on a collection page made the store "read"
+  with that collection's rows missing, so one flaky run removed them at once. Now it is `errors` (not ok): the store is
+  not marked seen, finished collections are taken and the rest carried. A 404 or a robots-disallowed path is still an
+  honest nothing.
+- **Raw store titles need more refusals than sister data.** Opened, open box, pre-owned, resealed, empty, break spots,
+  repacks and missing packs are unfit; "(6 Boxes)", "Display of 6" and "Half" are another quantity unless the product's
+  own name says so; a lone variant naming another kind of product ("Booster Pack" on a box id) or a quantity ("x6") is
+  refused. A pack count ("(24 packs)") is NOT refused: most real box listings state theirs and the catalogue claims none.
+- **A number is not proof by itself.** A handle or SKU id with no TCGplayer photo of it now needs the matcher to land
+  on that product or the title to name its set (else `unconfirmed`): shops number their own SKUs with 5–6 digits. And any
+  second TCGplayer-shaped id in a handle or SKU, in the catalogue or not, refuses the listing (`id-conflict`), as a
+  second photo id already did. A store whose own numeric SKUs sit beside a TCGplayer handle id loses those listings:
+  a missing price over a wrong one.

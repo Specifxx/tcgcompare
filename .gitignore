@@ -9,3 +9,4 @@ out
 data/.cache
 data/amazon-live/
 sisters/
+data/crawl/listings.json

@@ -19,14 +19,50 @@ Game facts live in `src/site.config.ts`; engine code never names a game.
 
 ## Store prices come from the sister sites, by TCGplayer product id only
 
-`lib/import/sisters.ts` reads each sister's published data from a sparse checkout (`SISTER_DIR`); nothing is fetched
-from a store by this repo. OP Compare is read from its `snapshot` branch (its sealed ids are TCGplayer's), its
-store list from its `main`. Rift Compare (Riftbound) is read from `data/public/sealed-listings.json` on its `main`: a
-group's TCGplayer id is the one in its own TCGplayer row's url, one id per group and one group per id, or nothing. Never
-match a sister's offer by title. A sister whose data is over 72 hours old is skipped and reported in `meta.json`, and so
-is every store the sister's own import has not read for 72 hours (its `meta.json` `seen` time). eBay, TCGplayer,
-Amazon and Cardmarket rows of a sister are left behind, except the sister's own eBay listing for the product, which is
-reused.
+`lib/import/sisters.ts` reads each sister's published data from a sparse checkout (`SISTER_DIR`); no store is visited
+for a game a sister covers (our own crawl, below, reads only the games none covers). OP Compare is read from its
+`snapshot` branch (its sealed ids are TCGplayer's), its store list from its `main`. Rift Compare (Riftbound) is read
+from `data/public/sealed-listings.json` on its `main`: a group's TCGplayer id is the one in its own TCGplayer row's
+url, one id per group and one group per id, or nothing. Never match a sister's offer by title. A sister whose data is
+over 72 hours old is skipped and reported in `meta.json`, and so is every store the sister's own import has not read
+for 72 hours (its `meta.json` `seen` time). eBay, TCGplayer, Amazon and Cardmarket rows of a sister are left behind,
+except the sister's own eBay listing for the product, which is reused.
+
+## Our own crawl (games no sister covers)
+
+For the games no sister prices (the `crawl` words in `site.config.ts`; never a game in a sister's `lines` in
+`sisters.ts`, `tests/crawl.test.ts`), this repo reads the stores it already knows itself (owner, 2026-11-14):
+
+- `scripts/crawl-probe.ts` (`crawl-probe.yml`, weekly, its commit never carries a deploy marker) reads robots.txt and
+  `/collections.json` (3 pages at most) of each Shopify store in `data/public/stores.json` (platform from the sisters'
+  store lists; never a refused or blocked store) and writes `data/crawl/stores.json`: per store and game, at most four
+  collections whose handle or title names that game alone, never a singles or accessories collection, and at most
+  eight a store in all (so one full read fits the per-store cap). A shop listed in two markets is asked once.
+- `scripts/crawl-uncovered.ts` runs before the import in `refresh-prices.yml` and `trial-import.yml` (never fatal, a
+  no-op while the list is empty), reads those collections' `products.json` (4 pages each) and leaves the listings in
+  the git-ignored `data/crawl/listings.json`. The import takes a listing ONLY by the TCGplayer id the listing carries
+  (`pickId`, `lib/import/crawl.ts`): exactly one catalogue id across its handle, SKUs and photo filenames, of a game it
+  was crawled for, no other TCGplayer-shaped id in its handle, SKUs or photos (in the catalogue or not), not foreign,
+  unfit (also opened, open box, pre-owned, resealed, empty, a break spot, a repack, missing packs) or another quantity
+  ("(6 Boxes)", "Display of 6", "Half"), the title's and a lone variant's product type the same as the id's, and
+  `matchSealed` on that game alone agreeing or saying nothing; an id from the handle or a SKU alone (no TCGplayer
+  photo of it) also needs the matcher to land on it or the title to name its set. The matcher only refuses; never
+  take a crawl listing by its title. A listing whose variants are different products is refused whole.
+- The offers then go through the same vetting, offer floor and 4x band as a sister's. A store not read this run
+  keeps its crawled rows for 72 hours after its last good read (`meta.json` `crawl.seen`), never longer. A collection
+  page that fails (5xx, timeout, bad JSON) makes the store not read; a store stopped part way (a failed collection,
+  its cap, the budget, the deadline) is `partial`: the collections it read to the end are taken, its other rows
+  carried. A 404 or a robots-disallowed path is an honest "nothing here". Stores go least recently tried first
+  (`crawl.tried`).
+- `lib/import/polite-http.ts` is the only code that visits a store: robots.txt obeyed (RFC 9309 wildcards; missing
+  allows, unreadable allows nothing), an honest User-Agent naming tcgprices.app, one request at a time per store a
+  second apart (a store is its host: a shop in two markets is one session, its cap counted once for both markets'
+  allowance), two stores at a time, 20 s timeouts, a run budget (`CRAWL_BUDGET`, 6,000) and a per-store cap. A
+  401/403/429, captcha or challenge page stops that store for the run: never retry it or work around it. The store's
+  own currency (`/meta.json`) must be its market's, or the store is skipped.
+- `meta.json` `crawl` records each run (stores read and stopped by reason, requests, listings, taken, refused by
+  reason); the ops monitor's "Own store crawl" check is red when the list is non-empty and the crawl is stale or read
+  no store.
 
 ## Store vetting (owner, 2026-11-14: remove scam and suspicious shops)
 
