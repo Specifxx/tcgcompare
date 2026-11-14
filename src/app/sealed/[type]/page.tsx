@@ -1,4 +1,5 @@
 import { abs } from "@/lib/site";
+import { AdBanners } from "@/components/AdBanners";
 import { JsonLd } from "@/components/JsonLd";
 import type { Metadata } from "next";
 import Link from "@/components/Link";
@@ -55,6 +56,7 @@ export default function SealedHub({ params }: { params: { type: string } }) {
           </nav>
         )}
       </header>
+      <AdBanners {...adSearch()} page="sealed-type" className="mt-6" />
       {items.length > 0 && (
         <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", name: `${SITE.gameShort} ${h.label.toLowerCase()}`, numberOfItems: items.length, itemListElement: items.slice(0, 30).map((p, i) => ({ "@type": "ListItem", position: i + 1, name: p.name, url: abs(`/card/${p.slug}`) })) }} />
       )}

@@ -1,4 +1,5 @@
 import Link from "@/components/Link";
+import { AdBanners } from "@/components/AdBanners";
 import { SITE } from "@/site.config";
 import { SearchBox } from "@/components/SearchBox";
 import { MarketChooser } from "@/components/ClientPrefs";
@@ -229,6 +230,9 @@ export default function Home() {
           )}
         </p>
       </Hero>
+
+      {/* The ad banners, right under the hero (owner, 2026-11-14). */}
+      <AdBanners {...adSearch()} page="home" className="mt-6" />
 
       {/* Every game, in one moving line. */}
       <GameMarquee />

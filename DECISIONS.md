@@ -260,3 +260,21 @@ Amazon is never "the cheapest" on any Compare site.
 - `priceRows().cheapest` skips eBay and Amazon (`neverCheapest`), and a paid alternative is never cheaper than it.
 - The ops monitor's "No eBay prices" check (`src/lib/no-ebay-prices.ts`) is red when an eBay offer or pick reaches
   `data/public`; `tests/no-ebay-prices.test.ts` pins every layer.
+
+## 2026-11-14: No row is highlighted as the cheapest; eBay and TCGplayer always pinned; ad banners under the hero
+
+Owner: "don't highlight the cheapest price. Also here tcgplayer is the best price - we shouldnt make it any different",
+"even for listings without ebay price - we should include an ebay price row at the top anyway saying check on ebay. Same
+for tcgplayer", "Need some ad banners for amazon / tcgplayer / ebay … directly under the hero if possible". His
+screenshot: a quick view in AU tinting Collectible Madness at A$239 as BEST PRICE with "Buy now" while TCGplayer was
+US$99.
+
+- `PriceTable` has no best tint, no "Best price" badge, no "Buy now" and no "+% vs cheapest": rows are sorted by price
+  and every row looks alike (TCGplayer keeps its blue button). The phone top-buy block and sticky bar, which named one
+  store "Cheapest", are gone from the product page.
+- eBay's pinned row is always there (a tagged search when there is no eBay price, which on this site is always), and
+  TCGplayer's too: a "Check TCGplayer" row linking the product's TCGplayer page when there is no TCGplayer price in the
+  market. The quick view gets both (`/api/quick` returns `ebayQuery` and `tcgUrl`).
+- `AdBanners`: three calm text banners (eBay, TCGplayer, Amazon where its store has our tag), labelled Ad, directly
+  under the hero or page header on home, game, set, sealed and product pages, tagged `<page>-banner-<source>`. Browser
+  only with its height reserved (h-14), so the server HTML still carries no ad and nothing shifts.

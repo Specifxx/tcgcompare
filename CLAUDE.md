@@ -76,7 +76,7 @@ page. `data/public/store-vetting.json` lists who was refused and why. `tests/vet
 
 This site has NO eBay keyset and must never be given one or pointed at a sister's. eBay is the first pinned row of
 every product (`PriceTable` `ebayQuery`): a tagged search of the visitor's own eBay, labelled Ad, with no price
-claimed. Campaign 5339155912, customid prefix `tcgprices`. Pinned paid rows are eBay then TCGplayer only; every store
+claimed. Campaign 5339155912, customid prefix `tcgprices`. Pinned paid rows are eBay then TCGplayer only, both always shown (a "Check" search row without a price); no row is ever highlighted as the cheapest; `AdBanners` (Ad-labelled eBay, TCGplayer, Amazon text banners) sit under each hero; every store
 is an ordinary row; Amazon only with a real Amazon price. No eBay price ever reaches an offer, the data or a page, and eBay or Amazon is never "the cheapest" (`src/lib/no-ebay-prices.ts`, ops check "No eBay prices", `tests/no-ebay-prices.test.ts`).
 
 ## Amazon's price on the Amazon row (not live yet: no credentials)

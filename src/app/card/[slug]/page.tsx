@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AdBanners } from "@/components/AdBanners";
 import Link from "@/components/Link";
 import { Fragment } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -16,7 +17,7 @@ import { PriceTable } from "@/components/PriceTable";
 import { VaultOwn } from "@/components/vault/VaultOwn";
 import { PriceAlert } from "@/components/PriceAlert";
 import { lowestByMarket } from "@/lib/alert-feed";
-import { CardStickyBuyBar, CardTopBuy, CheckedAgo } from "@/components/CardBuy";
+import { CheckedAgo } from "@/components/CardBuy";
 import { PriceChart } from "@/components/PriceChart";
 import { TileGrid } from "@/components/ProductTile";
 import { JsonLd } from "@/components/JsonLd";
@@ -146,7 +147,6 @@ export default function CardPage({ params }: { params: { slug: string } }) {
               <p className="text-sm">7d <span className={(e.change7d ?? 0) >= 0 ? "text-up" : "text-down"}>{pct(e.change7d)}</span> · 30d <span className={(e.change30d ?? 0) >= 0 ? "text-up" : "text-down"}>{pct(e.change30d)}</span></p>
               <p className="text-sm text-muted">{inStock.length} in-stock listing{inStock.length === 1 ? "" : "s"} worldwide</p>
             </div>
-            <CardTopBuy offers={e.offers} productId={p.id} ebayQuery={ebayQuery} />
             <VaultOwn id={p.id} name={`${name}${p.number ? ` ${p.number}` : ""}`} href={`/card/${p.slug}`} image={p.image ? imageAt(p.image, "200w") : null} prices={lowestByMarket(e.offers)} className="mt-3" />
             {Object.keys(e.tcg).length > 1 && (
               <p className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -156,12 +156,13 @@ export default function CardPage({ params }: { params: { slug: string } }) {
               </p>
             )}
           </header>
+          <AdBanners {...adSearch(set?.name, set)} page="card" />
           <section>
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4">
               <h2 className="text-lg font-bold">Compare prices</h2>
               <CheckedAgo at={m?.updatedAt} />
             </div>
-            <PriceTable ebayQuery={ebayQuery} offers={e.offers} fx={m?.fx ?? { USD: 1 }} productId={p.id} page="card" amazon={amazon} image={p.image ? imageAt(p.image, "200w") : null} product={`${name}${p.number ? ` ${p.number}` : ""}`} />
+            <PriceTable ebayQuery={ebayQuery} tcgUrl={p.tcgUrl || undefined} offers={e.offers} fx={m?.fx ?? { USD: 1 }} productId={p.id} page="card" amazon={amazon} image={p.image ? imageAt(p.image, "200w") : null} product={`${name}${p.number ? ` ${p.number}` : ""}`} />
             {SITE.priceAlerts && <PriceAlert site={SITE.key} productId={p.id} prices={lowestByMarket(e.offers)} />}
           </section>
           <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CARD} />
@@ -186,7 +187,6 @@ export default function CardPage({ params }: { params: { slug: string } }) {
       )}
       {/* The page's one ad block (owner, 2026-11-13): native and horizontal, below the price table and everything else; never beside a buy button. */}
       <InlineAds ads={cardAds({ setId: p.setId, kind: p.kind, exclude: p.id, fill: true, limit: 10 })} search={adSearch(set?.name, set)} page="card" />
-      <CardStickyBuyBar offers={e.offers} productId={p.id} />
     </article>
   );
 }

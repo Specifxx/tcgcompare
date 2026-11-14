@@ -10,6 +10,8 @@ import { imageAt } from "@/lib/image";
 import { shortName } from "@/lib/names";
 import { adSearch, cardAds } from "@/lib/card-ads";
 import { amazonSearchUrls } from "@/lib/affiliate";
+import { ebayQueryFor } from "@/lib/product-page";
+import { ebayQueryOf } from "@/lib/lines";
 import { amazonCarries, amazonCells } from "@/lib/amazon-live";
 import { SITE } from "@/site.config";
 
@@ -29,6 +31,9 @@ export function GET(_req: Request, { params }: { params: { slug: string } }) {
       id: p.id,
       offers: priceOf(p.id).offers,
       fx: meta()?.fx ?? { USD: 1 },
+      // The pinned eBay and TCGplayer link rows, as on the card page (owner, 2026-11-14).
+      ebayQuery: ebayQueryFor(shortName(p.name), ebayQueryOf(setById(p.setId))),
+      tcgUrl: p.tcgUrl || null,
       amazon: p.kind === "sealed" && amazonCarries(p) ? amazonLinks(p.id, shortName(p.name)) : null,
       // As the tile sends them (ProductTile.tsx), for a quick view opened from a plain link.
       name: shortName(p.name),

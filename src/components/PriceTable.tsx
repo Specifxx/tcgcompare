@@ -34,8 +34,8 @@ export function sourceName(o: Offer) {
 /**
  * The pinned rows' classes. Until 2026-11-12 each drew an outline (eBay green, Amazon amber, the cheapest sky blue; owner, 2026-11-06
  * and 11-07). The owner then found "all the colored rows" too much and left the design to us (DECISIONS.md, "A calmer price table"):
- * the rows are plain rows again, in the same order with the same tags and links. The keys stay as hooks and draw nothing; the cheapest
- * row is marked by its tint, its "Best price" badge and the table's one filled button.
+ * the rows are plain rows again, in the same order with the same tags and links. The keys stay as hooks and draw nothing. Since
+ * 2026-11-14 (owner: "don't highlight the cheapest price") no row is marked: no tint, no "Best price" badge, no "Buy now" button.
  */
 export const PIN_OUTLINE = {
   ebay: "",
@@ -46,11 +46,11 @@ export const PIN_OUTLINE = {
 /** Where the phone's sticky buy bar hides (components/CardBuy.tsx). */
 export const PRICE_TABLE_ID = "price-comparison";
 
-export function PriceTable({ ebayQuery, offers, fx, productId, page, compact = false, amazon = null, tableId = PRICE_TABLE_ID, product, image = null }: { /** this site's eBay row when the data holds no eBay listing: a tagged search for exactly this product (owner, 2026-11-14: no eBay API here, "but we obviously want to make eBay money") */ ebayQuery?: string; /** the product's picture, for the cart list (components/cart) */ image?: string | null; offers: Offer[]; fx: Record<string, number>; productId: number; page: string; compact?: boolean; amazon?: Partial<Record<Market, string | AmazonCell>> | null; /** null in the quick view: the page's own table keeps the id the buy bar watches */ tableId?: string | null; /** the product's name: shows "Report a wrong price" under the table */ product?: string }) {
+export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, compact = false, amazon = null, tableId = PRICE_TABLE_ID, product, image = null }: { /** this site's eBay row when the data holds no eBay listing: a tagged search for exactly this product (owner, 2026-11-14: no eBay API here, "but we obviously want to make eBay money") */ ebayQuery?: string; /** TCGplayer's own page for this product: a pinned "Check TCGplayer" row when the data holds no TCGplayer price (owner, 2026-11-14) */ tcgUrl?: string; /** the product's picture, for the cart list (components/cart) */ image?: string | null; offers: Offer[]; fx: Record<string, number>; productId: number; page: string; compact?: boolean; amazon?: Partial<Record<Market, string | AmazonCell>> | null; /** null in the quick view: the page's own table keeps the id the buy bar watches */ tableId?: string | null; /** the product's name: shows "Report a wrong price" under the table */ product?: string }) {
   const { market, setMarket } = useMarket();
   const [showOut, setShowOut] = useState(false);
-  // eBay and TCGplayer lead the table (lib/price-rows.ts `display`); "Cheapest"
-  // stays on the real cheapest and a dearer pinned row says by how much. No
+  // eBay and TCGplayer lead the table (lib/price-rows.ts `display`); no row is
+  // marked as the cheapest (owner, 2026-11-14). No
   // wording about the order (owner, 2026-10-30): the paid rows are simply first.
   // Amazon (a tagged search of the market's own Amazon, only where that store has
   // our tag: lib/affiliate.ts) comes third, right under the pinned eBay and
@@ -64,12 +64,12 @@ export function PriceTable({ ebayQuery, offers, fx, productId, page, compact = f
   // row with a green outline, Amazon the second with an amber one, and both carry the
   // store row's thumbs and cart button (lib/cart-list.ts: manual lines on their tagged
   // links). With no Amazon price there is no row (owner, 2026-11-12).
-  const { inStock, refs, outOfStock, cheapest, display, pinned } = priceRows(offers, market);
+  const { inStock, refs, outOfStock, display, pinned } = priceRows(offers, market);
   const rows = display;
   const cur = CURRENCY[market];
   const conv = (o: Offer) => (o.currency === cur ? null : Math.round((o.cents / (fx[o.currency] ?? 1)) * (fx[cur] ?? 1)));
   // DexCompare's conversion layout (its buy-click rate is the family's highest, ~44%): the market the prices are for is stated and
-  // switchable right above the rows, the best price is the one loud button, every other row says "View deal".
+  // switchable right above the rows, every store row says "View deal" (owner, 2026-11-14: no row highlighted as the cheapest).
   const storesIn = new Set(inStock.filter((o) => o.source !== "tcgplayer" && o.source !== "ebay").map((o) => o.source)).size;
   const picker = (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-line bg-raised px-3 py-2 text-xs text-muted" data-market-bar>
@@ -104,12 +104,28 @@ export function PriceTable({ ebayQuery, offers, fx, productId, page, compact = f
       </td>
     </tr>
   ) : null;
+  // TCGplayer is always the second pinned row: with no TCGplayer price in the data, a link to its own page for this product,
+  // with no price claimed (owner, 2026-11-14: "Same for tcgplayer").
+  const tcgSearchRow = tcgUrl && !pinned.some((o) => o.source === "tcgplayer") ? (
+    <tr data-tcg-search-row className="border-t border-line">
+      <td className="px-3 py-2.5">
+        <span className="font-medium text-ink">TCGplayer</span>
+      </td>
+      <td className="hidden px-3 py-2.5 text-xs text-muted sm:table-cell">Sealed listings on TCGplayer</td>
+      <td className="px-3 py-2.5 text-right text-xs text-muted">See prices</td>
+      <td className="px-3 py-2.5 text-right">
+        <a href={goHref({ url: tcgUrl, source: "tcgplayer", market }, productId, `${page}_pinned_search`)} rel="sponsored nofollow noopener" target="_blank" className="btn-tcg min-h-10 whitespace-nowrap px-3 py-1.5">
+          Check TCGplayer <span aria-hidden="true">↗</span>
+        </a>
+      </td>
+    </tr>
+  ) : null;
   if (!rows.length)
     return (
       <div className="overflow-hidden rounded-xl border border-dashed border-line">
         {picker}
-        {ebaySearchRow && <table className="w-full text-sm"><tbody>{ebaySearchRow}</tbody></table>}
-        <p className="p-4 text-sm text-muted">No store listings in {MARKET_LABEL[market]} right now. Try another market above{ebaySearchRow ? ", or check eBay" : ""}.</p>
+        {(ebaySearchRow || tcgSearchRow) && <table className="w-full text-sm"><tbody>{ebaySearchRow}{tcgSearchRow}</tbody></table>}
+        <p className="p-4 text-sm text-muted">No store listings in {MARKET_LABEL[market]} right now. Try another market above{ebaySearchRow || tcgSearchRow ? ", or check the links above" : ""}.</p>
         {product && <div className="px-4 pb-3"><ReportPrice product={product} region={market} buttonClassName="btn-ghost px-3 py-1.5" /></div>}
       </div>
     );
@@ -159,13 +175,14 @@ export function PriceTable({ ebayQuery, offers, fx, productId, page, compact = f
         </thead>
         <tbody>
           {ebaySearchRow}
+          {/* TCGplayer's link row sits right under eBay; a priced TCGplayer row is already the second pinned row. */}
+          {pinned.some((o) => o.source === "ebay") ? null : tcgSearchRow}
           {amazonAfter < 0 && amazonRow}
           {shown.map((o, i) => {
             const c = conv(o);
-            const best = o === cheapest;
             return (
               <Fragment key={i}>
-                <tr className={`border-t border-line ${best ? "bg-open-soft/40" : ""} ${o.inStock ? "" : "opacity-60"} ${best && inStock.length > 1 ? PIN_OUTLINE.cheapest : o.source === "ebay" && pinned.includes(o) ? PIN_OUTLINE.ebay : ""}`}>
+                <tr className={`border-t border-line ${o.inStock ? "" : "opacity-60"} ${o.source === "ebay" && pinned.includes(o) ? PIN_OUTLINE.ebay : ""}`}>
                   <td className="px-3 py-2.5">
                     <span className="font-medium text-ink">{sourceName(o)}</span>
                     <StoreVote url={o.url} name={sourceName(o)} className="ml-2 text-muted" />
@@ -174,7 +191,6 @@ export function PriceTable({ ebayQuery, offers, fx, productId, page, compact = f
                       <span className="block sm:hidden"><CartAddButton href={tagged(o.url, subId(o.market, `${page}_cart`, productId), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={product ?? o.title} detail={o.printing && o.printing !== "Normal" ? o.printing : null} priceCents={o.cents} currency={o.currency} image={image} inline className="text-xs" /></span>
                     )}
                     {o.source === "ebay" && <span className="ad-pill ml-2">Ad</span>}
-                    {best && <span className="ml-2 rounded-full bg-open-soft px-2 py-0.5 text-[10px] font-bold uppercase text-open">Best price</span>}
                   </td>
                   <td className="hidden px-3 py-2.5 text-xs text-muted sm:table-cell">
                     {o.printing && o.printing !== "Normal" && <span className="tag mr-1">{o.printing}</span>}
@@ -186,9 +202,6 @@ export function PriceTable({ ebayQuery, offers, fx, productId, page, compact = f
                   <td className="px-3 py-2.5 text-right font-semibold tabular-nums">
                     {money(o.cents, o.currency)}
                     {c != null && <span className="block text-xs font-normal text-muted">{o.source === "tcgplayer" ? "" : "≈ "}{money(c, cur)}</span>}
-                    {pinned.includes(o) && cheapest && o !== cheapest && o.currency === cheapest.currency && cheapest.cents > 0 && o.cents > cheapest.cents && (
-                      <span className="block text-xs font-normal text-muted">+{Math.round(((o.cents - cheapest.cents) / cheapest.cents) * 100)}% vs cheapest</span>
-                    )}
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     {/* The cart list (components/cart, owner 2026-11-06): an in-stock store row, beside its button. */}
@@ -196,8 +209,8 @@ export function PriceTable({ ebayQuery, offers, fx, productId, page, compact = f
                     {!compact && o.inStock && o.source !== "tcgplayer" && (
                       <CartAddButton href={tagged(o.url, subId(o.market, `${page}_cart`, productId), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={product ?? o.title} detail={o.printing && o.printing !== "Normal" ? o.printing : null} priceCents={o.cents} currency={o.currency} image={image} className="hidden text-muted sm:inline-flex" />
                     )}
-                    <a href={goHref(o, productId, pinned.includes(o) ? `${page}_pinned` : page)} rel="sponsored nofollow noopener" target="_blank" className={`min-h-10 whitespace-nowrap ${o.source === "tcgplayer" && o.inStock ? "btn-tcg px-3 py-1.5" : best || (pinned.includes(o) && o.inStock) ? "btn-primary px-3 py-1.5" : o.inStock ? "btn-soft px-3 py-1.5" : "btn-ghost px-3 py-1.5 opacity-80"}`}>
-                      {best ? "Buy now" : o.inStock ? "View deal" : "View"} <span aria-hidden="true">↗</span>
+                    <a href={goHref(o, productId, pinned.includes(o) ? `${page}_pinned` : page)} rel="sponsored nofollow noopener" target="_blank" className={`min-h-10 whitespace-nowrap ${o.source === "tcgplayer" && o.inStock ? "btn-tcg px-3 py-1.5" : pinned.includes(o) && o.inStock ? "btn-primary px-3 py-1.5" : o.inStock ? "btn-soft px-3 py-1.5" : "btn-ghost px-3 py-1.5 opacity-80"}`}>
+                      {o.inStock ? "View deal" : "View"} <span aria-hidden="true">↗</span>
                     </a>
                     </span>
                   </td>

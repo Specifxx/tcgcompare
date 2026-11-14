@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { AdBanners } from "@/components/AdBanners";
+import { adSearch } from "@/lib/card-ads";
 import Link from "@/components/Link";
 import { notFound } from "next/navigation";
 import { SITE } from "@/site.config";
@@ -45,6 +47,9 @@ export default function GamePage({ params }: { params: { slug: string } }) {
           {v.newest && <p className="mt-3"><Link className="btn-primary" href={`/sets/${v.newest.slug}`}>Newest set: {v.newest.name} →</Link></p>}
         </header>
       </div>
+
+      {/* The ad banners, right under the hero (owner, 2026-11-14). */}
+      <AdBanners {...adSearch(null, { line: line.id })} page="game" />
 
       <nav aria-label={`${line.name} product types`} className="-mt-4 flex flex-wrap gap-2">
         {gameTypeHubs(line).filter((h) => h.items.length >= GAME_TYPE_MIN).map((h) => (
