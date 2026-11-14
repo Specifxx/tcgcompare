@@ -1,0 +1,36 @@
+// Owner, 2026-11-12: "we just want eBay and TCGplayer as the paid links at the top". Source guards: fail the build if a
+// pinned Fetch row, an unpriced Amazon row or an Amazon rail/strip comes back.
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const read = (f: string) => readFileSync(new URL(`../src/components/${f}`, import.meta.url), "utf8");
+
+test("the Amazon row needs a real price: no price, no row", () => {
+  const s = read("PriceTable.tsx");
+  assert.match(s, /const amazonRow = amazonUrl && amazonLive \?/);
+  assert.doesNotMatch(s, /Check Amazon|Also check on Amazon/);
+});
+
+test("Fetch TCG is an ordinary store row: not pinned, no Ad or Marketplace tag", () => {
+  const s = read("PriceTable.tsx");
+  assert.doesNotMatch(s, /PIN_OUTLINE\.fetch/);
+  const m = s.match(/data-fetch-row[\s\S]{0,1500}/);
+  if (m) assert.doesNotMatch(m[0], />Marketplace<|>Ad</);
+});
+
+test("the dock, the inline block and the photo strip carry eBay and TCGplayer only, never Amazon", () => {
+  assert.doesNotMatch(read("DockAds.tsx"), /source: "amazon"/);
+  assert.doesNotMatch(read("InlineAds.tsx"), /amazon/i);
+  assert.match(read("CardAds.tsx"), /const showAmazon = false as boolean;/);
+});
+
+test("TCGplayer's pinned button is blue (owner, 2026-11-12)", () => {
+  const src = readFileSync(new URL("../src/components/PriceTable.tsx", import.meta.url), "utf8");
+  assert.match(src, /"btn-tcg px-3 py-1\.5"/);
+});
+
+test("TCGplayer's converted price carries no ≈ mark (owner, 2026-11-13)", () => {
+  const src = readFileSync(new URL("../src/components/PriceTable.tsx", import.meta.url), "utf8");
+  assert.match(src, /o\.source === "tcgplayer" \? "" : "≈ "/);
+});
