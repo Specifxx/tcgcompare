@@ -71,3 +71,16 @@ US market's cheapest in-stock store or TCGplayer price in dollars (`usCheapestQu
 out when there is none. The eBay search now adds the game's words unless the name holds the whole phrase as words
 (`ebayQueryFor`): "Starter" no longer stands for "Star Wars Unlimited", and the Japanese Pokemon line keeps "japanese".
 `tests/product-page.test.ts`.
+
+## 2026-11-14: A search page, and the pages the YGO / Bandai copy left behind
+
+- **`/search?q=`** is where Enter goes when no suggestion is picked; it went to `/cards?q=`, a 404 here (YGO Compare
+  301'd `/cards` to `/sealed`, which ignores the words). The page is one static, noindex shell like `/cart`: the browser
+  reads `q` (`SearchResults.tsx`, `useSearchParams` under Suspense) and asks `/api/search` for 60 hits, already
+  CDN-cached per lower-cased query, so a search costs no page render and no new function. Never in the sitemap.
+- **`/games/:slug/:type`** has its own CDN rule: `/games/:slug` matches one segment only, so the type hubs were
+  rendered fresh on every visit. `tests/vercel-cost.test.ts` lists it.
+- **`/sets`** leaves out a game with no sets (Naruto today), whose heading linked a 404 game hub.
+- **The cart's `utm_source`** is `SITE.domain`; it said `ygocompare.com`.
+- **`/games` and home descriptions** name the games with product today, biggest first, and stay generic about product
+  types (`lib/site-copy.ts`): `SITE.game` is one phrase here, so "compares: trading card game." read wrongly.
