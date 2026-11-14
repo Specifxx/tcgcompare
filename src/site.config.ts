@@ -115,6 +115,9 @@ export const SITE: SiteConfig = {
     minCents: 500,
     minStores: 2,
     groupMaxAgeMonths: 60,
+    // TCGplayer's catch-all groups, dated by the group, not by their products (lib/import/continuity.ts): Magic's
+    // Secret Lair Drop Series, Secret Lair Series and Challenger Decks, Pokemon's Miscellaneous Cards & Products.
+    evergreenGroups: [2576, 2632, 2203, 2374],
   },
   rarityOrder: [],
   chaseRarities: [],

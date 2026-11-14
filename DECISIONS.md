@@ -84,3 +84,30 @@ out when there is none. The eBay search now adds the game's words unless the nam
 - **The cart's `utm_source`** is `SITE.domain`; it said `ygocompare.com`.
 - **`/games` and home descriptions** name the games with product today, biggest first, and stay generic about product
   types (`lib/site-copy.ts`): `SITE.game` is one phrase here, so "compares: trading card game." read wrongly.
+
+## 2026-11-14: A page that existed never 404s, and a sister that is down does not empty its stores
+
+`lib/import/continuity.ts`, called by `scripts/import-all.ts`; pinned by `tests/continuity.test.ts`.
+
+- **Culled for any reason.** culled.json used to be built only from the products TCGCSV returned today, so a product
+  whose group was no longer read (the 60-month `groupMaxAgeMonths` window) simply vanished and its page 404'd. It is
+  now built from the previous catalogue: every product that had a page and has none today, whatever the reason (the
+  focus, the group's age, TCGCSV no longer listing it), with its set found in today's sets or the previous catalogue's.
+  On 14 November's data, 609 live products (Secret Lair Drop Series, Pokemon Miscellaneous, Challenger Decks…) sat in
+  groups TCGCSV dates 2021-11-19, which would have fallen out of the window on 19 November.
+- **Groups that still hold pages are read whatever their age.** The safest rule is data-driven: any group the previous
+  catalogue still has a product in is read, so a page is only ever lost through the focus, never through a date. The
+  catch-all groups (`SITE.catalogFocus.evergreenGroups`: 2576, 2632, 2203, 2374) are read always, even while empty,
+  because their publishedOn is the group's, not their products'. A group with no page left and no catch-all status
+  still ages out, which keeps the daily request count bounded.
+- **culled.json entries carry the game.** An entry is now `{ set, line }`; the old string form (set slug only) is still
+  read, and gains its line when the import knows the set. A culled product whose set has no page goes to its game's hub
+  (`/games/<slug>`), then to the set's hub as before. Battle Academy 2024 went to /sealed; it now goes to Pokemon.
+- **A sister that is down** (missing checkout, unreadable, stale): the previous import's rows of its stores are carried
+  for at most 72 hours after its data was last fresh (the same 72 hours a live sister row is held to), only where no
+  live sister has that store on that product, and only under a key the previous store directory gave the same shop.
+  They pass the same vetting and price band as live rows. Past 72 hours nothing is carried, but a product the last
+  import kept is never culled only because a store it had rows from is down with its sister: it is held. Each sister's
+  meta.json entry now lists its store keys (`stores`); a down one keeps `at` (its last fresh data) and says how many rows
+  were `carried` and products `held`. The hold has no end date on purpose: a sister down for days is an ops problem,
+  not a reason to 301 hundreds of pages and bring them back the day it returns.
