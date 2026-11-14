@@ -60,3 +60,14 @@ offers are read from `o/<id / 1024>.json.gz`, and only `store:` rows with no con
 currency and an `updatedAt` inside 72 hours are taken (a card of the same range is never read). The store list is
 `src/lib/stores.ts` on OP Compare's `main`, checked out beside it. On the 14 November snapshot: 5,258 store rows on
 187 One Piece products from 291 stores. Riftbound still waits: Rift Compare's public data carries no TCGplayer id.
+
+## 2026-11-14: The 2050 layer's light theme and reduced motion, fixed
+
+- The hero's coloured word kept the dark theme's lights in the light theme, where the cyan read 1.98:1 on the near-white
+  page. The light theme draws it with the same three lights a shade deeper (sky-700, indigo-700, violet-600): every point
+  of the sweep 5.2:1 or better on `--bg` and `--surface` (`tests/contrast.test.ts` samples the gradient).
+- `@view-transition` now sits inside `prefers-reduced-motion: no-preference`: the page cross-fade is motion too.
+- The marquee's chips carry their own space (`margin-right`) instead of the track's flex gap, so the -50% loop is exactly
+  one copy and no longer jumps 5px at each wrap.
+- Under reduced motion the row stands still, so it becomes a sideways scroller with no edge fade, and the hidden second
+  copy is not drawn: every game reachable by touch and mouse, each once. `tests/minimal-look.test.ts` pins all three.

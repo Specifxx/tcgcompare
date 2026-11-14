@@ -299,6 +299,25 @@ test("motion is CSS only: transforms and opacity, off for prefers-reduced-motion
   for (const f of ["components/home/Hero.tsx", "components/Fold.tsx", "components/Tabs.tsx", "components/home/SealedShelf.tsx"]) assert.doesNotMatch(src(f), /IntersectionObserver|addEventListener\("scroll"|requestAnimationFrame/, f);
 });
 
+test("the 2050 layer's motion: page cross-fades only without reduced motion, the marquee loops without a jump and, standing still, scrolls", () => {
+  const c = code(css);
+  // The cross-fade is motion too: outside a no-preference block it ran for visitors who asked for less.
+  const vt = [...c.matchAll(/@view-transition/g)];
+  assert.equal(vt.length, 1, "one @view-transition");
+  assert.match(c, /@media \(prefers-reduced-motion: no-preference\) \{\s*@view-transition \{\s*navigation: auto;\s*\}\s*\}/);
+  // The loop moves -50% of a track that holds two copies: with a flex gap, one copy is half a gap longer than half the track and
+  // the row jumped 5px every minute. Each chip carries its own space instead.
+  assert.match(c, /\.neo-track \{[^}]*gap: 0;[^}]*\}/);
+  assert.match(c, /\.neo-track > \* \{\s*margin-right: 0\.625rem;\s*\}/);
+  assert.match(c, /@keyframes neo-marquee \{[^@]*translateX\(-50%\)/);
+  // Standing still, the row scrolls (touch and mouse reach every game), loses the edge fade and drops the hidden second copy.
+  const reduce = [...c.matchAll(/@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?)\n\}/g)].map((m) => m[1]).join("\n");
+  assert.match(reduce, /\.neo-marquee \{[^}]*overflow-x: auto;[^}]*mask-image: none;[^}]*\}/);
+  assert.match(reduce, /\.neo-track > \[aria-hidden="true"\] \{\s*display: none;\s*\}/);
+  // The copy it hides is the one GameMarquee marks hidden from screen readers and the tab order.
+  assert.match(src("components/GameMarquee.tsx"), /tabIndex=\{hidden \? -1 : undefined\} aria-hidden=\{hidden \|\| undefined\}/);
+});
+
 test("a phone's page is as wide as the phone: a sideways scroller is its own containing block, and a list's column can shrink", () => {
   // A visually hidden label inside an unpositioned sideways scroller is not clipped by it and counts toward the page's width: the
   // ad block's made every page that carries it 962px wide on a 390px phone (measured 2026-11-13).
