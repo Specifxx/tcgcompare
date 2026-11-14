@@ -2,12 +2,15 @@ name: Refresh prices
 
 # The daily import: TCGCSV (TCGplayer's catalogue and prices for every game in SITE.lines) + our sister sites'
 # published store offers (checked out beside this repo, read by lib/import/sisters.ts) -> data/ -> commit to main.
-# The data commit's SUBJECT carries [deploy], so it is the day's one production build
-# (scripts/vercel-ignore-build.sh). 21:37 UTC: after TCGCSV's ~20:00 UTC refresh. No eBay API on this site.
+# The data commit's SUBJECT carries [deploy]; the build gate allows one production build every 12 hours
+# (scripts/vercel-ignore-build.sh), so the import runs TWICE a day, 12 h 10 min apart (owner, 2026-11-14: no eBay
+# quota to wait for, so prices refresh as often as the build cap allows). 21:37 UTC follows TCGCSV's ~20:00 UTC
+# refresh; 09:47 UTC picks up the sister sites' imports that ran since. No eBay API on this site.
 
 on:
   schedule:
     - cron: "37 21 * * *"
+    - cron: "47 9 * * *"
   workflow_dispatch:
 
 concurrency:

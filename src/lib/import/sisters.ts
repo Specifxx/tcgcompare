@@ -45,6 +45,8 @@ const NOT_STORES = new Set(["ebay", "tcgplayer", "amazon"]);
 export interface SisterStatus { ok: boolean; offers: number; products: number; at: string | null; error?: string }
 export interface SisterResult {
   offers: Map<number, Offer[]>;
+  /** eBay listings an engine sister already found with its own calls (one per product and market): reused, never searched again. */
+  ebay: Map<number, Offer[]>;
   /** Every store with at least one offer taken, under the key its offers carry. */
   stores: StoreConfig[];
   status: Record<string, SisterStatus>;
@@ -111,7 +113,7 @@ const readJson = <T>(file: string): T => JSON.parse(fs.readFileSync(file, "utf8"
 
 type Tuple = [string, number, number, string, string?, (number | null)?, string?];
 
-function readEngine(root: string, src: SisterSource, book: StoreBook, add: (id: number, o: Offer) => void): { at: string | null; products: number } {
+function readEngine(root: string, src: SisterSource, book: StoreBook, add: (id: number, o: Offer) => void, addEbay: (id: number, o: Offer) => void): { at: string | null; products: number } {
   const stores = new Map(parseStoresTs(fs.readFileSync(path.join(root, src.stores), "utf8")).map((s) => [s.key, s]));
   const meta = readJson<{ updatedAt?: string }>(path.join(root, src.data, "meta.json"));
   const dir = path.join(root, src.data, "prices");
@@ -121,7 +123,13 @@ function readEngine(root: string, src: SisterSource, book: StoreBook, add: (id: 
     const shard = readJson<Record<string, { o?: Tuple[] }>>(path.join(dir, f));
     for (const [id, e] of Object.entries(shard)) {
       for (const t of e.o ?? []) {
-        const [source, cents, flags, ref, printing] = t;
+        const [source, cents, flags, ref, printing, ship, mk] = t;
+        // The sister's own eBay result for this product: a listing with stated postage, in stock, no printing.
+        if (source === "ebay" && !printing && ship != null && mk && (MARKETS as string[]).includes(mk) && (flags & 1) === 1 && cents > 0 && /^https:\/\/www\.ebay\./.test(ref)) {
+          const market = mk as Market;
+          addEbay(Number(id), { source: "ebay", market, currency: CURRENCY[market], cents, inStock: true, url: ref, title: "", shippingCents: ship });
+          continue;
+        }
         const raw = stores.get(source);
         // Sealed only: a row that names a printing ("Foil", "1st Edition") is a card's, or an edition this site does not split.
         if (!raw || NOT_STORES.has(source) || printing || !(cents > 0)) continue;
@@ -182,6 +190,7 @@ function readSealed(root: string, src: SisterSource, book: StoreBook, add: (id: 
 export function loadSisterOffers(root: string, now = new Date(), sources: SisterSource[] = SISTERS): SisterResult {
   const book = new StoreBook();
   const offers = new Map<number, Offer[]>();
+  const ebay = new Map<number, Offer[]>();
   const status: Record<string, SisterStatus> = {};
   for (const src of sources) {
     const mine = new Map<number, Map<string, Offer>>();
@@ -192,7 +201,13 @@ export function loadSisterOffers(root: string, now = new Date(), sources: Sister
       if (!cur || (o.inStock && !cur.inStock) || (o.inStock === cur.inStock && o.cents < cur.cents)) mine.get(id)!.set(o.source, o);
     };
     try {
-      const got = (src.kind === "engine" ? readEngine : readSealed)(path.join(root, src.dir), src, book, add);
+      const mineEbay = new Map<number, Offer[]>();
+      const addEbay = (id: number, o: Offer) => {
+        const list = mineEbay.get(id) ?? [];
+        if (!list.some((x) => x.market === o.market)) list.push(o);
+        mineEbay.set(id, list);
+      };
+      const got = src.kind === "engine" ? readEngine(path.join(root, src.dir), src, book, add, addEbay) : readSealed(path.join(root, src.dir), src, book, add);
       const ageH = got.at ? (now.getTime() - new Date(got.at).getTime()) / 3_600_000 : Infinity;
       if (!(ageH <= MAX_AGE_H)) throw new Error(`data is ${Number.isFinite(ageH) ? `${Math.round(ageH)} hours` : "of unknown age"} old`);
       let n = 0;
@@ -203,6 +218,7 @@ export function loadSisterOffers(root: string, now = new Date(), sources: Sister
           book.use(o.source);
           n++;
         }
+      for (const [id, list] of mineEbay) ebay.set(id, list);
       status[src.id] = { ok: true, offers: n, products: got.products, at: got.at };
       console.log(`[sister] ${src.id}: ${n} offers on ${got.products} products (data of ${got.at})`);
     } catch (e) {
@@ -211,5 +227,5 @@ export function loadSisterOffers(root: string, now = new Date(), sources: Sister
       console.warn(`[sister] ${src.id} SKIPPED: ${msg}`);
     }
   }
-  return { offers, stores: book.list(), status };
+  return { offers, ebay, stores: book.list(), status };
 }

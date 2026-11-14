@@ -19,6 +19,7 @@ import { fetchStore, storeCurrency } from "@/lib/import/shopify";
 import { readDemandSlugs } from "@/lib/import/demand";
 import { focusCatalog } from "@/lib/import/focus";
 import { loadSisterOffers } from "@/lib/import/sisters";
+import { OFFER_FLOOR, vetStores, type Refusal } from "@/lib/import/vet";
 import { buildIndex, handleOf, isForeign, isPreorder, isUnfitListing, looksSealed, matchCard, matchSealed, printingOf } from "@/lib/import/match";
 import {
   ebayCredentials,
@@ -118,20 +119,29 @@ async function main() {
   };
   let sisterStatus: Meta["sisters"];
   let sisterStores: (typeof SITE.stores) | null = null;
+  let refused: Refusal[] = [];
+  let sisterEbay = new Map<number, Offer[]>();
   if (process.env.SISTER_DIR) {
     // Store rows come from our sister sites' published data, by TCGplayer product id (lib/import/sisters.ts).
     const res = loadSisterOffers(process.env.SISTER_DIR, now);
     sisterStatus = res.status;
     sisterStores = res.stores;
+    sisterEbay = res.ebay;
+    // Store vetting (lib/import/vet.ts): a blocked, domain-less or too-cheap-to-be-true store shows no row at all.
+    const blocklist = JSON.parse(fs.readFileSync(path.join(process.cwd(), "data", "store-blocklist.json"), "utf8")) as Record<string, string>;
+    refused = vetStores({ stores: res.stores, offers: res.offers, refCents: (id) => (byId.has(id) ? referenceCents(tcg[id]) : null), fx, blocklist });
+    const out = new Set(refused.map((r) => r.key));
+    for (const r of refused) console.log(`[vet] ${r.key} (${r.host}) refused: ${r.why}`);
     let dropped = 0;
     for (const [id, list] of res.offers) {
       if (!byId.has(id)) continue;
       const ref = referenceCents(tcg[id]);
       for (const o of list) {
-        // The same sanity band as a store pass: under a quarter or over four times TCGplayer's market price is
+        if (out.has(o.source)) continue;
+        // The same sanity band as a store pass: under half or over four times TCGplayer's market price is
         // likelier another product than a deal.
         const usd = o.cents / (fx[o.currency] ?? 1);
-        if (ref != null && ref >= 300 && (usd < ref * 0.25 || usd > ref * 4)) { dropped++; continue; }
+        if (ref != null && ref >= 300 && (usd < ref * OFFER_FLOOR || usd > ref * 4)) { dropped++; continue; }
         addOffer(id, o);
         const st = (storeStatus[o.source] ??= { ok: true, products: 0, matched: 0, at: now.toISOString() });
         st.products++;
@@ -160,12 +170,12 @@ async function main() {
           const m = sealed ? matchSealed(it.title, idx) : matchCard(it.title, idx, `${it.productType} | ${it.tags.join(" | ")}`);
           if (!m) continue;
           matched++;
-          // Price sanity: a store price under a quarter or over four times the
+          // Price sanity: a store price under half or over four times the
           // TCGplayer reference is far likelier a bad match (or a damaged /
           // graded copy) than a real deal. Leave it out.
           const ref = referenceCents(tcg[m.product.id]);
           const usd = it.cents / (fx[CURRENCY[store.market]] ?? 1);
-          if (ref != null && ref >= 300 && (usd < ref * 0.25 || usd > ref * 4)) continue;
+          if (ref != null && ref >= 300 && (usd < ref * OFFER_FLOOR || usd > ref * 4)) continue;
           const offer: Offer = {
             source: store.key,
             market: store.market,
@@ -319,6 +329,8 @@ async function main() {
       if (!ebayTrusted(e.offer.cents / (fx[e.offer.currency] ?? 1), ebayRef)) continue;
       offers.push({ ...e.offer, market });
     }
+    // eBay listings a sister site already found for this very product (no call of ours), under the same trust band.
+    for (const o of sisterEbay.get(p.id) ?? []) if (ebayTrusted(o.cents / (fx[o.currency] ?? 1), ebayRef)) offers.push(o);
     const tcgLow = Object.values(t).map((x) => x.low).filter((x): x is number => x != null);
     const tcgCents = tcgplayerOfferCents(tcgLow, ref);
     if (tcgCents != null) {
@@ -390,6 +402,7 @@ async function main() {
   writeJson(path.join(PUBLIC, "catalog.json"), catalog);
   // The store directory (src/content/stores.ts reads it): every sister store with an offer on a kept product.
   if (sisterStores) {
+    writeJson(path.join(PUBLIC, "store-vetting.json"), { at: now.toISOString(), refused });
     const live = new Set([...storeOffers.values()].flatMap((l) => l.map((o) => o.source)));
     writeJson(path.join(PUBLIC, "stores.json"), sisterStores.filter((st) => live.has(st.key)).map(({ key, name, base, market }) => ({ key, name, base, market })));
   }
