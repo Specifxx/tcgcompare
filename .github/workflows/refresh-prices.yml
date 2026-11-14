@@ -117,6 +117,17 @@ jobs:
           sparse-checkout: |
             src/lib/stores.ts
           sparse-checkout-cone-mode: false
+      # Rift Compare (Riftbound) commits its public data to main: only the sealed listings and their meta (never
+      # data/public/listings/, about 84 MB of singles).
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: Specifxx/TCGEmpire
+          path: sisters/TCGEmpire
+          sparse-checkout: |
+            data/public/sealed-listings.json
+            data/public/meta.json
+          sparse-checkout-cone-mode: false
       - name: Import
         env:
           SISTER_DIR: sisters

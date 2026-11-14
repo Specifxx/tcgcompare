@@ -21,9 +21,12 @@ Game facts live in `src/site.config.ts`; engine code never names a game.
 
 `lib/import/sisters.ts` reads each sister's published data from a sparse checkout (`SISTER_DIR`); nothing is fetched
 from a store by this repo. OP Compare is read from its `snapshot` branch (its sealed ids are TCGplayer's), its
-store list from its `main`. Never match a sister's offer by title. A sister whose data is over 72 hours old is skipped
-and reported in `meta.json`. eBay, TCGplayer and Amazon rows of a sister are left behind, except the sister's own eBay
-listing for the product, which is reused.
+store list from its `main`. Rift Compare (Riftbound) is read from `data/public/sealed-listings.json` on its `main`: a
+group's TCGplayer id is the one in its own TCGplayer row's url, one id per group and one group per id, or nothing. Never
+match a sister's offer by title. A sister whose data is over 72 hours old is skipped and reported in `meta.json`, and so
+is every store the sister's own import has not read for 72 hours (its `meta.json` `seen` time). eBay, TCGplayer,
+Amazon and Cardmarket rows of a sister are left behind, except the sister's own eBay listing for the product, which is
+reused.
 
 ## Store vetting (owner, 2026-11-14: remove scam and suspicious shops)
 
