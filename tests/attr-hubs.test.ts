@@ -29,10 +29,3 @@ test("every hub has enough cards, a slug, and never takes the rarity segment", (
   assert.ok((SITE.cardHubs ?? []).every((c) => /^[a-z-]+$/.test(c.facet)));
 });
 
-test("sealed only: the card hub pages are gone and every /cards URL 301s to /sealed", async () => {
-  assert.ok(!fs.existsSync("src/app/cards"));
-  const config = (await import(NEXT_CONFIG as string)).default as { redirects: () => Promise<{ source: string; destination: string; statusCode?: number }[]> };
-  const rules = await config.redirects();
-  for (const source of ["/cards", "/cards/:path*"]) assert.deepEqual(rules.find((r) => r.source === source), { source, destination: "/sealed", statusCode: 301 });
-  assert.equal(attrFacets().length, 0, "a sealed-only catalogue has no attribute hubs");
-});

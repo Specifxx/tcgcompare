@@ -20,11 +20,9 @@ test("every link goes through the no-prefetch wrapper", () => {
 
 const CDN_PAGES: [string, string][] = [
   ["src/app/card/[slug]/page.tsx", "/card/:slug"],
-  ["src/app/kit/[slug]/page.tsx", "/kit/:slug"],
   ["src/app/sets/[slug]/page.tsx", "/sets/:slug"],
   ["src/app/sealed/[type]/page.tsx", "/sealed/:type"],
   ["src/app/games/[slug]/page.tsx", "/games/:slug"],
-  ["src/app/kits/grade/[grade]/page.tsx", "/kits/grade/:grade"],
   ["src/app/preorders/[slug]/page.tsx", "/preorders/:slug"],
 ];
 

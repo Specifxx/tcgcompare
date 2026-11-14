@@ -2,7 +2,6 @@ import Link from "@/components/Link";
 import { SITE } from "@/site.config";
 import { SearchBox } from "@/components/SearchBox";
 import { MarketChooser } from "@/components/ClientPrefs";
-import { ChristmasGifts } from "@/components/ChristmasGifts";
 import { DealGrid, TileGrid } from "@/components/ProductTile";
 import { deals, latestReleasedSet, meta, products, refCents, worthFeaturing } from "@/lib/data";
 import { ago, money } from "@/lib/format";
@@ -16,7 +15,6 @@ import { fitTitle } from "@/lib/seo-title";
 import { featuredSealed, sealedHubs, sealedInSet, sealedSets } from "@/lib/hubs";
 import { isPreorder, longDate, preorderPath } from "@/lib/preorders";
 import { openPreorder } from "@/lib/preorder-nav";
-import { seasonMarkupLive } from "@/lib/season";
 import { imageAt } from "@/lib/image";
 import { sealedHero } from "@/lib/sealed-hero";
 import { SealedShelf } from "@/components/home/SealedShelf";
@@ -27,6 +25,8 @@ import { InlineAds } from "@/components/InlineAds";
 import { inlineReady } from "@/lib/inline-ads";
 import { Section } from "@/components/Section";
 import { adSearch, cardAds } from "@/lib/card-ads";
+import { GameRows } from "@/components/GameRows";
+import { gameViews } from "@/lib/game-hubs";
 
 // The homepage leads with "<game> Booster Box Prices" (sealed only since 2026-11-06) and the number of stores compared.
 export function generateMetadata(): Metadata {
@@ -38,7 +38,7 @@ export function generateMetadata(): Metadata {
   const title = fitTitle([`${g} Booster Box Prices — Compare ${n} Stores${brand}`, `${g} Booster Box Prices — ${n} Stores${brand}`, `${g} Booster Box Prices${brand}`, `${g} Booster Box Prices — Compare ${n} Stores`, `${g} Booster Box Prices`]);
   return {
     title,
-    description: `Compare ${SITE.game} booster box, tin, structure deck and pre-order prices across TCGplayer, eBay, Amazon and ${n} online stores. Cheapest in-stock first, in your currency, updated daily.`,
+    description: `Compare ${SITE.game} booster box, tin, structure deck and pre-order prices across TCGplayer, eBay, Amazon and ${n} online stores. Cheapest in-stock first, in your currency, updated twice a day.`,
     alternates: { canonical: "/", types: { "application/rss+xml": "/feed.xml" } },
     openGraph: { type: "website", siteName: SITE.name, url: "/", title: title.absolute },
   };
@@ -84,27 +84,30 @@ export default function Home() {
     .slice(0, 8);
   const storeCount = SITE.stores.length;
   // The hero's one pill: the Christmas gift guide in its season (owner, 2026-11-12), else the release on pre-order.
-  const xmas = seasonMarkupLive("christmas");
   const preorder = openPreorder();
   const ads = cardAds({ limit: 10 });
   const faqs = [
-    { q: `What is ${SITE.name}?`, a: `${SITE.name} is a free ${SITE.game} sealed price comparison site. It compares prices for every ${SITE.gameShort} booster box, pack, tin, structure deck and collection across TCGplayer, eBay, Amazon and ${storeCount} online game stores in the US, UK, Canada and Australia, and updates them every day.` },
+    { q: `What is ${SITE.name}?`, a: `${SITE.name} is a free ${SITE.game} sealed price comparison site. It compares prices for every ${SITE.gameShort} booster box, pack, tin, structure deck and collection across TCGplayer, eBay, Amazon and ${storeCount} online game stores in the US, UK, Canada, Australia, Europe and Singapore, and updates them twice a day.` },
     { q: `Where is the cheapest place to buy a ${SITE.gameShort} booster box?`, a: `It changes box by box. Search a set on ${SITE.name} to see every store's price for its booster box, cheapest in-stock first, in your own currency, with a direct link to buy.` },
-    { q: `How often are ${SITE.gameShort} prices updated?`, a: `Every day. TCGplayer prices and store listings refresh daily, and eBay listings for every sealed product are re-checked every one to two days.` },
+    { q: `How often are ${SITE.gameShort} prices updated?`, a: `Twice a day. TCGplayer prices and store listings are refreshed every 12 hours; the eBay row opens eBay's live listings for the product.` },
     { q: `Does ${SITE.name} list single cards?`, a: `No. ${SITE.name} compares sealed product only: booster boxes, packs, tins, decks and collections, where store prices differ the most.` },
     { q: `Is ${SITE.name} free?`, a: `Yes, completely, and you don't need an account. ${SITE.name} is paid for by affiliate commissions: when you buy through some links, the store may pay us a small fee at no cost to you.` },
   ];
 
   // The hero's ways in: the six pages most visitors want next. Never products.
-  const ways: Way[] = [
-    ...TYPE_WAYS.flatMap(([slug, icon]): Way[] => {
-      const h = hubs.find((x) => x.slug === slug);
-      return h ? [{ href: `/sealed/${h.slug}`, label: h.label, icon }] : [];
-    }).slice(0, 3),
-    { href: "/preorders", label: "Pre-orders", icon: "calendar" },
-    { href: "/tools/deal-finder", label: "Deals", icon: "tag" },
-    { href: "/sets", label: "All sets", icon: "sets" },
-  ];
+  // On this site a visitor's first question is "which game": the five biggest, then all of them.
+  const games = gameViews();
+  const ways: Way[] = games.length
+    ? [...games.slice(0, 5).map((v): Way => ({ href: `/games/${v.line.slug}`, label: v.line.short, icon: "box" })), { href: "/games", label: "All games", icon: "sets" }]
+    : [
+        ...TYPE_WAYS.flatMap(([slug, icon]): Way[] => {
+          const h = hubs.find((x) => x.slug === slug);
+          return h ? [{ href: `/sealed/${h.slug}`, label: h.label, icon }] : [];
+        }).slice(0, 3),
+        { href: "/preorders", label: "Pre-orders", icon: "calendar" },
+        { href: "/tools/deal-finder", label: "Deals", icon: "tag" },
+        { href: "/sets", label: "All sets", icon: "sets" },
+      ];
 
   // The latest sets: the newest released one first, then the ones on pre-order (soonest first), then the rest. Never a pre-order first.
   const newestSets = sealedSets().slice(0, 4);
@@ -180,11 +183,7 @@ export default function Home() {
       {/* The hero: words, the search and six ways in, never a product (components/home/Hero.tsx). The h1 is the one the old hero carried. */}
       <Hero>
         {/* The one small line above the headline. */}
-        {xmas ? (
-          <div className="rise">
-            <ChristmasGifts />
-          </div>
-        ) : (
+        {(
           preorder && (
             <HeroPill href={preorderPath(preorder)}>
               <span>
@@ -235,7 +234,14 @@ export default function Home() {
         </Section>
       )}
 
-      {latestSets.length > 0 && (
+      {games.length > 0 && (
+        <div className="reveal mt-16 sm:mt-24">
+          <GameRows />
+        </div>
+      )}
+
+      {/* With many games the game list is the second block; one game shows its latest sets. */}
+      {games.length === 0 && latestSets.length > 0 && (
         <Section title="Latest sets" href="/sets" linkLabel="All sets" className="reveal mt-16 sm:mt-24">
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {latestSets.map((s) => (

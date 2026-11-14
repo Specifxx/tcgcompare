@@ -59,14 +59,14 @@ const LINES: GameLine[] = [
 ];
 
 export const SITE: SiteConfig = {
-  // The affiliate sub-id prefix (eBay customid, Impact subId1): `sealed-us-card_pinned-1234`.
-  key: "sealed",
-  name: "SealedCompare",
-  shortName: "SealedCompare",
-  wordmark: ["SEALED", "COMPARE"],
+  // The affiliate sub-id prefix (eBay customid, Impact subId1): `tcgprices-us-card_pinned-1234`.
+  key: "tcgprices",
+  name: "TCG Prices",
+  shortName: "TCG Prices",
+  wordmark: ["TCG", "PRICES"],
   game: "trading card game",
   gameShort: "TCG",
-  domain: "sealedcompare.com",
+  domain: "tcgprices.app",
   apexHost: true,
   tagline: "Compare booster box prices for every trading card game",
   description:
@@ -147,6 +147,8 @@ export const SITE: SiteConfig = {
     { name: "Gundam Compare", url: "https://gundamcompare.com", game: "Gundam", anchor: "Gundam Card Game prices", search: "https://gundamcompare.com/cards?q={q}" },
     { name: "BandaiCompare", url: "https://bandaicompare.com", game: "Union Arena, Fusion World & Digimon", anchor: "Union Arena, Fusion World and Digimon prices" },
     { name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com", game: "Cyberpunk TCG", anchor: "Cyberpunk TCG prices", search: "https://cyberpunkcompare.com/cards?q={q}" },
+    { name: "WargameCompare", url: "https://wargamecompare.com", game: "Wargames", anchor: "Miniature wargame prices" },
+    { name: "FigureCompare", url: "https://figurecompare.com", game: "Anime figures", anchor: "Anime figure prices" },
     { name: "SportsCardCompare", url: "https://sportscardcompare.com", game: "Sports cards", anchor: "Sealed sports card box prices" },
   ],
   family: { id: "sealed" },

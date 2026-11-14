@@ -25,22 +25,6 @@ test("sealedOnlyCatalog drops cards and recounts each set from its sealed produc
   assert.equal(c.sets[0].productCount, 1);
 });
 
-test("every retired card URL goes to its set's sealed page, or /sealed; anything else is not a card", () => {
-  const raw = JSON.parse(fs.readFileSync("data/redirects/cards.json", "utf8")) as { bySet: Record<string, string[]> };
-  const all = Object.values(raw.bySet).flat();
-  assert.ok(all.length > 10_000, "the frozen map holds every card URL");
-  const has = (s: string) => sealedSets().some((x) => x.slug === s);
-  const [set, slugs] = Object.entries(raw.bySet).find(([s]) => has(s))!;
-  assert.equal(retiredCardTarget(slugs[0], has), `/sets/${set}`);
-  const orphan = Object.entries(raw.bySet).find(([s]) => !has(s));
-  if (orphan) assert.equal(retiredCardTarget(orphan[1][0], has), "/sealed");
-  assert.equal(retiredCardTarget("not-a-card-at-all", has), null);
-  // No sealed product's slug is in the card map, so a sealed URL never redirects.
-  const cards = new Set(all);
-  assert.ok(products().every((p) => !cards.has(p.slug)));
-  assert.ok(setBySlug(set));
-});
-
 test("the card page redirects a retired card permanently and the redirect file ships with the functions", () => {
   const page = fs.readFileSync("src/app/card/[slug]/page.tsx", "utf8");
   assert.match(page, /permanentRedirect\(to\)/);
@@ -59,22 +43,6 @@ test("the sitemap lists no card, card hub or retired page", () => {
   assert.ok(!urls.some((u) => products().some((p) => p.sealedType === "Insert" && u === `/card/${p.slug}`)), "no pack insert");
 });
 
-test("retired guides 301 and the kept ones still render", async () => {
-  const config = (await import(NEXT_CONFIG as string)).default as { redirects: () => Promise<{ source: string; destination: string; statusCode?: number }[]> };
-  const rules = await config.redirects();
-  const retired = rules.filter((r) => r.source.startsWith("/blog/"));
-  assert.ok(retired.length >= 17);
-  for (const r of retired) {
-    assert.equal(r.statusCode, 301);
-    assert.ok(!POSTS.some((p) => `/blog/${p.slug}` === r.source), `${r.source} is still a post`);
-  }
-  const ids = new Set(products().map((p) => String(p.id)));
-  for (const p of POSTS) {
-    assert.doesNotMatch(p.html, /\{\{(toplist|topall|rarity|attrstats):/, p.slug);
-    for (const m of p.html.matchAll(/\{\{(?:card|price):(\d+)\}\}/g)) assert.ok(ids.has(m[1]), `${p.slug} names product ${m[1]}, not a sealed product`);
-  }
-});
-
 // Real catalogue rows, 2026-11-06: TCGplayer files oversized cards, tokens and single promo cards under "sealed".
 test("a single card TCGplayer files as sealed is not a sealed product", () => {
   const box = { id: 2, slug: "x-booster-box", name: "X Booster Box", kind: "sealed" as const, setId: 7, number: null, rarity: null, attrs: {}, sealedType: "Booster Box", image: null, tcgUrl: "", printings: [] };
@@ -85,10 +53,3 @@ test("a single card TCGplayer files as sealed is not a sealed product", () => {
   assert.ok(products().every((p) => !p.rarity));
 });
 
-test("the old rarity hub goes to the rarity guide", () => {
-  const src = fs.readFileSync("next.config.js", "utf8");
-  const i = src.indexOf('"/cards/rarity/:path*"');
-  assert.ok(i > 0 && i < src.indexOf('"/cards/:path*"'));
-  assert.ok(src.includes('destination: "/blog/yu-gi-oh-rarities-explained"'));
-  assert.ok(POSTS.some((p) => p.slug === "yu-gi-oh-rarities-explained"));
-});

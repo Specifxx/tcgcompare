@@ -3,17 +3,19 @@ import Link from "@/components/Link";
 import { Fragment } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { retiredCardTarget } from "@/lib/card-redirects";
+import { culledSetSlug } from "@/lib/culled";
+import { gameHubOfSet } from "@/lib/data";
 import { SITE } from "@/site.config";
 import { byValue, historyOf, looseSingleSetId, meta, priceOf, productBySlug, productsInSet, refCents, setById, setBySlug } from "@/lib/data";
 import { imageAt } from "@/lib/image";
 import { money, pct } from "@/lib/format";
 import { shortName } from "@/lib/names";
+import { ebayQueryOf } from "@/lib/lines";
 import { PriceTable } from "@/components/PriceTable";
 import { VaultOwn } from "@/components/vault/VaultOwn";
 import { PriceAlert } from "@/components/PriceAlert";
 import { lowestByMarket } from "@/lib/alert-feed";
 import { CardStickyBuyBar, CardTopBuy, CheckedAgo } from "@/components/CardBuy";
-import { EbayCallout } from "@/components/EbayCallout";
 import { PriceChart } from "@/components/PriceChart";
 import { TileGrid } from "@/components/ProductTile";
 import { JsonLd } from "@/components/JsonLd";
@@ -61,11 +63,14 @@ export default function CardPage({ params }: { params: { slug: string } }) {
     // A single card from before the site went sealed-only: a permanent redirect to its set (lib/card-redirects.ts).
     const to = retiredCardTarget(params.slug, (s) => (setBySlug(s)?.productCount ?? 0) > 0);
     if (to) permanentRedirect(to);
+    // A product the sealed focus dropped (lib/import/focus.ts): its set, or its game when the set is empty too.
+    const culled = culledSetSlug(params.slug);
+    if (culled != null) permanentRedirect((setBySlug(culled)?.productCount ?? 0) > 0 ? `/sets/${culled}` : gameHubOfSet(culled));
     // A single that TCGplayer filed as sealed (lib/data.ts isLooseSingle): its set, or the sealed hub.
     const loose = looseSingleSetId(params.slug);
     if (loose != null) {
       const set = setById(loose);
-      permanentRedirect(set && set.productCount > 0 ? `/sets/${set.slug}` : "/sealed");
+      permanentRedirect(set && set.productCount > 0 ? `/sets/${set.slug}` : gameHubOfSet(set?.slug ?? ""));
     }
     notFound();
   }
@@ -75,6 +80,9 @@ export default function CardPage({ params }: { params: { slug: string } }) {
   const m = meta();
   const series = historyOf(p);
   const name = shortName(p.name);
+  // The game's own words lead the eBay search unless the product's name already says them.
+  const gameWords = ebayQueryOf(set);
+  const ebayQuery = name.toLowerCase().includes(gameWords.toLowerCase().split(" ")[0]) ? name : `${gameWords} ${name}`.trim();
   const related = byValue(productsInSet(p.setId).filter((x) => x.id !== p.id && x.kind === p.kind)).slice(0, 6);
   const inStock = e.offers.filter((o) => o.inStock);
   const usOffers = inStock.filter((o) => o.currency === "USD");
@@ -135,7 +143,7 @@ export default function CardPage({ params }: { params: { slug: string } }) {
               <p className="text-sm">7d <span className={(e.change7d ?? 0) >= 0 ? "text-up" : "text-down"}>{pct(e.change7d)}</span> · 30d <span className={(e.change30d ?? 0) >= 0 ? "text-up" : "text-down"}>{pct(e.change30d)}</span></p>
               <p className="text-sm text-muted">{inStock.length} in-stock listing{inStock.length === 1 ? "" : "s"} worldwide</p>
             </div>
-            <CardTopBuy offers={e.offers} productId={p.id} ebayQuery={`${SITE.ebay.query} ${name} ${p.number ?? ""}`.trim()} />
+            <CardTopBuy offers={e.offers} productId={p.id} ebayQuery={ebayQuery} />
             <VaultOwn id={p.id} name={`${name}${p.number ? ` ${p.number}` : ""}`} href={`/card/${p.slug}`} image={p.image ? imageAt(p.image, "200w") : null} prices={lowestByMarket(e.offers)} className="mt-3" />
             {Object.keys(e.tcg).length > 1 && (
               <p className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -150,8 +158,7 @@ export default function CardPage({ params }: { params: { slug: string } }) {
               <h2 className="text-lg font-bold">Compare prices</h2>
               <CheckedAgo at={m?.updatedAt} />
             </div>
-            <div className="mb-3"><EbayCallout offers={e.offers} productId={p.id} query={`${SITE.ebay.query} ${name} ${p.number ?? ""}`.trim()} /></div>
-            <PriceTable offers={e.offers} fx={m?.fx ?? { USD: 1 }} productId={p.id} page="card" amazon={amazon} image={p.image ? imageAt(p.image, "200w") : null} product={`${name}${p.number ? ` ${p.number}` : ""}`} />
+            <PriceTable ebayQuery={ebayQuery} offers={e.offers} fx={m?.fx ?? { USD: 1 }} productId={p.id} page="card" amazon={amazon} image={p.image ? imageAt(p.image, "200w") : null} product={`${name}${p.number ? ` ${p.number}` : ""}`} />
             {SITE.priceAlerts && <PriceAlert site={SITE.key} productId={p.id} prices={lowestByMarket(e.offers)} />}
           </section>
           <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CARD} />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "@/components/Link";
 import { notFound, permanentRedirect } from "next/navigation";
+import { gameHubOfSet } from "@/lib/data";
 import { SITE } from "@/site.config";
 import { canon } from "@/lib/site";
 import { setBySlug, summaryOf } from "@/lib/data";
@@ -43,7 +44,7 @@ export default function SetPage({ params }: { params: { slug: string } }) {
   const s = setBySlug(params.slug);
   if (!s) notFound();
   const sealed = sealedInSet(s.id);
-  if (!sealed.length) permanentRedirect("/sealed");
+  if (!sealed.length) permanentRedirect(gameHubOfSet(s.slug));
   const listed = sealedSets();
   const i = listed.findIndex((x) => x.id === s.id);
   const newer = i > 0 ? listed[i - 1] : null;

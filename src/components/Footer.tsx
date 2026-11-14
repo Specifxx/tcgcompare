@@ -35,8 +35,6 @@ export function footerColumns(history: boolean): { title: string; links: FooterL
         { href: "/collection", label: "My collection" },
         { href: "/methodology", label: "How prices work" },
         { href: "/stores", label: "Stores we track" },
-        { href: "/blog", label: "Guides" },
-        { href: "/forum", label: "Community forum · beta" },
         ...(creatorsOn() ? [{ href: "/creators", label: "Creators" }] : []),
         { href: "/contact", label: "Contact" },
         { href: "/list-your-store", label: "List your store" },

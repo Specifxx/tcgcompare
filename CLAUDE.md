@@ -1,106 +1,68 @@
 # Working in this repo
 
-Read `README.md` first. This is YGO Compare (Yu-Gi-Oh! TCG), **sealed only** since
-2026-11-06 (owner): booster boxes, packs, tins, decks and collections, no single cards.
-It runs the **Dex / MTG Compare engine's look** on its own data layer, as Gundam Compare
-(2026-11-04) and WargameCompare do. It is NO LONGER a sister of the Lorcana /
-Cyberpunk / Bandai card engine: there is no `engine.json`, no engine-drift check and
-nothing to sync. Change this repo on its own; port engine presentation changes by hand.
-Game-specific facts still live in `src/site.config.ts` and `src/content/`.
+Read `README.md` first. This is TCG Prices (tcgprices.app): **sealed product only, for every trading card game with a
+real market**, on one site (`SITE.lines`, 31 games). It began on 2026-11-14 as a copy of YGO Compare's engine with
+BandaiCompare's multi-game parts. It is a copy, not a synced sister: change this repo on its own and port fixes by hand.
+Game facts live in `src/site.config.ts`; engine code never names a game.
 
-## Sealed only (owner, 2026-11-06; DECISIONS.md)
+## What gets a page (owner, 2026-11-14)
 
-- `SITE.sealedOnly`: the import drops cards after every slug is settled (a sealed slug never
-  changes; `keepSlugs` in `scripts/import-all.ts` keeps yesterday's slug by product id), and
-  `sealedOnlyCatalog` in `lib/data.ts` drops any card a data file still holds.
-- Every single-card URL the site had is in `data/redirects/cards.json` (frozen; never edit,
-  never grow). `/card/<slug>` is still the sealed product page; a card slug found there gets a
-  permanent redirect to its set, or `/sealed` (`lib/card-redirects.ts`). `/cards/*`, the card
-  tools, `/list` and the card-table guides 301 from `next.config.js` (`RETIRED`). Never let an
-  old URL 404, and never put a card, a card hub or a retired page back in the sitemap
-  (`tests/sealed-only.test.ts`). The ops monitor checks one old card URL redirects.
-- A set page exists only for a set with sealed product (`sealedSets()`); others 301 to `/sealed`.
+- Sealed only, and only products with demand today (`lib/import/focus.ts`, `SITE.catalogFocus`): TCGplayer has a
+  market price of US$5 or more AND the set is recent (36 months for boxes, cases, trainer boxes, bundles, tins,
+  collections and decks; 18 months for packs and the rest), OR two stores in one market have it in stock. Inserts and
+  accessories never; Search Console demand always. Never widen it to "everything TCGplayer lists": a dead set's packs
+  are thin pages.
+- A game needs a market of roughly US$1M a year or more (owner). Add one as a line in `SITE.lines` with its TCGplayer
+  category id; a game with no product today has no page, menu entry or sitemap URL.
+- A product the focus drops after it had a page goes to `data/public/culled.json` and must 301 to its set or game
+  hub, never 404.
 
-## Deploys are gated — do not add `[deploy]` to commit subjects
+## Store prices come from the sister sites, by TCGplayer product id only
 
-**One production build per 12 hours, and production only (owner, 2026-11-02: Vercel spend capped at $5–6 a
-day).** `scripts/vercel-ignore-build.sh` skips a `[deploy]` commit within 12 hours of the last production
-deployment (it rides the next release); `[urgent]` in the subject overrides that, only when the owner says
-so. `vercel.json` disables every branch except production (`"**": false`), so no preview is ever built.
-Never dispatch a manual release just to ship a merge. DECISIONS.md, 2026-11-02.
+`lib/import/sisters.ts` reads each sister's published data from a sparse checkout (`SISTER_DIR`); nothing is fetched
+from a store by this repo. Never match a sister's offer by title. A sister whose data is over 72 hours old is skipped
+and reported in `meta.json`. eBay, TCGplayer and Amazon rows of a sister are left behind, except the sister's own eBay
+listing for the product, which is reused.
 
-Production builds only when the commit SUBJECT carries `[deploy]`
-(`scripts/vercel-ignore-build.sh`). The daily data commit from
-`refresh-prices.yml` carries it; that is the one build a day. Never put
-`[deploy]` in a subject on your own initiative. "Push to prod" means land on
-`main` and ride the next daily release, unless the owner says it is urgent.
-Previews build only with `[preview]` in the subject, when the owner asks.
+## Store vetting (owner, 2026-11-14: remove scam and suspicious shops)
 
-## No accounts, no database, no email
+`lib/import/vet.ts` judges every store on every import: blocked (`data/store-blocklist.json`, one host per line with
+why), no domain of its own (a platform's free address), or too cheap to be true (median under 70% of TCGplayer's
+market across five or more in-stock products). A single in-stock price under half of market is left out. Rules may
+only refuse; never loosen one to keep a store. A refused store is simply absent: never call a named store a scam on a
+page. `data/public/store-vetting.json` lists who was refused and why. `tests/vet.test.ts`.
 
-The site is price comparison only: no sign-in, no Premium, no
-email service and no database. Everything it serves is the committed JSON
-under `data/` (`src/lib/data.ts`).
+## eBay: links only (owner, 2026-11-14)
 
-**Price alerts are the one exception (owner, 2026-11-02):** the card page's
-"Email me when the price drops" form (`PriceAlertForm.tsx`, `SITE.priceAlerts`)
-posts to RiftCompare's shared alert service, which keeps the address, emails
-and reads this site's static `/alert-feed.json` (`src/lib/alert-feed.ts`) once
-a day. This site still stores no address and holds no mail key; never add one.
-Keep the feed's price the lowest in-stock store price, never eBay or converted.
+This site has NO eBay keyset and must never be given one or pointed at a sister's. eBay is the first pinned row of
+every product (`PriceTable` `ebayQuery`): a tagged search of the visitor's own eBay, labelled Ad, with no price
+claimed. Campaign 5339155912, customid prefix `tcgprices`. Pinned paid rows are eBay then TCGplayer only; every store
+is an ordinary row; Amazon only with a real Amazon price.
 
-## Size
+## Deploys are gated: never add `[deploy]` to a commit subject
 
-Every server function bundles `data/`. Before sealed-only, ~15,000 cards made it ~49 MB
-(7.8 MB catalogue, 7.6 MB summary, 29 MB price shards), and every one of ~16,500 product
-URLs was an ISR render and write after each release. Don't add cards back, and don't pass catalogue-sized lists to a
-client component, without measuring `data/` first.
+One production build per 12 hours, production only (owner, 2026-11-02: Vercel spend capped at $5 to $6 a day).
+Production builds only a commit whose SUBJECT carries `[deploy]` (`scripts/vercel-ignore-build.sh`); `[urgent]`
+overrides the 12-hour gap only when the owner says so. `refresh-prices.yml` runs twice a day, 12 h 10 min apart, and
+its data commit carries the marker: that is the most the cap allows, never schedule a third. "Push to prod" means land
+on `main` and ride the next import. Previews are off.
 
-## Cost rules (from Rift Compare, where breaking them exhausted Neon projects)
+## Cost rules
 
-1. Public data stays in committed files under `data/`; don't add a database
-   read to any page or route.
-2. No `generateStaticParams` that prerenders database- or data-heavy pages at
-   build. Card and set pages use an empty list (cached on first visit).
-3. No page or route handler revalidates under 21600 seconds (six hours);
-   86400 for slow content. A route handler caches through its CDN header.
-4. Every database query selects only the columns it needs and is bounded.
-5. Never write anything private to `data/` — it is public with the source.
+1. Public data stays in committed files under `data/`; no database, no accounts, no mail key.
+2. No `generateStaticParams` that prerenders data-heavy pages. No page or route revalidates under 21600 seconds.
+3. Never write anything private to `data/`.
+4. Measure `data/` before adding a game with a large catalogue: every server function bundles it.
 
-## eBay
+## Design
 
-One eBay app (5,000 Browse calls/day) is shared with Gundam Compare and
-Lorcana Compare: Lorcana and Gundam 1,150 each, YGO
-2,200 (2026-10-28; 1,500 each from the owner's 2026-10-26 split), counted in
-`data/state/ebay-usage.json`. Every sealed product
-gets calls; there are no cards. Sealed only (2026-11-06): the plan is `planSealedCoverage` in
-`src/lib/import/ebay.ts` (every sealed product except inserts, in the US, UK, Canada and
-Australia; every US product every 24 h, first and uncapped, then daily ceilings of Canada 400, UK 300,
-Australia 277 at 48/72 h, spare calls spent on the most overdue pairs; owner's region split 2026-11-10), pinned by
-`tests/ebay-plan.test.ts`. Do not raise `SITE.ebay.dailyBudget` without moving
-another site's down by the same amount; the three must total 4,500 or less.
-
-## Amazon's price on sealed pages (owner, 2026-11-05)
-
-`scripts/amazon-asins.ts` (daily refresh) finds each sealed product's ASIN on each market's own Amazon, kept only when
-`matchSealed` lands on that product; `scripts/fetch-amazon-prices.ts` (first in every build) fetches those prices into the
-git-ignored `data/amazon-live/`; `lib/amazon-live.ts` gives the card page its Amazon row's link and 24-hour price. Prices
-are never committed, never a sort, cheapest, deal, feed or quick view. Credentials `AMAZON_CREATORS_AU_*` (GitHub + Vercel)
-serve every store; a store without API access is skipped. `tests/amazon-api.test.ts`; the ops monitor reads the status.
-
-## Matching
-
-`src/lib/import/match.ts`: a wrong match is worse than none. Sealed titles match by set,
-product type and edition (`matchSealed`); the edition (1st / Unlimited) is taken from the
-title, never guessed; foreign-language products are never matched; a store price under a
-quarter or over four times TCGplayer's is dropped. Add a test in
-`tests/match.test.ts` for every new title format.
+The minimal look (owner, 2026-11-13): the hero is words, the search and six ways in, never a product; one tabbed
+shelf; the game list; one ad block. Three colours, no pop-ups, default region US. `tests/minimal-look.test.ts`.
 
 ## The site watches itself
 
-`ops-monitor.yml` runs `scripts/ops-monitor.ts` every three hours; a failing
-check fails the run, and GitHub emails the owner. When you add a scheduled job,
-external API or anything with a limit, add a check there.
+`ops-monitor.yml`'s schedule is off until the domain is live; turn it on at go-live. A new scheduled job, external
+API or limit gets a check in `scripts/ops-monitor.ts`.
 
 ## Checks
 

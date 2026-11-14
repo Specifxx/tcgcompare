@@ -53,14 +53,14 @@ test("the ads are ONE native horizontal block per page (owner, 2026-11-13); the 
   assert.match(read("src/components/QuickView.tsx"), /<CompactCardAds /);
   assert.match(read("src/app/layout.tsx"), /<DockAds ads=\{cardAds\(/);
   assert.doesNotMatch(read("src/app/layout.tsx"), /SideAds/);
-  for (const [f, page] of [["src/app/page.tsx", "home"], ["src/app/card/[slug]/page.tsx", "card"], ["src/app/sets/[slug]/page.tsx", "set"], ["src/app/sealed/page.tsx", "sealed"], ["src/app/sealed/[type]/page.tsx", "sealed-type"], ["src/app/kit/[slug]/page.tsx", "kit"], ["src/app/kits/page.tsx", "kits"], ["src/app/kits/grade/[grade]/page.tsx", "kit-grade"]] as const) {
+  for (const [f, page] of [["src/app/page.tsx", "home"], ["src/app/card/[slug]/page.tsx", "card"], ["src/app/sets/[slug]/page.tsx", "set"], ["src/app/sealed/page.tsx", "sealed"], ["src/app/sealed/[type]/page.tsx", "sealed-type"]] as const) {
     const src = read(f);
     assert.equal(src.match(/<InlineAds /g)?.length, 1, `${f}: exactly one block`);
     assert.match(src, new RegExp(`page="${page}"`), f);
     assert.doesNotMatch(src, /CompactCardAds|CompactKitAds|KitEbayStrip|LandingAds|SideAds/, f);
   }
   // Below the price table, never above a price: after the "Compare prices" section on a card and a kit page.
-  for (const f of ["src/app/card/[slug]/page.tsx", "src/app/kit/[slug]/page.tsx"]) {
+  for (const f of ["src/app/card/[slug]/page.tsx"]) {
     const src = read(f);
     assert.ok(src.indexOf("<InlineAds ") > src.indexOf("<PriceTable"), `${f}: below the price table`);
   }

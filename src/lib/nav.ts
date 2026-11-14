@@ -26,6 +26,9 @@ export interface NavOptions {
 }
 const readyFor = (o: NavOptions) => (l: NavLink) => o.history !== false || !NEEDS_HISTORY.has(l.href);
 
+/** Games named in the menus. */
+export const NAV_GAMES = 8;
+
 export interface NavLink {
   href: string;
   label: string;
@@ -39,7 +42,9 @@ export function navGroups(o: NavOptions = {}): NavGroup[] {
   const ready = readyFor(o);
   const prices: NavLink[] = [
     ...(o.sale ? [o.sale] : []),
-    ...(SITE.lines ?? []).map((l) => ({ href: `/games/${l.slug}`, label: l.short })),
+    // The biggest games by name (SITE.lines is in market order), every other one a click away on /games.
+    ...(SITE.lines ?? []).slice(0, NAV_GAMES).map((l) => ({ href: `/games/${l.slug}`, label: l.short })),
+    ...((SITE.lines ?? []).length > NAV_GAMES ? [{ href: "/games", label: "All games" }] : []),
     { href: "/sealed", label: "Sealed products" },
     { href: "/sealed/booster-box", label: "Booster boxes" },
     { href: "/sets", label: "Sets" },
@@ -52,9 +57,7 @@ export function navGroups(o: NavOptions = {}): NavGroup[] {
   ];
   const tools: NavLink[] = TOOLS.filter((t) => t.href !== "/tools/deal-finder").map((t) => ({ href: t.href, label: t.name }));
   const guides: NavLink[] = [
-    { href: "/blog", label: "Guides" },
     { href: "/price-report", label: "Monthly price report" },
-    { href: "/forum", label: "Community forum" },
     ...(creatorsOn() ? [{ href: "/creators", label: `${SITE.gameShort} creators` }] : []),
     { href: "/about", label: "About" },
   ];
@@ -75,14 +78,13 @@ export function navGroups(o: NavOptions = {}): NavGroup[] {
 export function phoneNav(o: NavOptions = {}): NavLink[] {
   const ready = readyFor(o);
   return [
-    ...(SITE.lines ?? []).map((l) => ({ href: `/games/${l.slug}`, label: l.short })),
+    ...(SITE.lines ?? []).slice(0, 5).map((l) => ({ href: `/games/${l.slug}`, label: l.short })),
+    ...((SITE.lines ?? []).length > 5 ? [{ href: "/games", label: "All games" }] : []),
     { href: "/sealed", label: "Sealed" },
     { href: "/sets", label: "Sets" },
     ...(SITE.kits ? [{ href: "/kits", label: SITE.kits.label }] : []),
     { href: "/tools/deal-finder", label: "Deals" },
     { href: "/movers", label: "Movers" },
     { href: "/tools", label: "Tools" },
-    { href: "/blog", label: "Guides" },
-    { href: "/forum", label: "Forum" },
   ].filter(ready);
 }

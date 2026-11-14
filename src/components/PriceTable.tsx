@@ -12,7 +12,7 @@ import { SITE } from "@/site.config";
 import { CURRENCY, MARKETS, MARKET_LABEL, type Market, type Offer } from "@/lib/site-types";
 import { money } from "@/lib/format";
 import { Flag } from "./Flag";
-import { goHref, subId, tagged } from "@/lib/affiliate";
+import { ebaySearchUrl, goHref, subId, tagged } from "@/lib/affiliate";
 import { CartAddButton } from "./cart/CartAddButton";
 import { priceRows } from "@/lib/price-rows";
 import { useMarket } from "./ClientPrefs";
@@ -46,7 +46,7 @@ export const PIN_OUTLINE = {
 /** Where the phone's sticky buy bar hides (components/CardBuy.tsx). */
 export const PRICE_TABLE_ID = "price-comparison";
 
-export function PriceTable({ offers, fx, productId, page, compact = false, amazon = null, tableId = PRICE_TABLE_ID, product, image = null }: { /** the product's picture, for the cart list (components/cart) */ image?: string | null; offers: Offer[]; fx: Record<string, number>; productId: number; page: string; compact?: boolean; amazon?: Partial<Record<Market, string | AmazonCell>> | null; /** null in the quick view: the page's own table keeps the id the buy bar watches */ tableId?: string | null; /** the product's name: shows "Report a wrong price" under the table */ product?: string }) {
+export function PriceTable({ ebayQuery, offers, fx, productId, page, compact = false, amazon = null, tableId = PRICE_TABLE_ID, product, image = null }: { /** this site's eBay row when the data holds no eBay listing: a tagged search for exactly this product (owner, 2026-11-14: no eBay API here, "but we obviously want to make eBay money") */ ebayQuery?: string; /** the product's picture, for the cart list (components/cart) */ image?: string | null; offers: Offer[]; fx: Record<string, number>; productId: number; page: string; compact?: boolean; amazon?: Partial<Record<Market, string | AmazonCell>> | null; /** null in the quick view: the page's own table keeps the id the buy bar watches */ tableId?: string | null; /** the product's name: shows "Report a wrong price" under the table */ product?: string }) {
   const { market, setMarket } = useMarket();
   const [showOut, setShowOut] = useState(false);
   // eBay and TCGplayer lead the table (lib/price-rows.ts `display`); "Cheapest"
@@ -86,11 +86,30 @@ export function PriceTable({ offers, fx, productId, page, compact = false, amazo
       </span>}
     </div>
   );
+  // eBay is always the first row. With no eBay listing in the data it is a tagged search of the visitor's own eBay
+  // (the US site where eBay has none for the market), labelled Ad, with no price claimed.
+  const ebayMarket = market === "UK" || market === "AU" || market === "CA" ? market : "US";
+  const ebaySearchRow = ebayQuery && !pinned.some((o) => o.source === "ebay") ? (
+    <tr data-ebay-search-row className="border-t border-line">
+      <td className="px-3 py-2.5">
+        <span className="font-medium text-ink">{ebayMarket === "US" ? "eBay" : `eBay ${ebayMarket}`}</span>
+        <span className="ad-pill ml-2">Ad</span>
+      </td>
+      <td className="hidden px-3 py-2.5 text-xs text-muted sm:table-cell">New and sealed listings, cheapest first</td>
+      <td className="px-3 py-2.5 text-right text-xs text-muted">See prices</td>
+      <td className="px-3 py-2.5 text-right">
+        <a href={goHref({ url: ebaySearchUrl(ebayQuery, ebayMarket), source: "ebay", market }, productId, `${page}_pinned_search`)} rel="sponsored nofollow noopener" target="_blank" className="btn-primary min-h-10 whitespace-nowrap px-3 py-1.5">
+          Check eBay <span aria-hidden="true">↗</span>
+        </a>
+      </td>
+    </tr>
+  ) : null;
   if (!rows.length)
     return (
       <div className="overflow-hidden rounded-xl border border-dashed border-line">
         {picker}
-        <p className="p-4 text-sm text-muted">No live listings in {MARKET_LABEL[market]} right now. Try another market above, or check eBay below.</p>
+        {ebaySearchRow && <table className="w-full text-sm"><tbody>{ebaySearchRow}</tbody></table>}
+        <p className="p-4 text-sm text-muted">No store listings in {MARKET_LABEL[market]} right now. Try another market above{ebaySearchRow ? ", or check eBay" : ""}.</p>
         {product && <div className="px-4 pb-3"><ReportPrice product={product} region={market} buttonClassName="btn-ghost px-3 py-1.5" /></div>}
       </div>
     );
@@ -139,6 +158,7 @@ export function PriceTable({ offers, fx, productId, page, compact = false, amazo
           </tr>
         </thead>
         <tbody>
+          {ebaySearchRow}
           {amazonAfter < 0 && amazonRow}
           {shown.map((o, i) => {
             const c = conv(o);

@@ -31,6 +31,8 @@ export default function GamePage({ params }: { params: { slug: string } }) {
   const line = lineBySlug(params.slug);
   if (!line) notFound();
   const v = gameView(line);
+  // A game with no product today has no page (it comes back with its first product).
+  if (!v.sealed) notFound();
   return (
     <div className="flex flex-col gap-8" style={{ ["--game" as string]: line.color }}>
       <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", name: `${line.name} sets`, numberOfItems: v.sets.length, itemListElement: v.sets.slice(0, 30).map((s, i) => ({ "@type": "ListItem", position: i + 1, name: s.name, url: abs(`/sets/${s.slug}`) })) }} />

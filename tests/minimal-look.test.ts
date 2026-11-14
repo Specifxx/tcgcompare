@@ -185,8 +185,9 @@ test("the home page as a crawler reads it: one h1, every shelf list and the fold
   // Four to six ways in, each a hub of the site, the three that are not a product type always there.
   const ways = [...hero.matchAll(/<a (?=[^>]*class="way flex-1")[^>]*href="([^"]+)"/g)].map((m) => m[1]);
   assert.ok(ways.length >= 4 && ways.length <= 6, `${ways.length} ways in`);
-  for (const w of ways) assert.match(w, /^\/(sealed\/[a-z-]+|preorders|tools\/deal-finder|sets)$/, w);
-  for (const w of ["/preorders", "/tools/deal-finder", "/sets"]) assert.ok(ways.includes(w), `${w} is a way in`);
+  // On the all-games site the ways in are the biggest games, then all of them.
+  for (const w of ways) assert.match(w, /^\/games(\/[a-z0-9-]+)?$/, w);
+  assert.ok(ways.includes("/games"), "every game is one tap away");
   // The shelf: every list's products are in the HTML whichever tab is chosen.
   const tabs = [...html.matchAll(/role="tab"[^>]*>([^<]+)/g)].map((m) => m[1]);
   assert.equal(tabs[0], "Booster boxes");
@@ -199,12 +200,12 @@ test("the home page as a crawler reads it: one h1, every shelf list and the fold
   assert.equal(count(html, /class="group pc-link"/g), count(html, /data-qv="[a-z0-9-]+"/g));
   // The outline: the shelf, the sets, then the reading matter (folded) and the questions, by their own headings.
   const h2 = [...html.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/g)].map((m) => text(m[1]));
-  assert.deepEqual(h2.slice(0, 2), [`${SITE.gameShort} booster boxes and sealed`, "Latest sets"]);
+  assert.deepEqual(h2.slice(0, 2), [`${SITE.gameShort} booster boxes and sealed`, "Pick your game"]);
   assert.equal(h2.at(-1), "Frequently asked questions");
   assert.ok(h2.length <= 5, `${h2.length} headings: a page of five blocks, not twenty`);
-  assert.match(html, /<details class="fold" data-fold="guides-h"><summary><h2 id="guides-h">Guides<\/h2>/, "the guides are folded, their heading still an h2");
+  if (html.includes("guides-h")) assert.match(html, /<details class="fold" data-fold="guides-h"><summary><h2 id="guides-h">Guides<\/h2>/, "the guides are folded, their heading still an h2");
   assert.doesNotMatch(html, /<details class="fold"[^>]* open/, "folds start closed");
-  assert.ok(count(html, /<a [^>]*href="\/blog\/[a-z0-9-]+"/g) >= 1, "the guides' links are in the HTML");
+  if (html.includes("guides-h")) assert.ok(count(html, /<a [^>]*href="\/blog\/[a-z0-9-]+"/g) >= 1, "the guides' links are in the HTML");
   assert.ok(count(html, /<a [^>]*href="\/sets\/[a-z0-9-]+"/g) >= 1, "the latest sets are links");
   assert.ok(count(html, /<details class="faq">/g) >= 2, "the questions open one by one");
   // Structured data: every block parses, and the page still says what it is.

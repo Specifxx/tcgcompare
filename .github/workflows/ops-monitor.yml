@@ -3,9 +3,11 @@ name: Ops monitor
 # broke): live site, data freshness, store imports and the eBay budget.
 # Fails (and GitHub emails the owner) only when a check is red; every result,
 # amber included, goes to the `ops-status` branch for Empire HQ and the Monday report.
+# The schedule is OFF until the domain serves the site (DECISIONS.md, 2026-11-14): a check of a site that does not
+# exist yet would email the owner every three hours. Turn it on in the pull request that records the go-live.
 on:
-  schedule:
-    - cron: "40 */3 * * *"
+  # schedule:
+  #   - cron: "40 */3 * * *"
   workflow_dispatch:
 permissions:
   contents: write # the ops-status branch only

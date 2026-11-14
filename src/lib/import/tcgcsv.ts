@@ -68,8 +68,8 @@ export function sealedTypeOf(name: string): string {
   if (/deck display|decks? \[?display|display of \d+ (starter|structure|theme) decks?/.test(n)) return "Deck Display";
   if (/booster bundle|\bbundle\b|fat pack/.test(n)) return "Bundle";
   if (/trove/.test(n)) return "Illumineer's Trove";
-  if (/booster (box|display)|\bdisplay\b|\bbooster box\b/.test(n)) return "Booster Box";
   if (/\bmega[- ]?tins?\b|\btins?\b/.test(n)) return "Tin";
+  if (/booster (box|display)|\bdisplay\b|\bbooster box\b/.test(n)) return "Booster Box";
   if (/blister/.test(n)) return "Blister Pack";
   if (/commander deck/.test(n)) return "Commander Deck";
   if (/structure deck/.test(n)) return "Structure Deck";

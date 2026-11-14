@@ -46,7 +46,8 @@ export function gameView(line: GameLine): GameView {
   return view;
 }
 
-export const gameViews = (): GameView[] => LINES.map(gameView);
+/** Every game with a product today, in SITE.lines order (the biggest markets first). */
+export const gameViews = (): GameView[] => LINES.map(gameView).filter((v) => v.sealed > 0);
 
 // One game's sealed products by product type (/games/<game>/<type>): a Fusion World player never wades through Union Arena or
 // Digimon boxes (owner, 2026-11-09). A hub exists for any type the game has products in; it is indexed, listed in the sitemap and

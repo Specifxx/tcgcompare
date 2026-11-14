@@ -1,66 +1,34 @@
-# YGO Compare
+# TCG Prices
 
-Free Yu-Gi-Oh! TCG **sealed** price comparison: every booster box, pack, tin,
-structure deck and collection, compared across TCGplayer, eBay, Amazon and Yu-Gi-Oh!
-game stores (US, UK, Canada, Australia), updated daily. No single cards since
-2026-11-06 (owner): every old card URL 301s to its set (`data/redirects/cards.json`).
-
-Built on the Rift Compare playbook (riftcompare.com, repo `Specifxx/TCGEmpire`). It
-runs the Dex / MTG Compare engine's look on its own data layer, like Gundam Compare
-and WargameCompare, and is no longer a sister of the Lorcana / Cyberpunk / Bandai card
-engine: change this repo on its own.
+Sealed price comparison for every trading card game people buy (tcgprices.app, not yet live): booster boxes, cases,
+trainer boxes, bundles, tins and decks for 31 games, compared across TCGplayer, eBay and over a thousand card stores in
+the US, UK, Canada, Australia, Europe and Singapore. A Compare Empire site (RiftCompare is `Specifxx/TCGEmpire`),
+started 2026-11-14 from YGO Compare's sealed engine and BandaiCompare's multi-game parts.
 
 ## How it works
 
-```
-GitHub Actions, daily 12:17 UTC (refresh-prices.yml)
-  TCGCSV (TCGplayer catalogue + prices, category 2; sealed products only)
-  + every Shopify store in src/content/stores.ts  (products.json)
-  + eBay Browse API, budgeted (2,200 calls/day, every sealed product in US/UK/CA/AU)
-  → data/public/*.json, data/history/<set>.json, data/state/*.json
-  → commit to main with "[deploy]" in the subject  → one Vercel build a day
-  → IndexNow ping
-```
+- **Catalogue and TCGplayer prices**: TCGCSV, one TCGplayer category per game in `SITE.lines` (`src/site.config.ts`,
+  `src/lib/import/tcgcsv.ts`). Sealed products only.
+- **Store prices**: read from our sister sites' published data, never from the stores a second time
+  (`src/lib/import/sisters.ts`). An offer is taken only when it names its product by TCGplayer's product id.
+- **Store vetting**: every import refuses a blocked store, a store with no domain of its own and a store whose shelf
+  is priced far under market (`src/lib/import/vet.ts`, `data/store-blocklist.json`).
+- **Which products get a page**: only ones with demand today (`src/lib/import/focus.ts`).
+- **eBay**: no eBay API. Every product's first row is a tagged eBay search; a sister site's own eBay listing is
+  reused where it has one.
+- **Data**: committed JSON under `data/public/`, written by `.github/workflows/refresh-prices.yml` twice a day. No
+  database.
 
-* **Public pages never touch the database.** They read the committed JSON
-  (`src/lib/data.ts`), shipped with the deployment. Product, set, sealed-type
-  and pre-order pages are one Vercel CDN copy a day each (`force-dynamic` +
-  `CDN_PAGES` in next.config.js), nothing prerendered at build.
-* **There is no database.** No accounts, no Premium, no email: the site
-  compares prices and earns through affiliate links (eBay, TCGplayer, Amazon).
-* **Deploys are gated** (`scripts/vercel-ignore-build.sh`): production builds
-  only when the commit subject has `[deploy]`; previews need `[preview]`;
-  `claude/*` branches never deploy.
-
-## Features
-
-Sealed product pages with a price row per store (cheapest in-stock first,
-affiliate buy links through `/go`, each click a Vercel `buy_click` event),
-price history charts, set pages, movers, a pre-order tracker, guides, the daily
-Price Duel, Deal Finder and a selling-fee calculator. Dark theme by default with
-a light toggle, and a Halloween theme that switches itself off at the
-visitor's midnight on 31 October.
-
-Matching: a store title is read as sealed (`looksSealed`) and matched by set, product
-type and edition (`matchSealed`); 1st Edition / Unlimited is read from the title,
-never guessed. The card matcher is still in `src/lib/import/match.ts` but has no
-cards to match.
-
-Finding stores: `.github/workflows/probe-stores.yml` checks every candidate in
-`research/candidate-hosts.txt` for Yu-Gi-Oh! collections and prints a
-`stores.ts` listing to review.
-
-## Run locally
+## Run it
 
 ```
-npm install
-cp .env.example .env
-npx tsx scripts/import-all.ts   # fetch data (EBAY_REFRESH=false to skip eBay)
-npm run dev
+npm ci
+npm run dev          # reads data/public
+npm run typecheck && npm run lint && npm test
 ```
 
-Checks: `npm run typecheck`, `npm run lint`, `npm test`.
+The import needs the open internet and the sister repositories beside it, so it runs in GitHub Actions
+(`refresh-prices.yml` on `main`; `trial-import.yml` on a `claude/**` branch whose commit message carries
+`[trial-import]`).
 
-## Going live
-
-See `docs/SETUP.md` (and the Claude in Chrome prompt in `docs/CHROME-SETUP-PROMPT.md`).
+Read `CLAUDE.md` before changing anything, and `DECISIONS.md` for why things are the way they are.
