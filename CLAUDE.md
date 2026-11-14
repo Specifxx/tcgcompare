@@ -40,6 +40,20 @@ every product (`PriceTable` `ebayQuery`): a tagged search of the visitor's own e
 claimed. Campaign 5339155912, customid prefix `tcgprices`. Pinned paid rows are eBay then TCGplayer only; every store
 is an ordinary row; Amazon only with a real Amazon price.
 
+## Amazon's price on the Amazon row (not live yet: no credentials)
+
+`scripts/amazon-asins.ts` (in `refresh-prices.yml`, after the import) finds each sealed product's ASIN on each market's own
+Amazon with the Creators API's searchItems and keeps it only when `lib/import/amazon-match.ts` reads the title as THAT
+product: the title names the product's own game (`amazon` words per line in `site.config.ts`) and no other, it is read
+against that game's products only, set names lose their "ME06: " code, other kinds of pack (Double Pack Set, release
+event, empty box) are refused, then `matchSealed` decides. Pokémon Japan and foreign-named products are never searched
+(every Japanese title is refused). ASINs and misses are committed in `data/amazon/` (prices never);
+`scripts/fetch-amazon-prices.ts` runs first in every build into the git-ignored `data/amazon-live/`, and the product page
+shows the row only with a live price under 24 hours old (`lib/amazon-live.ts`). Never a sort, cheapest, deal, feed or
+quick-view price. Credentials `AMAZON_CREATORS_AU_*` (and optionally `_US_*`) are **not set yet** in this repo's GitHub
+secrets or Vercel: until the owner adds them every run writes `{"state":"off"}` and no row shows.
+`tests/amazon-api.test.ts`, `tests/amazon-match.test.ts`.
+
 ## Deploys are gated: never add `[deploy]` to a commit subject
 
 One production build per 12 hours, production only (owner, 2026-11-02: Vercel spend capped at $5 to $6 a day).

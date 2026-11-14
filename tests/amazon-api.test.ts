@@ -7,7 +7,8 @@ import { amazonTitleMatches } from "../scripts/amazon-asins";
 import { amazonItemUrl } from "@/lib/affiliate";
 import { credentialsFor, itemsOf, pickListing, tokenEndpoint, type Item } from "@/lib/amazon-creators";
 import { isFreshAmazonPrice } from "@/lib/amazon-live";
-import { buildIndex } from "@/lib/import/match";
+import { amazonMatcher } from "@/lib/import/amazon-match";
+import { LINES } from "@/lib/lines";
 import type { Product, SetInfo } from "@/lib/site-types";
 
 test("the token endpoint follows the credential version, else the store's home region", () => {
@@ -53,12 +54,12 @@ test("a price is shown for 24 hours after it was fetched, never from the future"
 });
 
 const product = (id: number, name: string, extra: Partial<Product> = {}): Product => ({ id, slug: String(id), name, kind: "sealed", setId: 1, number: null, rarity: null, attrs: {}, sealedType: null, image: null, tcgUrl: "", printings: [], ...extra });
-const set: SetInfo = { id: 1, name: "Hyperia City", code: "14", slug: "hyperia-city", releasedOn: "2026-10-16", productCount: 2, upcoming: false };
+const set: SetInfo = { id: 1, name: "Hyperia City", code: "14", slug: "hyperia-city", releasedOn: "2026-10-16", productCount: 2, upcoming: false, line: "lor" };
 
 test("an Amazon title matches a sealed product only as the store matcher's own product", () => {
   const box = product(1, "Hyperia City Booster Box");
   const etb = product(2, "Hyperia City Illumineer's Trove");
-  const idx = buildIndex([box, etb], [set], "fraction", {});
+  const idx = amazonMatcher([box, etb], [set], LINES, "fraction", {});
   assert.ok(amazonTitleMatches(box, "Disney Lorcana TCG: Hyperia City Booster Box (24 Packs)", idx));
   assert.ok(!amazonTitleMatches(box, "Disney Lorcana TCG: Hyperia City Illumineer's Trove", idx), "another product");
   assert.ok(!amazonTitleMatches(box, "Disney Lorcana Hyperia City Booster Pack", idx), "a pack is not a box");

@@ -24,6 +24,45 @@ const g = (
   blurb: string,
 ): GameLine => ({ id, tcgcsvCategoryId, name, short, slug, tcgplayerSlug, ebayQuery, color, blurb });
 
+// How an Amazon title names each game (lib/import/amazon-match.ts): every word of one `any` phrase, no whole `not`
+// phrase (accents folded, ß read as ss). The `not`s keep games that share a word apart: Pokémon Japan's titles say
+// "Japanese" (and the store matcher refuses every foreign title, so it is never searched), Magic's FINAL FANTASY and
+// Godzilla products are Magic's, Fusion World is not the older Dragon Ball Super game, the Shadowverse Vanguard
+// collab is Shadowverse's, and Weiß Schwarz's hololive sets are Weiß Schwarz's.
+const AMAZON: Record<string, GameLine["amazon"]> = {
+  mtg: { any: ["magic the gathering", "mtg"] },
+  pkm: { any: ["pokemon"], not: ["japanese"] },
+  op: { any: ["one piece"] },
+  ygo: { any: ["yu gi oh", "yugioh"] },
+  rb: { any: ["riftbound"] },
+  lor: { any: ["lorcana"] },
+  gun: { any: ["gundam"] },
+  pkj: { any: ["pokemon japanese"] },
+  ua: { any: ["union arena"] },
+  fw: { any: ["fusion world"] },
+  dg: { any: ["digimon"] },
+  swu: { any: ["star wars unlimited"] },
+  fab: { any: ["flesh blood"] },
+  ws: { any: ["weiss schwarz"] },
+  cfv: { any: ["cardfight vanguard"], not: ["shadowverse"] },
+  sor: { any: ["sorcery contested realm"] },
+  ga: { any: ["grand archive"] },
+  holo: { any: ["hololive official card game", "hololive ocg"], not: ["weiss schwarz"] },
+  gz: { any: ["godzilla card game"], not: ["universus", "magic the gathering", "mtg"] },
+  cp: { any: ["cyberpunk"] },
+  ff: { any: ["final fantasy tcg", "final fantasy trading card game", "fftcg"], not: ["magic the gathering", "mtg"] },
+  dbs: { any: ["dragon ball super"], not: ["fusion world"] },
+  sve: { any: ["shadowverse"] },
+  uvs: { any: ["universus"] },
+  nar: { any: ["naruto"] },
+  ele: { any: ["elestrals"] },
+  cr: { any: ["cookierun", "cookie run"] },
+  pal: { any: ["palworld"] },
+  wx: { any: ["wixoss"] },
+  bss: { any: ["battle spirits"] },
+  ac: { any: ["alpha clash"] },
+};
+
 const LINES: GameLine[] = [
   g("mtg", 1, "Magic: The Gathering", "Magic", "magic-the-gathering", "magic", "magic the gathering", "#b8742a", "Play Booster and Collector Booster boxes, bundles, Commander decks and Secret Lair-era sealed product."),
   g("pkm", 3, "Pokémon", "Pokémon", "pokemon", "pokemon", "pokemon", "#d9a514", "Booster boxes, Elite Trainer Boxes, booster bundles, tins and premium collections from every current set."),
@@ -56,7 +95,7 @@ const LINES: GameLine[] = [
   g("wx", 67, "WIXOSS", "WIXOSS", "wixoss", "all", "wixoss", "#9a5a9a", "English booster boxes and starter decks."),
   g("bss", 72, "Battle Spirits Saga", "Battle Spirits", "battle-spirits-saga", "all", "battle spirits saga", "#b0553c", "Booster boxes and starter decks."),
   g("ac", 78, "Alpha Clash", "Alpha Clash", "alpha-clash", "all", "alpha clash tcg", "#5a8a4a", "Booster boxes and starter decks."),
-];
+].map((l) => ({ ...l, ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}) }));
 
 export const SITE: SiteConfig = {
   // The affiliate sub-id prefix (eBay customid, Impact subId1): `tcgprices-us-card_pinned-1234`.

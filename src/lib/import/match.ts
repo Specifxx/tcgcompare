@@ -203,6 +203,21 @@ export interface IndexOptions {
   rarityMustAgree?: boolean;
   rarityAliases?: Record<string, string[]>;
   setEditions?: SetEdition[];
+  /** Read a set named "ME06: Delta Reign" as "Delta Reign", its "ME06" kept as one more code of the set. TCGplayer
+   *  puts the release code in front of a third of its set names, and a title rarely spells it, so with the code a
+   *  word of the set name every title needs, those sets could never match. Off by default (the Amazon matcher sets
+   *  it, lib/import/amazon-match.ts). */
+  stripSetCodes?: boolean;
+}
+
+// A release code in front of a set name: "ME06: ", "SWSH10: ", "DZ-BT16: ", "SV: ", "MEZ: ". A word with a digit, or a
+// short all-capital one; "Commander: ", "Tarkir: " and "CookieRun: " are names, not codes.
+const SET_CODE_PREFIX = /^([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*):\s+(?=\S)/;
+/** A set name without its release-code prefix, and the code ("" when it has none). */
+export function splitSetCode(name: string): { name: string; code: string } {
+  const m = name.match(SET_CODE_PREFIX);
+  if (!m || !(/\d/.test(m[1]) || /^[A-Z]{2,5}$/.test(m[1]))) return { name, code: "" };
+  return { name: name.slice(m[0].length), code: m[1] };
 }
 
 /** The edition a title points at: a word, null (none, and no default), or
@@ -224,7 +239,15 @@ export function editionAgrees(p: Product, title: string, idx: MatchIndex): boole
   return titleEdition(title, idx.editions) === own;
 }
 
-export function buildIndex(products: Product[], sets: SetInfo[], style: NumberStyle, opts: IndexOptions = {}): MatchIndex {
+export function buildIndex(products: Product[], setList: SetInfo[], style: NumberStyle, opts: IndexOptions = {}): MatchIndex {
+  const prefixes = new Map<number, string>();
+  const sets = opts.stripSetCodes
+    ? setList.map((s) => {
+        const { name, code } = splitSetCode(s.name);
+        if (code) prefixes.set(s.id, code);
+        return { ...s, name };
+      })
+    : setList;
   const byNumber = new Map<string, Product[]>();
   const bySetNumber = new Map<string, Product[]>();
   const bySetName = new Map<string, Product[]>();
@@ -263,6 +286,9 @@ export function buildIndex(products: Product[], sets: SetInfo[], style: NumberSt
   };
   for (const st of sets) {
     addCode(st.code, st.id);
+    const prefix = prefixes.get(st.id) ?? "";
+    addCode(prefix, st.id);
+    addCode(prefix.replace(/-/g, ""), st.id);
     const words = st.name.replace(/[^A-Za-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);
     if (words.length >= 2) addCode(words.map((w) => w[0]).join(""), st.id);
   }
