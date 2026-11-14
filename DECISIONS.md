@@ -245,3 +245,18 @@ buy button and every placement are unchanged. A caller can still ask for the bar
 The owner bought tcgprices.app on Vercel (team Specifix's projects, auto-renew off) and it was added to the `tcgprices`
 project as the production domain, apex only: no redirect to www, because `SITE.domain` and every canonical are the apex.
 Vercel Web Analytics is on (the plan's included tier). The ops monitor's three-hourly schedule is turned on with it.
+
+## 2026-11-14: No eBay price anywhere, eBay is never the cheapest
+
+A product page showed an "eBay AU" row marked BEST PRICE at A$639.95 (Magnificent Maestros display) and the "Cheapest
+in Australia" box named eBay. The import was reusing a sister site's own eBay listing as an offer (and would have used
+our own eBay state), so 2,646 eBay prices sat on 450 products and the homepage held 12 eBay picks. That breaks two rules
+at once: this site has no eBay prices (eBay is the first pinned row, a tagged search, no price claimed), and eBay or
+Amazon is never "the cheapest" on any Compare site.
+
+- The import adds no eBay offer at all; `ebay-picks.json` is written empty and never read.
+- Read side, so the published data is clean before the next import: `decodeEntry` and `summaryOf` drop eBay offers,
+  `summarize` leaves eBay and Amazon out of each market's cheapest and the store counts.
+- `priceRows().cheapest` skips eBay and Amazon (`neverCheapest`), and a paid alternative is never cheaper than it.
+- The ops monitor's "No eBay prices" check (`src/lib/no-ebay-prices.ts`) is red when an eBay offer or pick reaches
+  `data/public`; `tests/no-ebay-prices.test.ts` pins every layer.

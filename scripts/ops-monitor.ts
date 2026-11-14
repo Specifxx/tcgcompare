@@ -13,6 +13,7 @@ import type { Meta } from "@/lib/site-types";
 import { SITE_HOST } from "@/lib/site";
 import { readKitFile } from "@/lib/kit-store";
 import { crawlVerdict } from "@/lib/import/crawl";
+import { ebayPriceVerdict } from "@/lib/no-ebay-prices";
 
 type Result = { name: string; status: "ok" | "warn" | "fail"; detail: string };
 const site = (process.env.NEXT_PUBLIC_SITE_URL || `https://${SITE_HOST}`).replace(/\/$/, "");
@@ -60,13 +61,9 @@ async function main() {
       const bad = Object.entries(meta.stores).filter(([, s]) => !s.ok || s.matched === 0);
       return bad.length ? { status: bad.length > SITE.stores.length / 3 ? "fail" : "warn", detail: bad.map(([k, s]) => `${k}: ${s.error ?? "0 matched"}`).join("; ") } : { status: "ok", detail: `${SITE.stores.length} stores` };
     }),
-    check("eBay budget", async () => {
-      if (!process.env.EBAY_CLIENT_ID) return { status: "warn", detail: "EBAY_CLIENT_ID not set in GitHub secrets — no eBay prices" };
-      if (!meta.ebay) return { status: "warn", detail: "no eBay run recorded yet" };
-      const age = (Date.now() - new Date(meta.ebay.at).getTime()) / 3_600_000;
-      if (age > 30) return { status: "warn", detail: `last eBay run ${age.toFixed(0)}h ago` };
-      return { status: "ok", detail: `${meta.ebay.calls}/${meta.ebay.budget} calls on ${meta.ebay.day}, ${meta.ebay.eligible} eligible` };
-    }),
+    // TCG Prices has no eBay prices (owner, 2026-11-14): eBay is the pinned tagged search only, never a price row,
+    // "Best price" or "Cheapest in". An eBay offer in the published data is red.
+    check("No eBay prices", async () => ({ ...ebayPriceVerdict(path.join(process.cwd(), "data/public")) })),
     // Our own crawl of the games no sister covers (scripts/crawl-uncovered.ts, before every import; lib/import/crawl.ts).
     check("Own store crawl", async () => {
       let listed: unknown[] = [];

@@ -33,9 +33,12 @@ export interface SummaryEntry {
   e?: OfferTuple[];
 }
 
+/** TCG Prices has no eBay prices (owner, 2026-11-14): eBay is a tagged search link only, so an eBay offer in a data file is dropped. */
+export const isEbayOffer = (o: Pick<Offer, "source">) => o.source === "ebay";
+
 export const decodeEntry = (e: StoredEntry): PriceEntry => ({
   tcg: e.t,
-  offers: e.o.map(decodeOffer).filter((x): x is Offer => !!x),
+  offers: e.o.map(decodeOffer).filter((x): x is Offer => !!x && !isEbayOffer(x)),
   change7d: e.c7,
   change30d: e.c30,
 });
@@ -44,7 +47,7 @@ export function summarize(e: PriceEntry): SummaryEntry {
   const best = new Map<string, Offer>();
   const ebay = new Map<string, Offer>();
   for (const o of e.offers) {
-    if (!o.inStock) continue;
+    if (!o.inStock || isEbayOffer(o) || o.source === "amazon") continue;
     const k = o.source === "tcgplayer" ? "tcg" : o.market;
     const cur = best.get(k);
     if (!cur || o.cents < cur.cents) best.set(k, o);
@@ -55,8 +58,8 @@ export function summarize(e: PriceEntry): SummaryEntry {
     t: e.tcg,
     c7: e.change7d,
     c30: e.change30d,
-    n: new Set(e.offers.filter((o) => o.inStock).map((o) => o.source)).size,
-    l: new Set(e.offers.map((o) => o.source)).size,
+    n: new Set(e.offers.filter((o) => o.inStock && !isEbayOffer(o)).map((o) => o.source)).size,
+    l: new Set(e.offers.filter((o) => !isEbayOffer(o)).map((o) => o.source)).size,
     b: [...best.values()].map(encodeOffer).filter((x): x is OfferTuple => !!x),
     ...(e8.length ? { e: e8 } : {}),
   };
@@ -68,8 +71,9 @@ export function writePrices(byId: Record<string, PriceEntry>, products: Product[
   const bySet = new Map<number, Record<string, StoredEntry>>();
   const summary: Record<string, SummaryEntry> = {};
   for (const p of products) {
-    const e = byId[p.id];
-    if (!e) continue;
+    const raw = byId[p.id];
+    if (!raw) continue;
+    const e: PriceEntry = { ...raw, offers: raw.offers.filter((o) => !isEbayOffer(o)) };
     if (!bySet.has(p.setId)) bySet.set(p.setId, {});
     bySet.get(p.setId)![p.id] = {
       t: e.tcg,

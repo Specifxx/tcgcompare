@@ -25,8 +25,8 @@ for a game a sister covers (our own crawl, below, reads only the games none cove
 from `data/public/sealed-listings.json` on its `main`: a group's TCGplayer id is the one in its own TCGplayer row's
 url, one id per group and one group per id, or nothing. Never match a sister's offer by title. A sister whose data is
 over 72 hours old is skipped and reported in `meta.json`, and so is every store the sister's own import has not read
-for 72 hours (its `meta.json` `seen` time). eBay, TCGplayer, Amazon and Cardmarket rows of a sister are left behind,
-except the sister's own eBay listing for the product, which is reused.
+for 72 hours (its `meta.json` `seen` time). eBay, TCGplayer, Amazon and Cardmarket rows of a sister are left behind, the sister's own eBay listing too
+(2026-11-14: no eBay price on this site).
 
 ## Our own crawl (games no sister covers)
 
@@ -77,7 +77,7 @@ page. `data/public/store-vetting.json` lists who was refused and why. `tests/vet
 This site has NO eBay keyset and must never be given one or pointed at a sister's. eBay is the first pinned row of
 every product (`PriceTable` `ebayQuery`): a tagged search of the visitor's own eBay, labelled Ad, with no price
 claimed. Campaign 5339155912, customid prefix `tcgprices`. Pinned paid rows are eBay then TCGplayer only; every store
-is an ordinary row; Amazon only with a real Amazon price.
+is an ordinary row; Amazon only with a real Amazon price. No eBay price ever reaches an offer, the data or a page, and eBay or Amazon is never "the cheapest" (`src/lib/no-ebay-prices.ts`, ops check "No eBay prices", `tests/no-ebay-prices.test.ts`).
 
 ## Amazon's price on the Amazon row (not live yet: no credentials)
 
