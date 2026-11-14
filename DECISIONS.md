@@ -111,3 +111,23 @@ out when there is none. The eBay search now adds the game's words unless the nam
   meta.json entry now lists its store keys (`stores`); a down one keeps `at` (its last fresh data) and says how many rows
   were `carried` and products `held`. The hold has no end date on purpose: a sister down for days is an ops problem,
   not a reason to 301 hundreds of pages and bring them back the day it returns.
+
+## 2026-11-14: Rift Compare's stores join, and every sealed sister's stores are judged one by one
+
+- **Per-store freshness.** The 72-hour rule was checked only on a sealed sister's (DexCompare, MTG Compare) export
+  time, so a shop the sister had not managed to read for days still came through as in stock and counted toward the
+  focus rule and the vetting medians. Their own sites show such a row as "unknown"; now `readSealed` skips any offer
+  whose store's `meta.json` `seen` time (the export time when a store has none) is over 72 hours old, as the snapshot
+  reader already did per row. On the 14 November data: MTG Compare loses 194 rows (124 in stock) from 6 stores,
+  DexCompare 103 (32 in stock) from 7.
+- **Rift Compare (Riftbound), a fourth kind "rift".** Its public data is on `main`: `data/public/sealed-listings.json`
+  groups every store row under its own sealed classifier's `groupKey` (set|type), and each group's `retailer:
+  "tcgplayer"` row links `tcgplayer.com/product/<id>`. That id prices the group's store rows only when the group names
+  one id and no other group names it; the join is Rift Compare's own matching, never a title of ours. eBay (`ebay`,
+  `ebay_<market>`), TCGplayer, Amazon and Cardmarket rows are left behind. Freshness is per store and market, from
+  `meta.seen.SealedListing["<retailer>|<country>"]`: a pair with no stamp or one over 72 hours old is skipped (one AU
+  shop, last read 27 October, was still published as in stock). The row carries its store (key, name, url host,
+  country), so no store list is read. The workflows check out only those two files (never `data/public/listings/`,
+  about 84 MB). On the 13 November export: 2,677 store rows (1,093 in stock) on 71 products, 66 of them in this
+  catalogue (2,667 rows), from 223 store-market pairs. A Riftbound group with no TCGplayer row (163 of them, such as
+  `REC|Booster Box`) gets nothing until Rift Compare publishes one.
