@@ -131,3 +131,14 @@ out when there is none. The eBay search now adds the game's words unless the nam
   about 84 MB). On the 13 November export: 2,677 store rows (1,093 in stock) on 71 products, 66 of them in this
   catalogue (2,667 rows), from 223 store-market pairs. A Riftbound group with no TCGplayer row (163 of them, such as
   `REC|Booster Box`) gets nothing until Rift Compare publishes one.
+
+## 2026-11-14: The 2050 layer's light theme and reduced motion, fixed
+
+- The hero's coloured word kept the dark theme's lights in the light theme, where the cyan read 1.98:1 on the near-white
+  page. The light theme draws it with the same three lights a shade deeper (sky-700, indigo-700, violet-600): every point
+  of the sweep 5.2:1 or better on `--bg` and `--surface` (`tests/contrast.test.ts` samples the gradient).
+- `@view-transition` now sits inside `prefers-reduced-motion: no-preference`: the page cross-fade is motion too.
+- The marquee's chips carry their own space (`margin-right`) instead of the track's flex gap, so the -50% loop is exactly
+  one copy and no longer jumps 5px at each wrap.
+- Under reduced motion the row stands still, so it becomes a sideways scroller with no edge fade, and the hidden second
+  copy is not drawn: every game reachable by touch and mouse, each once. `tests/minimal-look.test.ts` pins all three.

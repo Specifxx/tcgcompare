@@ -93,3 +93,35 @@ test("the buy button is written in the surface colour, so its words turn dark wh
   assert.ok(contrast(dark.get("open")!, dark.get("surface")!) > 8.7, "dark theme: 8.77:1");
   assert.ok(contrast(light.get("open")!, light.get("surface")!) > 5.7, "light theme: 5.71:1, as it always was");
 });
+
+/** Every point of a `linear-gradient(<angle>, #hex p%, …)` sweep, sampled every 1%, interpolated in sRGB as the browser does. */
+function sweep(gradient: string): Rgb[] {
+  const stops = [...gradient.matchAll(/#([0-9a-f]{6}) (\d+)%/gi)].map(([, hex, at]) => ({ c: [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)) as Rgb, at: +at / 100 }));
+  assert.ok(stops.length >= 2, `stops read from ${gradient}`);
+  const out: Rgb[] = [];
+  for (let t = 0; t <= 100; t++) {
+    const x = t / 100;
+    const i = Math.max(0, stops.findIndex((s, k) => k < stops.length - 1 && x <= stops[k + 1].at));
+    const [a, b] = [stops[i], stops[i + 1]];
+    const f = b.at === a.at ? 0 : (x - a.at) / (b.at - a.at);
+    out.push(a.c.map((v, j) => v + (b.c[j] - v) * f) as Rgb);
+  }
+  return out;
+}
+
+test("the hero's coloured word reads at 3:1 or better (large text) at every point of its moving light, in both themes", () => {
+  // Found 2026-11-14: the light theme drew the word with the dark theme's cyan, 1.98:1 on the near-white page.
+  const rule = /:root\[data-theme="light"\] \.hero-h1 \.text-brand \{\s*background-image: (linear-gradient\([^;]*\));/.exec(css);
+  assert.ok(rule, "the light theme has its own gradient for the word");
+  const lightWord = sweep(rule[1]);
+  for (const ground of ["bg", "surface"]) {
+    const worst = Math.min(...lightWord.map((c) => contrast(c, light.get(ground)!)));
+    assert.ok(worst >= 4.5, `light theme on --${ground}: ${worst.toFixed(2)}:1 at the weakest point`);
+  }
+  // The dark theme keeps the three lights themselves, read from the 2050 layer's tokens.
+  const neo = tokens(/:root \{([^}]*--neo-a[^}]*)\}/g);
+  for (const name of ["neo-a", "neo-b", "neo-c"]) {
+    const ratio = contrast(neo.get(name)!, dark.get("bg")!);
+    assert.ok(ratio >= 3, `--${name} on the dark --bg: ${ratio.toFixed(2)}:1`);
+  }
+});
