@@ -2,7 +2,7 @@
 // Compare PUBLIC_DATA_MODE=files lesson, made the only mode here). They ship
 // with the deployment (next.config.js outputFileTracingIncludes) and are read
 // once per server instance.
-import { lineOfSet } from "./lines";
+import { lineById, lineOfSet } from "./lines";
 import fs from "node:fs";
 import path from "node:path";
 import { isPreorder } from "./preorders";
@@ -263,4 +263,10 @@ export function deals(limit = 40): Deal[] {
 export function gameHubOfSet(setSlug: string): string {
   const l = lineOfSet(setBySlug(setSlug));
   return l ? `/games/${l.slug}` : "/sealed";
+}
+
+/** A game's hub by its SITE.lines id, or null for an id the site does not know. */
+export function gameHubOfLine(lineId: string): string | null {
+  const l = lineById(lineId);
+  return l ? `/games/${l.slug}` : null;
 }

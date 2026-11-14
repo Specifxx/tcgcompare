@@ -47,7 +47,7 @@ export const SISTERS: SisterSource[] = [
 export const MAX_AGE_H = 72;
 const NOT_STORES = new Set(["ebay", "tcgplayer", "amazon"]);
 
-export interface SisterStatus { ok: boolean; offers: number; products: number; at: string | null; error?: string }
+export interface SisterStatus { ok: boolean; offers: number; products: number; at: string | null; error?: string; stores?: string[] }
 export interface SisterResult {
   offers: Map<number, Offer[]>;
   /** eBay listings an engine sister already found with its own calls (one per product and market): reused, never searched again. */
@@ -253,15 +253,17 @@ export function loadSisterOffers(root: string, now = new Date(), sources: Sister
       const ageH = got.at ? (now.getTime() - new Date(got.at).getTime()) / 3_600_000 : Infinity;
       if (!(ageH <= MAX_AGE_H)) throw new Error(`data is ${Number.isFinite(ageH) ? `${Math.round(ageH)} hours` : "of unknown age"} old`);
       let n = 0;
+      const keys = new Set<string>();
       for (const [id, rows] of mine)
         for (const o of rows.values()) {
+          keys.add(o.source);
           if (!offers.has(id)) offers.set(id, []);
           offers.get(id)!.push(o);
           book.use(o.source);
           n++;
         }
       for (const [id, list] of mineEbay) ebay.set(id, list);
-      status[src.id] = { ok: true, offers: n, products: got.products, at: got.at };
+      status[src.id] = { ok: true, offers: n, products: got.products, at: got.at, stores: [...keys].sort() };
       console.log(`[sister] ${src.id}: ${n} offers on ${got.products} products (data of ${got.at})`);
     } catch (e) {
       const msg = (e as Error).message.slice(0, 200);
