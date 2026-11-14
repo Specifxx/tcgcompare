@@ -11,6 +11,7 @@ import "@/content/site.css";
 import { SITE } from "@/site.config";
 import { SITE_URL } from "@/lib/site";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
+import { Neo } from "@/components/Neo";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-surface focus:px-4 focus:py-2">
           Skip to content
         </a>
+        <Neo />
         <PrefsProvider>
           <Header />
           {/* ONE line under the header at most (the minimal look, 2026-11-13: two promo bars sat above every headline): the sale's

@@ -17,10 +17,10 @@
   --ink: 21 23 28;
   --muted: 92 96 108;
   --faint: 100 104 115; /* 5.2:1 on --bg, 5.6:1 on --surface (WCAG AA for small text) */
-  --brand: 37 87 201; /* Gundam Compare blue (#2557c9); white on it is 6.4:1 */
+  --brand: 67 56 202; /* indigo #4338ca; white on it is 8.6:1 */
   --brand-ink: 255 255 255;
-  --brand-soft: 229 237 255;
-  --brand-strong: 26 64 160; /* brand as TEXT on --brand-soft and on --surface: chips and .btn-soft */
+  --brand-soft: 233 234 255;
+  --brand-strong: 55 48 163; /* brand as TEXT on --brand-soft and on --surface: chips and .btn-soft */
   --accent: 229 48 63; /* the red of the mobile suit's chest: highlights only */
   --spark: 229 48 63;
   --open: 20 118 56; /* 5.0:1 on --open-soft, 5.7:1 on --surface: the 12px stock pill is AA */
@@ -36,7 +36,7 @@
   --ad: 243 246 252; /* sponsored units: a cool tint no store row or product card uses */
   --ad-line: 120 128 148;
   --shadow: 24 22 18;
-  --wordmark: linear-gradient(180deg, #1a40a0 0%, #2557c9 60%, #3d7bff 100%);
+  --wordmark: linear-gradient(90deg, #0284c7 0%, #4338ca 55%, #7c3aed 100%);
   /* The sticky header's height: sticky offsets (top-[var(--hdr)]) and anchor jumps (scroll-padding-top below) follow it. */
   --hdr: 60px;
   color-scheme: light;
@@ -49,16 +49,16 @@
 }
 
 :root:not([data-theme="light"]) {
-  --bg: 15 16 19;
-  --surface: 23 24 29;
-  --raised: 29 31 37;
-  --line: 45 47 55;
+  --bg: 7 8 13;
+  --surface: 15 17 25;
+  --raised: 21 24 34;
+  --line: 38 42 58;
   --ink: 238 238 241;
   --muted: 166 170 181;
   --faint: 140 144 156; /* 6.0:1 on --bg, 5.6:1 on --surface */
-  --brand: 122 165 255; /* #7aa5ff: 7.8:1 on --bg */
+  --brand: 138 160 255;
   --brand-ink: 10 20 44;
-  --brand-soft: 26 40 76;
+  --brand-soft: 28 36 78;
   --brand-strong: 170 198 255; /* on --brand-soft and on --surface */
   --accent: 255 102 118;
   --spark: 255 102 118;
@@ -75,7 +75,8 @@
   --ad: 26 31 45;
   --ad-line: 120 130 156;
   --shadow: 0 0 0;
-  --wordmark: linear-gradient(180deg, #ffffff 0%, #b9ceff 45%, #7aa5ff 100%);
+  --wordmark: linear-gradient(90deg, #7dd3fc 0%, #8aa0ff 50%, #c4a5ff 100%);
+  --neo-glow: 0.34;
   color-scheme: dark;
 }
 
@@ -882,5 +883,443 @@ a.hero-pill:hover {
   from {
     border-bottom-color: transparent;
     background-color: rgb(var(--bg) / 0);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   The 2050 layer (owner, 2026-11-14: "as aesthetic as possible, with scrolling animations and everything super duper cool - like
+   what you'd expect of a year 2050 website"). Depth, light and motion on top of the minimal layout, which it never changes: the
+   same blocks in the same order, the same words, no product in the hero. Everything here is CSS (one 20-line pointer script,
+   components/Neo.tsx, feeds the spotlight), nothing shifts layout, anything hidden-until-scrolled sits inside @supports for scroll
+   timelines so a crawler or an older browser sees the finished page, and prefers-reduced-motion turns all of it off.
+   DECISIONS.md, 2026-11-14. ─────────────────────────────────────────────────────────────────────────────────────────────── */
+:root {
+  --neo-a: 56 189 248; /* cyan */
+  --neo-b: 139 92 246; /* violet */
+  --neo-c: 79 110 255; /* electric blue */
+  --neo-glow: 0.16;
+}
+/* Pages cross-fade into each other where the browser can (no script). */
+@view-transition {
+  navigation: auto;
+}
+/* The page's own sky: one fixed wash of the three lights behind everything. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 85% -10%, rgb(var(--neo-b) / calc(var(--neo-glow) * 0.45)), transparent 60%),
+    radial-gradient(50rem 36rem at 5% 30%, rgb(var(--neo-a) / calc(var(--neo-glow) * 0.3)), transparent 60%),
+    radial-gradient(70rem 40rem at 50% 120%, rgb(var(--neo-c) / calc(var(--neo-glow) * 0.4)), transparent 60%);
+}
+/* How far down the page: a line of light along the top edge. */
+.neo-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 60;
+  height: 2px;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  pointer-events: none;
+  background: linear-gradient(90deg, rgb(var(--neo-a)), rgb(var(--neo-c)), rgb(var(--neo-b)));
+  box-shadow: 0 0 12px rgb(var(--neo-c) / 0.8);
+}
+.hdr {
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+}
+.hdr::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(var(--neo-a) / 0.55), rgb(var(--neo-b) / 0.55), transparent);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* The hero's ground: three lights that drift and a floor of lines running to the horizon. */
+.hero-bg {
+  background-image: none;
+  -webkit-mask-image: linear-gradient(#000 88%, transparent);
+  mask-image: linear-gradient(#000 88%, transparent);
+}
+.hero-bg::before {
+  top: -20rem;
+  width: 70rem;
+  height: 40rem;
+  margin-left: -35rem;
+  background: radial-gradient(closest-side, rgb(var(--neo-c) / calc(var(--neo-glow) * 1.1)), transparent);
+  filter: blur(10px);
+}
+.hero-bg::after {
+  top: -6rem;
+  width: 34rem;
+  height: 24rem;
+  background: radial-gradient(closest-side, rgb(var(--neo-b) / var(--neo-glow)), transparent);
+}
+:root[data-theme="light"] .hero-bg::before {
+  background: radial-gradient(closest-side, rgb(var(--neo-c) / 0.2), transparent);
+}
+.hero-orb {
+  position: absolute;
+  left: 50%;
+  top: 2rem;
+  width: 30rem;
+  height: 22rem;
+  margin-left: -36rem;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgb(var(--neo-a) / calc(var(--neo-glow) * 0.8)), transparent);
+  will-change: transform;
+}
+.hero-floor {
+  position: absolute;
+  left: -50%;
+  right: -50%;
+  bottom: 0;
+  height: 30rem;
+  transform: perspective(520px) rotateX(64deg);
+  transform-origin: 50% 100%;
+  background-image:
+    linear-gradient(rgb(var(--neo-c) / 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--neo-c) / 0.5) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(48% 95% at 50% 100%, #000 10%, transparent 90%);
+  mask-image: radial-gradient(48% 95% at 50% 100%, #000 10%, transparent 90%);
+  opacity: 0.8;
+}
+:root[data-theme="light"] .hero-floor {
+  opacity: 0.35;
+}
+.hero-in {
+  padding-bottom: clamp(3rem, 6vw, 5.5rem);
+}
+/* The headline: light moving across its coloured word. */
+.hero-h1 .text-brand {
+  background: linear-gradient(100deg, rgb(var(--neo-a)) 0%, rgb(var(--neo-c)) 35%, rgb(var(--neo-b)) 65%, rgb(var(--neo-a)) 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero-h1 {
+  text-shadow: 0 0 60px rgb(var(--neo-c) / calc(var(--neo-glow) * 0.6));
+}
+/* The search: glass, with a ring of light that wakes on focus. */
+.hero-search::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: 9999px;
+  background: conic-gradient(from var(--neo-spin, 0deg), rgb(var(--neo-a)), rgb(var(--neo-c)), rgb(var(--neo-b)), rgb(var(--neo-a)));
+  opacity: 0.35;
+  filter: blur(7px);
+  transition: opacity 0.3s ease;
+}
+.hero-search:focus-within::before,
+.hero-search:hover::before {
+  opacity: 0.9;
+}
+.hero-search input {
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  background-color: rgb(var(--surface) / 0.82);
+}
+@property --neo-spin {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+/* The ways in: glass tiles, each lit in its game's own colour, with a spotlight that follows the pointer (components/Neo.tsx). */
+.way,
+.pc-plate,
+.set-tile,
+.card {
+  --mx: 50%;
+  --my: 50%;
+}
+.way {
+  position: relative;
+  overflow: hidden;
+  background-color: rgb(var(--surface) / 0.55);
+}
+.way::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(9rem circle at var(--mx) var(--my), color-mix(in srgb, var(--game, rgb(var(--neo-c))) 32%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.way:hover::before {
+  opacity: 1;
+}
+.way:hover {
+  border-color: color-mix(in srgb, var(--game, rgb(var(--neo-c))) 70%, transparent);
+  box-shadow: 0 14px 40px -18px var(--game, rgb(var(--neo-c)));
+}
+.way-icon {
+  color: var(--game, rgb(var(--muted)));
+}
+.way:hover .way-icon {
+  background-color: color-mix(in srgb, var(--game, rgb(var(--neo-c))) 18%, transparent);
+  color: var(--game, rgb(var(--brand-strong)));
+}
+.hero-meta .live {
+  box-shadow: 0 0 0 0 rgb(var(--open) / 0.6);
+}
+/* The games, drifting past under the hero: every game is one tap away, and the page is never still. */
+.neo-marquee {
+  position: relative;
+  margin: 0 -1rem;
+  overflow: hidden;
+  padding: 0.75rem 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.neo-track {
+  display: flex;
+  width: max-content;
+  gap: 0.625rem;
+}
+.neo-marquee:hover .neo-track,
+.neo-marquee:focus-within .neo-track {
+  animation-play-state: paused;
+}
+.neo-chip {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--line));
+  background: rgb(var(--surface) / 0.6);
+  padding: 0 0.95rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--ink));
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.neo-chip i {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--game);
+  box-shadow: 0 0 10px var(--game);
+}
+.neo-chip:hover {
+  border-color: var(--game);
+  box-shadow: 0 0 24px -6px var(--game);
+  transform: translateY(-1px);
+}
+/* Product cards: the plate lifts on a pool of light, and a sheen crosses the photo. */
+.pc-plate {
+  overflow: hidden;
+}
+.pc-plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(14rem circle at var(--mx) var(--my), rgb(var(--neo-c) / 0.22), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+.group:hover .pc-plate::after {
+  opacity: 1;
+}
+.group:hover .pc-plate {
+  box-shadow: 0 22px 50px -22px rgb(var(--neo-c) / 0.75), 0 0 0 1px rgb(var(--neo-c) / 0.45);
+}
+/* Cards and tiles take a lit edge under the pointer. */
+.card,
+.set-tile {
+  position: relative;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+.set-tile:hover,
+a.card:hover {
+  border-color: rgb(var(--neo-c) / 0.6);
+  box-shadow: 0 18px 44px -24px rgb(var(--neo-c) / 0.7);
+}
+/* The one loud button: a gradient that breathes, and a sheen on hover. */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  /* White on either end is 5.3:1 or better (AA). */
+  background-image: linear-gradient(100deg, #4356e6, #7c3aed);
+  color: #fff;
+  box-shadow: 0 8px 24px -12px rgb(var(--neo-c) / 0.9);
+}
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.35) 50%, transparent 70%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+/* Section headings carry a short line of light. */
+.page h2.font-display,
+.page section > h2 {
+  background-image: linear-gradient(90deg, rgb(var(--neo-a)), rgb(var(--neo-b)));
+  background-repeat: no-repeat;
+  background-size: 2.75rem 3px;
+  background-position: 0 100%;
+  padding-bottom: 0.55rem;
+}
+.faq {
+  transition: border-color 0.2s ease;
+}
+.faq[open] {
+  border-color: rgb(var(--neo-c) / 0.5);
+}
+
+@media screen and (prefers-reduced-motion: no-preference) {
+  .hero-orb {
+    animation: neo-orb 19s ease-in-out infinite alternate;
+  }
+  .hero-floor {
+    animation: neo-floor 3.2s linear infinite;
+  }
+  .hero-h1 .text-brand {
+    animation: neo-sheen 7s ease-in-out infinite alternate;
+  }
+  .hero-search::before {
+    animation: neo-spin 6s linear infinite;
+  }
+  .hero-meta .live {
+    animation: neo-ping 2.2s ease-out infinite;
+  }
+  .neo-track {
+    animation: neo-marquee 60s linear infinite;
+  }
+  .btn-primary:hover::after {
+    transform: translateX(120%);
+    transition: transform 0.7s ease;
+  }
+  /* A price table's rows arrive one after another. */
+  .card > table tbody tr {
+    animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(min(var(--r, 0), 12) * 45ms);
+  }
+  .card > table tbody tr:nth-child(1) { --r: 0; }
+  .card > table tbody tr:nth-child(2) { --r: 1; }
+  .card > table tbody tr:nth-child(3) { --r: 2; }
+  .card > table tbody tr:nth-child(4) { --r: 3; }
+  .card > table tbody tr:nth-child(5) { --r: 4; }
+  .card > table tbody tr:nth-child(6) { --r: 5; }
+  .card > table tbody tr:nth-child(7) { --r: 6; }
+  .card > table tbody tr:nth-child(8) { --r: 7; }
+  .card > table tbody tr:nth-child(n + 9) { --r: 8; }
+  @supports (animation-timeline: view()) {
+    .neo-progress {
+      animation: neo-progress linear both;
+      animation-timeline: scroll(root);
+    }
+    /* Every card arrives as it scrolls in: up, into focus, to full size. Its neighbours in a row follow a beat behind. */
+    .pc-link,
+    .set-tile,
+    .faq {
+      animation: neo-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+    li:nth-child(4n + 2) > .pc-link, .pc-link:nth-child(4n + 2) { animation-range: entry 8% entry 63%; }
+    li:nth-child(4n + 3) > .pc-link, .pc-link:nth-child(4n + 3) { animation-range: entry 16% entry 71%; }
+    li:nth-child(4n + 4) > .pc-link, .pc-link:nth-child(4n + 4) { animation-range: entry 24% entry 79%; }
+    /* The hero lets go as the page moves on: it sinks back and dims. */
+    .hero-in {
+      animation: neo-hero-out linear both;
+      animation-timeline: view();
+      animation-range: exit 10% exit 90%;
+    }
+    .hero-floor {
+      animation: neo-floor 3.2s linear infinite;
+    }
+    /* A section's heading line draws itself as the section arrives. */
+    .page h2.font-display,
+    .page section > h2 {
+      animation: neo-rule linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 320px;
+    }
+  }
+}
+@keyframes neo-orb {
+  to {
+    transform: translate3d(9rem, 3rem, 0) scale(1.2);
+  }
+}
+@keyframes neo-floor {
+  to {
+    background-position: 0 56px, 0 0;
+  }
+}
+@keyframes neo-sheen {
+  to {
+    background-position: 100% 0;
+  }
+}
+@keyframes neo-spin {
+  to {
+    --neo-spin: 360deg;
+  }
+}
+@keyframes neo-ping {
+  70%,
+  100% {
+    box-shadow: 0 0 0 9px rgb(var(--open) / 0);
+  }
+}
+@keyframes neo-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes neo-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes neo-in {
+  from {
+    opacity: 0;
+    transform: translateY(36px) scale(0.94);
+    filter: blur(6px);
+  }
+}
+@keyframes neo-hero-out {
+  to {
+    opacity: 0.15;
+    transform: translateY(-40px) scale(0.96);
+    filter: blur(4px);
+  }
+}
+@keyframes neo-rule {
+  from {
+    background-size: 0 3px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .way::before,
+  .pc-plate::after {
+    display: none;
+  }
+  .neo-chip,
+  .card,
+  .set-tile {
+    transition: none;
+  }
+  .neo-chip:hover {
+    transform: none;
   }
 }

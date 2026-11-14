@@ -26,6 +26,7 @@ import { inlineReady } from "@/lib/inline-ads";
 import { Section } from "@/components/Section";
 import { adSearch, cardAds } from "@/lib/card-ads";
 import { GameRows } from "@/components/GameRows";
+import { GameMarquee } from "@/components/GameMarquee";
 import { gameViews } from "@/lib/game-hubs";
 
 // The homepage leads with "<game> Booster Box Prices" (sealed only since 2026-11-06) and the number of stores compared.
@@ -98,7 +99,7 @@ export default function Home() {
   // On this site a visitor's first question is "which game": the five biggest, then all of them.
   const games = gameViews();
   const ways: Way[] = games.length
-    ? [...games.slice(0, 5).map((v): Way => ({ href: `/games/${v.line.slug}`, label: v.line.short, icon: "box" })), { href: "/games", label: "All games", icon: "sets" }]
+    ? [...games.slice(0, 5).map((v): Way => ({ href: `/games/${v.line.slug}`, label: v.line.short, icon: "box", color: v.line.color })), { href: "/games", label: "All games", icon: "sets" }]
     : [
         ...TYPE_WAYS.flatMap(([slug, icon]): Way[] => {
           const h = hubs.find((x) => x.slug === slug);
@@ -227,6 +228,9 @@ export default function Home() {
           )}
         </p>
       </Hero>
+
+      {/* Every game, in one moving line. */}
+      <GameMarquee />
 
       {shelfTabs.length > 0 && (
         <Section title={`${SITE.gameShort} booster boxes and sealed`} className="reveal mt-8 sm:mt-12">

@@ -12,7 +12,10 @@ export const riseAt = (i: number) => ({ "--i": i }) as CSSProperties;
 export function Hero({ children }: { children: ReactNode }) {
   return (
     <section className="hero">
-      <div className="hero-bg" aria-hidden="true" />
+      <div className="hero-bg" aria-hidden="true">
+        <span className="hero-orb" />
+        <span className="hero-floor" />
+      </div>
       <div className="hero-in">{children}</div>
     </section>
   );
@@ -96,6 +99,8 @@ export interface Way {
   href: string;
   label: string;
   icon: WayShape;
+  /** The tile's own light (a game's colour). */
+  color?: string;
 }
 
 /**
@@ -107,7 +112,7 @@ export function WaysIn({ links, label }: { links: Way[]; label: string }) {
     <ul className="ways rise" style={riseAt(4)} aria-label={label}>
       {links.map((l) => (
         <li key={l.href} className="flex">
-          <Link href={l.href} className="way flex-1">
+          <Link href={l.href} className="way flex-1" style={l.color ? ({ "--game": l.color } as CSSProperties) : undefined}>
             <span className="way-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" focusable="false">
                 {SHAPES[l.icon]()}
