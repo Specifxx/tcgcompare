@@ -1,0 +1,167 @@
+{
+ "v": 1,
+ "site": "sealed",
+ "generatedAt": "2026-11-14T05:56:44.528Z",
+ "links": {
+  "US": {
+   "deals": "https://tcgprices.app/black-friday",
+   "preorders": "https://tcgprices.app/preorders"
+  }
+ },
+ "items": [
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Sword & Shield Ultra-Premium Collection: Charizard",
+   "url": "https://tcgprices.app/card/sword-and-shield-ultra-premium-collection-charizard",
+   "cents": 38000,
+   "currency": "USD",
+   "store": "Vegas Singles",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/282401_200w.jpg",
+   "refCents": 56240,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 32
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Marvel: Darkhold Destiny - Collector Booster Display",
+   "url": "https://tcgprices.app/card/marvel-darkhold-destiny-collector-booster-display",
+   "cents": 45588,
+   "currency": "USD",
+   "store": "Minted TCG",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723266_200w.jpg",
+   "refCents": 67491,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 32
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "151 Pokemon Center Elite Trainer Box (Exclusive)",
+   "url": "https://tcgprices.app/card/151-pokemon-center-elite-trainer-box-exclusive",
+   "cents": 84999,
+   "currency": "USD",
+   "store": "Collector Store",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/501999_200w.jpg",
+   "refCents": 114266,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 26
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Disney Lorcana: Into the Inkdark Booster Box Case",
+   "url": "https://tcgprices.app/card/disney-lorcana-into-the-inkdark-booster-box-case",
+   "cents": 76999,
+   "currency": "USD",
+   "store": "The Castle Games",
+   "refCents": 99999,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 23
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Perfect Order Booster Bundle Case",
+   "url": "https://tcgprices.app/card/perfect-order-booster-bundle-case",
+   "cents": 77500,
+   "currency": "USD",
+   "store": "Realgoodeal",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/672397_200w.jpg",
+   "refCents": 92188,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 16
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Hobbit - Collector Booster Display Case",
+   "url": "https://tcgprices.app/card/the-hobbit-collector-booster-display-case",
+   "cents": 379900,
+   "currency": "USD",
+   "store": "Apollo's Vault",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/692964_200w.jpg",
+   "refCents": 450160,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 16
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Glorious Victors Booster Box",
+   "url": "https://tcgprices.app/preorders/glorious-victors",
+   "cents": 7000,
+   "currency": "USD",
+   "store": "Skybox Collectibles",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/713238_200w.jpg",
+   "releaseDate": "2026-12-04"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Ignition of X Booster Box",
+   "url": "https://tcgprices.app/preorders/ignition-of-x",
+   "cents": 9499,
+   "currency": "USD",
+   "store": "Many Realms",
+   "releaseDate": "2026-12-11"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Starter Deck 13: The Saiyan Raised on Earth Starter Deck",
+   "url": "https://tcgprices.app/preorders/starter-deck-13-the-saiyan-raised-on-earth",
+   "cents": 1599,
+   "currency": "USD",
+   "store": "Gamers Guild AZ",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/721534_200w.jpg",
+   "releaseDate": "2027-01-22"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Starter Deck 14: The Prince of Saiyan Starter Deck",
+   "url": "https://tcgprices.app/preorders/starter-deck-14-the-prince-of-saiyan",
+   "cents": 1599,
+   "currency": "USD",
+   "store": "Gamers Guild AZ",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/721537_200w.jpg",
+   "releaseDate": "2027-01-22"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Into the Inkdark Booster Box",
+   "url": "https://tcgprices.app/preorders/into-the-inkdark",
+   "cents": 16767,
+   "currency": "USD",
+   "store": "Many Realms",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723336_200w.jpg",
+   "releaseDate": "2027-02-05"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Commander: Marvel: Darkhold Destiny Commander Deck",
+   "url": "https://tcgprices.app/preorders/commander-marvel-darkhold-destiny",
+   "cents": 24995,
+   "currency": "USD",
+   "store": "Lazarus Games",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723298_200w.jpg",
+   "releaseDate": "2027-04-09"
+  }
+ ]
+}
