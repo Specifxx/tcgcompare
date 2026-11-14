@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-14T05:56:44.528Z",
+ "generatedAt": "2026-11-14T16:53:03.876Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -13,29 +13,15 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "Sword & Shield Ultra-Premium Collection: Charizard",
-   "url": "https://tcgprices.app/card/sword-and-shield-ultra-premium-collection-charizard",
-   "cents": 38000,
+   "title": "Double Pack Set Volume 6 Display",
+   "url": "https://tcgprices.app/card/double-pack-set-volume-6-display",
+   "cents": 64999,
    "currency": "USD",
-   "store": "Vegas Singles",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/282401_200w.jpg",
-   "refCents": 56240,
+   "store": "Collector Store",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/563843_200w.jpg",
+   "refCents": 89998,
    "refLabel": "TCGplayer market price",
-   "savingPct": 32
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Marvel: Darkhold Destiny - Collector Booster Display",
-   "url": "https://tcgprices.app/card/marvel-darkhold-destiny-collector-booster-display",
-   "cents": 45588,
-   "currency": "USD",
-   "store": "Minted TCG",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723266_200w.jpg",
-   "refCents": 67491,
-   "refLabel": "TCGplayer market price",
-   "savingPct": 32
+   "savingPct": 28
   },
   {
    "kind": "deal",
@@ -55,6 +41,20 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
+   "title": "The Dominance of God Booster Box Case",
+   "url": "https://tcgprices.app/card/the-dominance-of-god-booster-box-case",
+   "cents": 239988,
+   "currency": "USD",
+   "store": "Wulf Gaming",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712902_200w.jpg",
+   "refCents": 314303,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 24
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
    "title": "Disney Lorcana: Into the Inkdark Booster Box Case",
    "url": "https://tcgprices.app/card/disney-lorcana-into-the-inkdark-booster-box-case",
    "cents": 76999,
@@ -68,15 +68,15 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "Perfect Order Booster Bundle Case",
-   "url": "https://tcgprices.app/card/perfect-order-booster-bundle-case",
-   "cents": 77500,
+   "title": "Carrying On His Will Booster Box Case",
+   "url": "https://tcgprices.app/card/carrying-on-his-will-booster-box-case",
+   "cents": 480000,
    "currency": "USD",
-   "store": "Realgoodeal",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/672397_200w.jpg",
-   "refCents": 92188,
+   "store": "Fabricator's Forge",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/628353_200w.jpg",
+   "refCents": 582908,
    "refLabel": "TCGplayer market price",
-   "savingPct": 16
+   "savingPct": 18
   },
   {
    "kind": "deal",
@@ -91,6 +91,18 @@
    "refCents": 450160,
    "refLabel": "TCGplayer market price",
    "savingPct": 16
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Dominance of God Booster Box",
+   "url": "https://tcgprices.app/preorders/the-dominance-of-god",
+   "cents": 22000,
+   "currency": "USD",
+   "store": "Triad Cards and Gaming",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712901_200w.jpg",
+   "releaseDate": "2026-11-20"
   },
   {
    "kind": "preorder",
@@ -143,25 +155,12 @@
    "kind": "preorder",
    "cluster": "cards",
    "region": "US",
-   "title": "Into the Inkdark Booster Box",
-   "url": "https://tcgprices.app/preorders/into-the-inkdark",
-   "cents": 16767,
+   "title": "Legacy Booster Box",
+   "url": "https://tcgprices.app/preorders/legacy",
+   "cents": 15999,
    "currency": "USD",
-   "store": "Many Realms",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723336_200w.jpg",
-   "releaseDate": "2027-02-05"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Commander: Marvel: Darkhold Destiny Commander Deck",
-   "url": "https://tcgprices.app/preorders/commander-marvel-darkhold-destiny",
-   "cents": 24995,
-   "currency": "USD",
-   "store": "Lazarus Games",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723298_200w.jpg",
-   "releaseDate": "2027-04-09"
+   "store": "Kollect Korner",
+   "releaseDate": "2027-01-29"
   }
  ]
 }
