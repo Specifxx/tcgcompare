@@ -142,3 +142,28 @@ out when there is none. The eBay search now adds the game's words unless the nam
   one copy and no longer jumps 5px at each wrap.
 - Under reduced motion the row stands still, so it becomes a sideways scroller with no edge fade, and the hidden second
   copy is not drawn: every game reachable by touch and mouse, each once. `tests/minimal-look.test.ts` pins all three.
+
+## 2026-11-14: The Amazon matcher reads one game at a time
+
+The Amazon pipeline came from YGO Compare unchanged, with a matcher built for one game. Run over the real catalogue
+with simulated Amazon titles ("<game> <set> <product>"), it matched 1,408 of the 2,182 products it would search and
+accepted 11 titles as another searched product, 4 of them in another game ("Union Arena SOLO LEVELING - Booster Box
+(First Edition)" as Lorcana's The First Chapter box, a Pokémon Classic Collection pack as Digimon's, six One Piece
+Double Pack Sets as the plain booster pack). `lib/import/amazon-match.ts` now holds an Amazon title to more than the
+store matcher:
+
+- The title must name the product's game and no other. Each line in `site.config.ts` carries its `amazon` words
+  (`any` phrases, `not` phrases for games that share a word: Magic's FINAL FANTASY products, Fusion World against the
+  older Dragon Ball Super game, the Shadowverse Vanguard collab, Weiß Schwarz's hololive sets).
+- It is read against that game's products only, with the "ME06: " release code taken off set names
+  (`IndexOptions.stripSetCodes`, off for the store import; the code still counts as a code of the set). A third of set
+  names carry one, and no title spells it.
+- A title naming a kind the product's name lacks (Double Pack, release event, Welcome, sleeved, blister, empty box,
+  mystery, repack…) is refused, and those products are out before `matchSealed` chooses.
+- Pokémon Japan is not searched: its titles say Japanese and the store matcher refuses every foreign title, so a
+  search could only ever spend budget. An English title never reaches a Japanese product, nor the reverse.
+- Searches say the game's name and the set without its code, not "trading card game".
+
+Same simulation after: 1,930 of 1,938 searched products match themselves, none matches another product. Still open:
+the page's Amazon search link and `amazonCarries` (US file and a one-game type list), and the credentials, which the
+owner has not set.
