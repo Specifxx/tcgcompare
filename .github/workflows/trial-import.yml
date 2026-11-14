@@ -1,0 +1,63 @@
+name: Trial import
+
+# Runs the daily import on a working branch and commits the data to THAT branch, so a change to the catalogue rules
+# can be seen on real data before it reaches main. Only for a push whose commit subject carries [trial-import].
+# Never touches main, never deploys (claude/* branches do not build on Vercel).
+
+on:
+  push:
+    branches: ["claude/**"]
+
+concurrency:
+  group: trial-import-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    if: contains(github.event.head_commit.message, '[trial-import]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/CompareEmpire, path: sisters/CompareEmpire, sparse-checkout: "apps/dexcompare-sealed/data/public\napps/dexcompare-sealed/src/data" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/mtgcompare, path: sisters/mtgcompare, sparse-checkout: "data/public\nsrc/data" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/ygocompare, path: sisters/ygocompare, sparse-checkout: "data/public\nsrc/content" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/lorcanacompare, path: sisters/lorcanacompare, sparse-checkout: "data/public\nsrc/content" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/GundamCompare, path: sisters/GundamCompare, sparse-checkout: "data/public\nsrc/content" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/bandaicompare, path: sisters/bandaicompare, sparse-checkout: "data/public\nsrc/content" }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: Specifxx/cyberpunkcompare, path: sisters/cyberpunkcompare, sparse-checkout: "data/public\nsrc/content" }
+      - name: Import
+        env:
+          SISTER_DIR: sisters
+        run: npx tsx scripts/import-all.ts
+      - name: Commit data to this branch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet && { echo "No data changes."; exit 0; }
+          git commit -m "data: trial import $(date -u +%F)"
+          git push origin HEAD:${GITHUB_REF_NAME}

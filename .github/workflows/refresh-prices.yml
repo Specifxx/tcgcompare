@@ -1,0 +1,142 @@
+name: Refresh prices
+
+# The daily import: TCGCSV (TCGplayer's catalogue and prices for every game in SITE.lines) + our sister sites'
+# published store offers (checked out beside this repo, read by lib/import/sisters.ts) -> data/ -> commit to main.
+# The data commit's SUBJECT carries [deploy]; the build gate allows one production build every 12 hours
+# (scripts/vercel-ignore-build.sh), so the import runs TWICE a day, 12 h 10 min apart (owner, 2026-11-14: no eBay
+# quota to wait for, so prices refresh as often as the build cap allows). 21:37 UTC follows TCGCSV's ~20:00 UTC
+# refresh; 09:47 UTC picks up the sister sites' imports that ran since. No eBay API on this site.
+
+on:
+  schedule:
+    - cron: "37 21 * * *"
+    - cron: "47 9 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: refresh-prices
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Our sister sites' public data (their repositories are public): only the data and store-list folders.
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: Specifxx/CompareEmpire
+          path: sisters/CompareEmpire
+          sparse-checkout: |
+            apps/dexcompare-sealed/data/public
+            apps/dexcompare-sealed/src/data
+          sparse-checkout-cone-mode: true
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: Specifxx/mtgcompare
+          path: sisters/mtgcompare
+          sparse-checkout: |
+            data/public
+            src/data
+          sparse-checkout-cone-mode: true
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: Specifxx/ygocompare
+          path: sisters/ygocompare
+          sparse-checkout: |
+            data/public
+            src/content
+          sparse-checkout-cone-mode: true
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: Specifxx/lorcanacompare
+          path: sisters/lorcanacompare
+          sparse-checkout: |
+            data/public
+            src/content
+          sparse-checkout-cone-mode: true
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: Specifxx/GundamCompare
+          path: sisters/GundamCompare
+          sparse-checkout: |
+            data/public
+            src/content
+          sparse-checkout-cone-mode: true
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: Specifxx/bandaicompare
+          path: sisters/bandaicompare
+          sparse-checkout: |
+            data/public
+            src/content
+          sparse-checkout-cone-mode: true
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: Specifxx/cyberpunkcompare
+          path: sisters/cyberpunkcompare
+          sparse-checkout: |
+            data/public
+            src/content
+          sparse-checkout-cone-mode: true
+      - name: Import
+        env:
+          SISTER_DIR: sisters
+        run: npx tsx scripts/import-all.ts
+      # Amazon ASINs for the sealed pages' Amazon row (Creators API searchItems, matched by the store matcher; ASINs only,
+      # prices are fetched by each Vercel build and never committed: DECISIONS.md 2026-11-05). A no-op until the secrets exist.
+      - name: Amazon ASINs (Creators API)
+        continue-on-error: true
+        env:
+          AMAZON_CREATORS_AU_CLIENT_ID: ${{ secrets.AMAZON_CREATORS_AU_CLIENT_ID }}
+          AMAZON_CREATORS_AU_CLIENT_SECRET: ${{ secrets.AMAZON_CREATORS_AU_CLIENT_SECRET }}
+          AMAZON_CREATORS_AU_VERSION: ${{ secrets.AMAZON_CREATORS_AU_VERSION }}
+          AMAZON_CREATORS_US_CLIENT_ID: ${{ secrets.AMAZON_CREATORS_US_CLIENT_ID }}
+          AMAZON_CREATORS_US_CLIENT_SECRET: ${{ secrets.AMAZON_CREATORS_US_CLIENT_SECRET }}
+          AMAZON_CREATORS_US_VERSION: ${{ secrets.AMAZON_CREATORS_US_VERSION }}
+        run: npx tsx scripts/amazon-asins.ts
+      # The Compare Empire network (scripts/family-sync.ts): this site's best deals and pre-orders for
+      # its sisters, and their feeds for this site's "Also in this cluster" blocks. Never fatal.
+      - name: Family feed
+        continue-on-error: true
+        run: npx tsx scripts/family-sync.ts
+      - name: Commit data (this commit is the daily release)
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then
+            echo "No data changes."
+            exit 0
+          fi
+          git commit -m "data: daily prices $(date -u +%F) [deploy]" -m "Written by refresh-prices.yml. This is the one scheduled production build a day."
+          for i in 1 2 3 4; do
+            git push origin HEAD:main && exit 0
+            sleep $((2 ** i)); git pull --rebase origin main
+          done
+          exit 1
+      - name: IndexNow
+        if: success()
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
+        run: npx tsx scripts/indexnow-submit.ts || true
