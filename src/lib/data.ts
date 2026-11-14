@@ -10,6 +10,7 @@ import type { Catalog, EbayPick, Market, Meta, Offer, PriceEntry, Product, SetIn
 import { CURRENCY } from "./site-types";
 import { readSetPrices, readSummary, type SummaryEntry } from "./price-store";
 import { decodeOffer } from "./offer-codec";
+import { isEbayOffer } from "./price-store";
 import { referenceCents } from "./import/tcgcsv";
 import type { Series } from "./series";
 import { SITE } from "@/site.config";
@@ -61,7 +62,8 @@ function load() {
     catalog,
     summary: readSummary(),
     meta: read<Meta | null>("public/meta.json", null),
-    picks: read<EbayPick[]>("public/ebay-picks.json", []),
+    // No eBay prices on TCG Prices (owner, 2026-11-14): the old picks file is never read.
+    picks: [] as EbayPick[],
     bySlug: new Map(catalog.products.map((p) => [p.slug, p])),
     byId: new Map(catalog.products.map((p) => [p.id, p])),
     setBySlug: new Map(catalog.sets.map((s) => [s.slug, s])),
@@ -123,7 +125,7 @@ export function summaryOf(id: number): Summary {
   if (hit) return hit;
   const e = load().summary[id];
   if (!e) return EMPTY_SUMMARY;
-  const s: Summary = { tcg: e.t, change7d: e.c7, change30d: e.c30, inStockSources: e.n, listedSources: e.l ?? e.n, best: e.b.map(decodeOffer).filter((o): o is Offer => !!o), ebay: (e.e ?? []).map(decodeOffer).filter((o): o is Offer => !!o) };
+  const s: Summary = { tcg: e.t, change7d: e.c7, change30d: e.c30, inStockSources: e.n, listedSources: e.l ?? e.n, best: e.b.map(decodeOffer).filter((o): o is Offer => !!o && !isEbayOffer(o) && o.source !== "amazon"), ebay: [] };
   decoded.set(id, s);
   return s;
 }

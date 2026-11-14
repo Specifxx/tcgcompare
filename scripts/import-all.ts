@@ -34,14 +34,13 @@ import {
   useSetEditions,
   type EbayState,
 } from "@/lib/import/ebay";
-import { ebayReferenceUsd, ebayTrusted, tcgplayerOfferCents } from "@/lib/import/sanity";
+import { tcgplayerOfferCents } from "@/lib/import/sanity";
 import { appendPoint, dayNumber, pctChange, readSetHistory, writeSetHistory } from "@/lib/import/history";
 import { fetchJson } from "@/lib/import/http";
 import { readAllPrices, writePrices } from "@/lib/price-store";
 
 const PUBLIC = path.join(process.cwd(), "data", "public");
 const STATE = path.join(process.cwd(), "data", "state");
-const EBAY_MAX_AGE_H = 120; // an eBay result older than 5 days is not shown
 const STORE_CARRY_H = 72; // a failed store's previous offers are kept this long
 
 function readJson<T>(file: string, fallback: T): T {
@@ -124,7 +123,6 @@ async function main() {
   let sisterStatus: Meta["sisters"];
   let sisterStores: (typeof SITE.stores) | null = null;
   let refused: Refusal[] = [];
-  let sisterEbay = new Map<number, Offer[]>();
   let downStores = new Set<string>();
   let crawlMeta: CrawlMeta | undefined;
   const crawlOffers = new WeakSet<Offer>();
@@ -154,7 +152,6 @@ async function main() {
     // through the same vetting and price band as a sister's row below.
     crawlMeta = mergeOwnCrawl({ res, products, sets, prevMeta, prevById: prevPrices.byId, now, crawlOffers });
     sisterStores = res.stores;
-    sisterEbay = res.ebay;
     // Store vetting (lib/import/vet.ts): a blocked, domain-less or too-cheap-to-be-true store shows no row at all.
     const blocklist = JSON.parse(fs.readFileSync(path.join(process.cwd(), "data", "store-blocklist.json"), "utf8")) as Record<string, string>;
     refused = vetStores({ stores: res.stores, offers: res.offers, refCents: (id) => (byId.has(id) ? referenceCents(tcg[id]) : null), fx, blocklist });
@@ -362,14 +359,8 @@ async function main() {
     const t = tcg[p.id] ?? {};
     const offers: Offer[] = [...(storeOffers.get(p.id) ?? [])];
     const ref = refUsd.get(p.id);
-    const ebayRef = ebayReferenceUsd(ref, offers.filter((o) => o.inStock).map((o) => o.cents / (fx[o.currency] ?? 1)));
-    for (const [market, e] of Object.entries(ebayState[p.id] ?? {}) as [Market, { at: string; offer: Offer | null }][]) {
-      if (!e.offer || now.getTime() - new Date(e.at).getTime() >= EBAY_MAX_AGE_H * 3_600_000) continue;
-      if (!ebayTrusted(e.offer.cents / (fx[e.offer.currency] ?? 1), ebayRef)) continue;
-      offers.push({ ...e.offer, market });
-    }
-    // eBay listings a sister site already found for this very product (no call of ours), under the same trust band.
-    for (const o of sisterEbay.get(p.id) ?? []) if (ebayTrusted(o.cents / (fx[o.currency] ?? 1), ebayRef)) offers.push(o);
+    // No eBay price is ever an offer here (owner, 2026-11-14): eBay is the pinned tagged search row only, never a
+    // price, a "Best price" or a "Cheapest in" box. Neither our own eBay state nor a sister's eBay listing is used.
     const tcgLow = Object.values(t).map((x) => x.low).filter((x): x is number => x != null);
     const tcgCents = tcgplayerOfferCents(tcgLow, ref);
     if (tcgCents != null) {

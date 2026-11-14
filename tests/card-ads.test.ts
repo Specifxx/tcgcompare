@@ -38,9 +38,10 @@ test("a thin set is topped up without repeating a product", () => {
   assert.deepEqual(topUp(a, b, 10).ebay.US!.map((t) => t.id), [1, 9]);
 });
 
-test("the summary keeps the cheapest in-stock eBay listing per market, never a pre-order", () => {
+test("the summary keeps no eBay listing at all: TCG Prices shows no eBay price (owner, 2026-11-14)", () => {
   const s = summarize({ tcg: {}, change7d: null, change30d: null, offers: [ebay("US", 900), ebay("US", 700), ebay("UK", 500, { inStock: false }), ebay("AU", 300, { preorder: true })] });
-  assert.deepEqual(s.e?.map((t) => [t[1], t[6]]), [[700, "US"]]);
+  assert.equal(s.e, undefined);
+  assert.deepEqual(s.b, []);
 });
 
 test("eBay item links lose their old tracking; /go tags them again", () => {
