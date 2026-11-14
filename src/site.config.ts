@@ -70,7 +70,7 @@ export const SITE: SiteConfig = {
   apexHost: true,
   tagline: "Compare booster box prices for every trading card game",
   description:
-    "Free sealed price comparison for every trading card game people buy: Pokémon, Magic, One Piece, Yu-Gi-Oh!, Lorcana, Riftbound, Star Wars: Unlimited, Flesh and Blood and more. Booster boxes, trainer boxes, bundles and decks across TCGplayer, eBay, Amazon and card stores, updated daily.",
+    "Free sealed price comparison for every trading card game people buy: Pokémon, Magic, One Piece, Yu-Gi-Oh!, Lorcana, Riftbound, Star Wars: Unlimited, Flesh and Blood and more. Booster boxes, trainer boxes, bundles and decks across TCGplayer, eBay and card stores, updated twice a day.",
   keywords: [
     "booster box prices",
     "tcg price comparison",

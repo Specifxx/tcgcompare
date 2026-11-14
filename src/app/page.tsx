@@ -38,7 +38,7 @@ export function generateMetadata(): Metadata {
   const title = fitTitle([`${g} Booster Box Prices — Compare ${n} Stores${brand}`, `${g} Booster Box Prices — ${n} Stores${brand}`, `${g} Booster Box Prices${brand}`, `${g} Booster Box Prices — Compare ${n} Stores`, `${g} Booster Box Prices`]);
   return {
     title,
-    description: `Compare ${SITE.game} booster box, tin, structure deck and pre-order prices across TCGplayer, eBay, Amazon and ${n} online stores. Cheapest in-stock first, in your currency, updated twice a day.`,
+    description: `Compare ${SITE.game} booster box, tin, structure deck and pre-order prices across TCGplayer, eBay and ${n} online stores. Cheapest in-stock first, in your currency, updated twice a day.`,
     alternates: { canonical: "/", types: { "application/rss+xml": "/feed.xml" } },
     openGraph: { type: "website", siteName: SITE.name, url: "/", title: title.absolute },
   };
@@ -87,7 +87,7 @@ export default function Home() {
   const preorder = openPreorder();
   const ads = cardAds({ limit: 10 });
   const faqs = [
-    { q: `What is ${SITE.name}?`, a: `${SITE.name} is a free ${SITE.game} sealed price comparison site. It compares prices for every ${SITE.gameShort} booster box, pack, tin, structure deck and collection across TCGplayer, eBay, Amazon and ${storeCount} online game stores in the US, UK, Canada, Australia, Europe and Singapore, and updates them twice a day.` },
+    { q: `What is ${SITE.name}?`, a: `${SITE.name} is a free ${SITE.game} sealed price comparison site. It compares prices for every ${SITE.gameShort} booster box, pack, tin, structure deck and collection across TCGplayer, eBay and ${storeCount} online game stores in the US, UK, Canada, Australia, Europe and Singapore, and updates them twice a day.` },
     { q: `Where is the cheapest place to buy a ${SITE.gameShort} booster box?`, a: `It changes box by box. Search a set on ${SITE.name} to see every store's price for its booster box, cheapest in-stock first, in your own currency, with a direct link to buy.` },
     { q: `How often are ${SITE.gameShort} prices updated?`, a: `Twice a day. TCGplayer prices and store listings are refreshed every 12 hours; the eBay row opens eBay's live listings for the product.` },
     { q: `Does ${SITE.name} list single cards?`, a: `No. ${SITE.name} compares sealed product only: booster boxes, packs, tins, decks and collections, where store prices differ the most.` },
@@ -196,7 +196,7 @@ export default function Home() {
           <span className="text-brand">{SITE.gameShort}</span> Booster Box Prices
         </h1>
         <p className="hero-sub rise" style={riseAt(1)}>
-          Buy {SITE.gameShort} sealed at the best price: today&rsquo;s prices from TCGplayer, eBay, Amazon and {storeCount} stores, in your own currency.
+          Buy {SITE.gameShort} sealed at the best price: today&rsquo;s prices from TCGplayer, eBay and {storeCount.toLocaleString("en")} stores, in your own currency.
         </p>
         <div className="hero-search rise" style={riseAt(2)}>
           <SearchBox big />
