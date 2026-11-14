@@ -239,3 +239,9 @@ text button (`inline`) is drawn as a bordered button (`cart.css`). Neutral, neve
 filled action and the calm three-colour rule holds. Nothing else moved: which rows can be added (open store rows, eBay and
 Amazon with a live price; never a marketplace or a search row), the line's buy link and its affiliate tag, the row order, the
 buy button and every placement are unchanged. A caller can still ask for the bare icon (`label={false}`).
+
+## 2026-11-14: Go-live on tcgprices.app
+
+The owner bought tcgprices.app on Vercel (team Specifix's projects, auto-renew off) and it was added to the `tcgprices`
+project as the production domain, apex only: no redirect to www, because `SITE.domain` and every canonical are the apex.
+Vercel Web Analytics is on (the plan's included tier). The ops monitor's three-hourly schedule is turned on with it.

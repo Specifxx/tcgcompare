@@ -118,7 +118,7 @@ timelines, everything off under reduced motion, never a product in the hero.
 
 ## The site watches itself
 
-`ops-monitor.yml`'s schedule is off until the domain is live; turn it on at go-live. A new scheduled job, external
+`ops-monitor.yml` runs every three hours (on since go-live, 2026-11-14). A new scheduled job, external
 API or limit gets a check in `scripts/ops-monitor.ts`.
 
 ## Checks
