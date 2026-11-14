@@ -422,6 +422,8 @@ export interface CrawlMeta {
   stores: number;
   /** Stores read to the end this run, and stopped (blocked, challenge, robots, budget…) by reason. */
   read: number;
+  /** Stores not read to the end whose finished collections were still taken (the rest of their rows carried). */
+  partial?: number;
   stopped: Record<string, number>;
   requests: number;
   budget: number;
@@ -432,8 +434,10 @@ export interface CrawlMeta {
   /** Offers kept after vetting and the price band, and rows carried for stores not read this run. */
   offers: number;
   carried: number;
-  /** "host|market" → the last time the crawl read that store to the end. */
+  /** "host|market" → the last time the crawl read that store to the end (the 72-hour carry counts from it). */
   seen: Record<string, string>;
+  /** "host|market" → the last time the crawl asked that store anything (the next run's order: longest ago first). */
+  tried?: Record<string, string>;
 }
 
 export interface EbayPick {

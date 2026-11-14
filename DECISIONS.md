@@ -203,3 +203,28 @@ The yield cannot be known from local data (0.8 to 4% of listings carry an id on 
 probe and `meta.json` `crawl.refused` will tell. Until the probe has run, `data/crawl/stores.json` is empty and the
 crawl is a no-op.
 
+
+## 2026-11-14: the crawl, tightened after review
+
+- **A shop is its host.** A store listed in two markets (danireon, hobbiesville, themythicstore, npcollectibles,
+  chonkycollectibles) was two sessions run side by side: two robots.txt reads and two requests in flight. The crawl and
+  the probe now group by host: one session, one robots.txt, one queue a second apart, the markets read in turn; the cap
+  is the per-store cap times the shop's markets, counted in that one session. The probe asks such a shop once.
+- **A stopped store keeps what it finished.** A cap, budget or deadline stop used to throw every page away, and the
+  store, never read to the end, went first again next run. Collections read to the end are now kept (`partial`); the
+  store's other rows are carried under the 72-hour rule; the order is "least recently tried" (`crawl.tried`), not
+  "least recently read". The probe keeps at most eight collections a store in all, so a full read (8 × 4 pages,
+  robots.txt, the currency) fits the 40-request cap.
+- **A failed page is not an empty one.** A 5xx, timeout or unreadable JSON on a collection page made the store "read"
+  with that collection's rows missing, so one flaky run removed them at once. Now it is `errors` (not ok): the store is
+  not marked seen, finished collections are taken and the rest carried. A 404 or a robots-disallowed path is still an
+  honest nothing.
+- **Raw store titles need more refusals than sister data.** Opened, open box, pre-owned, resealed, empty, break spots,
+  repacks and missing packs are unfit; "(6 Boxes)", "Display of 6" and "Half" are another quantity unless the product's
+  own name says so; a lone variant naming another kind of product ("Booster Pack" on a box id) or a quantity ("x6") is
+  refused. A pack count ("(24 packs)") is NOT refused: most real box listings state theirs and the catalogue claims none.
+- **A number is not proof by itself.** A handle or SKU id with no TCGplayer photo of it now needs the matcher to land
+  on that product or the title to name its set (else `unconfirmed`): shops number their own SKUs with 5–6 digits. And any
+  second TCGplayer-shaped id in a handle or SKU, in the catalogue or not, refuses the listing (`id-conflict`), as a
+  second photo id already did. A store whose own numeric SKUs sit beside a TCGplayer handle id loses those listings:
+  a missing price over a wrong one.

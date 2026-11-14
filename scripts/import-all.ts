@@ -496,13 +496,18 @@ function mergeOwnCrawl(a: {
   };
   const storesOf = [...new Map([...entries, ...(run?.stores ?? [])].map((s) => [storeIdentity(s.base, s.market), s])).values()];
   const { keyOf, added } = crawlStoreKeys(res.stores, storesOf);
-  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf }, keyOf) : { offers: new Map<number, Offer[]>(), taken: 0, refused: {}, listings: 0 };
+  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf }, keyOf) : { offers: new Map<number, Offer[]>(), fresh: new Map<string, Set<number>>(), taken: 0, refused: {}, listings: 0 };
   const readOk = new Set((run?.stores ?? []).filter((s) => s.ok).map((s) => storeIdentity(s.base, s.market)));
   const seen: Record<string, string> = { ...(prevMeta?.crawl?.seen ?? {}) };
   for (const id of readOk) seen[id] = run!.at;
+  // Every store this run asked anything, read or not: the next run starts with the stores tried longest ago, so one
+  // that keeps hitting its cap does not go first on every run.
+  const tried: Record<string, string> = { ...(prevMeta?.crawl?.tried ?? {}) };
+  for (const s of run?.stores ?? []) if (s.requests > 0) tried[storeIdentity(s.base, s.market)] = run!.at;
   // Forget stores no longer in the probe's list.
   const listed = new Set(storesOf.map((s) => storeIdentity(s.base, s.market)));
   for (const id of Object.keys(seen)) if (!listed.has(id)) delete seen[id];
+  for (const id of Object.keys(tried)) if (!listed.has(id)) delete tried[id];
   const prevKeyOf = new Map(readJson<StoreConfig[]>(path.join(PUBLIC, "stores.json"), []).map((s) => [storeIdentity(s.base, s.market), s.key]));
   const carry = carryCrawl({
     stores: storesOf,
@@ -516,6 +521,7 @@ function mergeOwnCrawl(a: {
       const line = p && lineOf(p);
       return !!line && crawlLines.has(line);
     },
+    fresh: got.fresh,
     now,
     maxAgeH: CRAWL_CARRY_H,
   });
@@ -539,6 +545,7 @@ function mergeOwnCrawl(a: {
     listed: entries.length,
     stores: storesOf.length,
     read: readOk.size,
+    partial: (run?.stores ?? []).filter((s) => !s.ok && s.partial).length,
     stopped,
     requests: run?.requests ?? 0,
     budget: run?.budget ?? 0,
@@ -548,6 +555,7 @@ function mergeOwnCrawl(a: {
     offers: 0,
     carried: carry.carried,
     seen,
+    tried,
   };
   console.log(`[crawl] ${run ? `run of ${run.at}: ${meta.read} of ${meta.stores} stores read, ${meta.requests} requests, ${got.listings} listings, ${got.taken} taken` : "no crawl run this import"}; ${carry.carried} rows carried; refused ${JSON.stringify(got.refused)}`);
   return meta;

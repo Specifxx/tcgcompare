@@ -18,6 +18,7 @@ import type { GameLine, Market, Meta, Offer, Product, StoreConfig } from "@/lib/
 import { CURRENCY } from "@/lib/site-types";
 import { handleOf, isForeign, isMulti, isPreorder, isUnfitListing, matchSealed, type MatchIndex } from "./match";
 import { sealedTypeOf } from "./tcgcsv";
+import { tokens } from "@/lib/slug";
 
 // ── What the crawl reads ────────────────────────────────────────────────────
 
@@ -64,6 +65,8 @@ export interface CrawlListing {
   inStock: boolean;
   preorder?: boolean;
   ids: FoundId[];
+  /** The kind of product its one variant's title names ("Booster Box"), when it names one. */
+  variantKind?: string;
   /** Set when the listing itself is unusable (its variants are different products, it has no price). */
   refuse?: string;
 }
@@ -74,8 +77,12 @@ export interface CrawlStoreRun {
   name: string;
   base: string;
   market: Market;
+  /** Every collection read to the end. */
   ok: boolean;
-  /** Why the store was stopped or skipped this run. */
+  /** Not ok, but some collections were read to the end: `listings` holds theirs (a cap, the budget, the deadline or a
+   *  failed collection stopped the rest). The import takes them and carries the store's other rows (carryCrawl). */
+  partial?: boolean;
+  /** Why the store was stopped or skipped this run, or which collections failed. */
   reason?: string;
   requests: number;
   listings: CrawlListing[];
@@ -133,19 +140,36 @@ const SAME_PRODUCT = /^(default title|default|new|sealed|factory sealed|brand ne
 const OTHER_PRODUCT = /booster|display|\bbox\b|\bcase\b|\bpacks?\b|\bdecks?\b|bundle|\btin\b|collection|starter|\bset\b|\bx\s*\d+|\d+\s*x\b|\bqty\b|quantity|\bof \d+\b|^\d+$/i;
 const BAD_VARIANT = /lightly played|moderately played|\bplayed\b|\blp\b|\bmp\b|damaged|dented|crushed|opened|used|heavily|\bhp\b|\bdmg\b|poor|japanese|chinese|korean|french|german|italian|spanish|\bjp\b|\bjpn\b/i;
 
-export type VariantPick = { cents: number; inStock: boolean; variantId: number } | { refuse: string };
+export type VariantPick = { cents: number; inStock: boolean; variantId: number; said?: string } | { refuse: string };
+
+// A lone variant's title that names only a quantity ("x6", "Qty 3", "of 12", "6"): not one of the product.
+const QUANTITY = /\bx\s*\d+|\d+\s*x\b|\bqty\b|quantity|\bof \d+\b|^\d+$/i;
 
 /**
  * One offer per listing: the cheapest in-stock variant (else the cheapest at all), among variants that are this
  * product. A listing whose variants are different products ("Booster Box" / "Booster Pack") is refused whole: which
- * one carries the id cannot be told.
+ * one carries the id cannot be told. A lone variant that names a quantity is refused; one that names a kind of
+ * product other than the listing's title says is refused, and the kind it names is kept (`said`) for pickId.
  */
-export function pickOffer(p: Pick<ShopifyListing, "variants">): VariantPick {
+export function pickOffer(p: Pick<ShopifyListing, "variants"> & { title?: string }): VariantPick {
   const vs = p.variants ?? [];
   if (!vs.length) return { refuse: "no-variant" };
+  let said: string | undefined;
   if (vs.length > 1) {
     const named = vs.map((v) => (v.title ?? "").trim()).filter((t) => t && !SAME_PRODUCT.test(t) && !BAD_VARIANT.test(t));
     if (named.some((t) => OTHER_PRODUCT.test(t)) || new Set(named.map((t) => t.toLowerCase())).size > 1) return { refuse: "variants-differ" };
+  } else {
+    const t = (vs[0].title ?? "").trim();
+    if (t && !SAME_PRODUCT.test(t) && !BAD_VARIANT.test(t) && OTHER_PRODUCT.test(t)) {
+      const kind = sealedTypeOf(t);
+      if (kind === "Other") {
+        if (QUANTITY.test(t)) return { refuse: "variants-differ" };
+      } else {
+        const titled = sealedTypeOf(p.title ?? "");
+        if (titled !== "Other" && titled !== kind) return { refuse: "variants-differ" };
+        said = kind;
+      }
+    }
   }
   const ok = vs.filter((v) => !BAD_VARIANT.test(v.title ?? "")).filter((v) => {
     const c = Math.round(Number(v.price) * 100);
@@ -155,7 +179,7 @@ export function pickOffer(p: Pick<ShopifyListing, "variants">): VariantPick {
   const inStock = ok.filter((v) => v.available);
   const pool = (inStock.length ? inStock : ok).slice().sort((a, b) => Number(a.price) - Number(b.price));
   const v = pool[0];
-  return { cents: Math.round(Number(v.price) * 100), inStock: !!v.available, variantId: v.id };
+  return { cents: Math.round(Number(v.price) * 100), inStock: !!v.available, variantId: v.id, ...(said ? { said } : {}) };
 }
 
 /** A Shopify product as the crawl keeps it. */
@@ -172,6 +196,7 @@ export function toListing(p: ShopifyListing, base: string, lines: string[]): Cra
     cents: pick.cents,
     inStock: pick.inStock,
     ...(isPreorder(p.title, tags) ? { preorder: true } : {}),
+    ...(pick.said ? { variantKind: pick.said } : {}),
     ids,
   };
 }
@@ -193,6 +218,8 @@ export type Refused =
   | "foreign"
   | "no-id"
   | "two-ids"
+  | "id-conflict"
+  | "unconfirmed"
   | "other-game"
   | "photo-conflict"
   | "not-sealed"
@@ -202,9 +229,25 @@ export type Refused =
 
 export type IdPick = { id: number } | { refuse: Refused; detail?: string };
 
+// Not a sealed product as the catalogue means one, though the shared isUnfitListing (used, damaged, graded) lets it
+// by: an opened or resealed box, an empty one, a break spot, a repack or mystery box, one missing its packs.
+const NOT_SEALED_AS_SOLD = /\bopened\b|\bopen[- ]box\b|\bpre-?owned\b|\bsecond[- ]hand\b|\bre-?sealed\b|\bempty\b|\bbreaks?\b|\bspots?\b|\brepacks?\b|\bmystery\b|\bno packs\b|\bmissing\b/i;
+// Another quantity than one: "(6 Boxes)", "6 boxes", "Display of 6", "Half Booster Box".
+const OTHER_QUANTITY = /\(\d+\s*(boxes|displays)\)|\b\d+\s*boxes\b|display of \d+|\bhalf\b/i;
+
+/** Every word of the set's name (its code-like words aside) is in the title. */
+function namesSet(title: string, p: Product, idx: MatchIndex): boolean {
+  const setTokens = idx.setName.get(p.setId) ?? [];
+  const words = setTokens.filter((t) => !/\d/.test(t));
+  const need = words.length ? words : setTokens;
+  if (!need.length) return false;
+  const have = new Set(tokens(title));
+  return need.every((t) => have.has(t));
+}
+
 export function pickId(l: CrawlListing, ctx: PickContext): IdPick {
   if (l.refuse) return { refuse: "listing", detail: l.refuse };
-  if (isUnfitListing(l.title)) return { refuse: "unfit" };
+  if (isUnfitListing(l.title) || NOT_SEALED_AS_SOLD.test(l.title)) return { refuse: "unfit" };
   if (isForeign(l.title) || isForeign(handleOf(l.url))) return { refuse: "foreign" };
   const known = [...new Set(l.ids.map((x) => x.id).filter((id) => ctx.products.has(id)))];
   if (!known.length) return { refuse: "no-id" };
@@ -213,15 +256,26 @@ export function pickId(l: CrawlListing, ctx: PickContext): IdPick {
   const p = ctx.products.get(id)!;
   const line = ctx.lineOf(p);
   if (!line || !l.lines.includes(line)) return { refuse: "other-game", detail: line };
-  // A photo of another TCGplayer product (a single, a pack) beside it: the listing is not plainly this product.
+  // Any other TCGplayer-shaped id beside it, in the catalogue or not, says the listing is not plainly this product:
+  // a photo of another product (a single, a pack), or a handle and a SKU naming two products.
   if (l.ids.some((x) => x.where === "image" && x.id !== id)) return { refuse: "photo-conflict" };
+  const other = l.ids.find((x) => x.where !== "image" && x.id !== id);
+  if (other) return { refuse: "id-conflict", detail: `${other.where} ${other.id}` };
   if (p.kind !== "sealed" || p.sealedType === "Insert") return { refuse: "not-sealed" };
   if (isMulti(l.title) !== isMulti(p.name)) return { refuse: "multiple" };
-  // The title names a kind of product ("Booster Pack") and the id is another kind ("Booster Box"): a shifted handle.
+  if (OTHER_QUANTITY.test(l.title) && !OTHER_QUANTITY.test(p.name)) return { refuse: "multiple", detail: "quantity" };
+  // The title (or its one variant) names a kind of product ("Booster Pack") and the id is another kind ("Booster Box"): a shifted handle.
+  const kind = sealedTypeOf(p.name);
   const said = sealedTypeOf(l.title);
-  if (said !== "Other" && said !== sealedTypeOf(p.name)) return { refuse: "type-differs", detail: `${said} / ${sealedTypeOf(p.name)}` };
-  const m = matchSealed(l.title, ctx.indexOf(line));
+  if (said !== "Other" && said !== kind) return { refuse: "type-differs", detail: `${said} / ${kind}` };
+  if (l.variantKind && l.variantKind !== kind) return { refuse: "type-differs", detail: `${l.variantKind} / ${kind}` };
+  const idx = ctx.indexOf(line);
+  const m = matchSealed(l.title, idx);
   if (m && m.product.id !== id) return { refuse: "matcher-disagrees", detail: String(m.product.id) };
+  // A number in a handle or SKU may be the store's own numbering: unless TCGplayer's own photo carries the id, the
+  // title must say which product it is (the matcher lands on it, or the title names its set).
+  const photo = l.ids.some((x) => x.where === "image" && x.id === id);
+  if (!photo && !m && !namesSet(l.title, p, idx)) return { refuse: "unconfirmed" };
   return { id };
 }
 
@@ -263,6 +317,8 @@ export function crawlStoreKeys(known: readonly StoreConfig[], crawled: readonly 
 
 export interface CrawlTake {
   offers: Map<number, Offer[]>;
+  /** Today's store key → the products it was taken for this run (carryCrawl leaves those to the fresh row). */
+  fresh: Map<string, Set<number>>;
   taken: number;
   refused: Record<string, number>;
   listings: number;
@@ -271,11 +327,13 @@ export interface CrawlTake {
 /** Every listing of the run through pickId: one offer per store and product (in stock first, then the cheaper). */
 export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<string, string>): CrawlTake {
   const offers = new Map<number, Offer[]>();
+  const fresh = new Map<string, Set<number>>();
   const refused: Record<string, number> = {};
   let taken = 0;
   let listings = 0;
   for (const s of run.stores) {
-    if (!s.ok) continue;
+    // A partial read still yields the collections it read to the end.
+    if (!s.ok && !s.partial) continue;
     const key = keyOf.get(storeIdentity(s.base, s.market));
     if (!key) continue;
     const best = new Map<number, Offer>();
@@ -294,15 +352,18 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
     for (const [id, o] of best) {
       if (!offers.has(id)) offers.set(id, []);
       offers.get(id)!.push(o);
+      if (!fresh.has(key)) fresh.set(key, new Set());
+      fresh.get(key)!.add(id);
     }
   }
-  return { offers, taken, refused, listings };
+  return { offers, fresh, taken, refused, listings };
 }
 
 /**
  * A store the crawl could not read this run (stopped, not reached in the budget, or the crawl did not run) keeps its
  * crawled rows from the previous import for at most `maxAgeH` after its last good read: a shop that stopped answering
  * is not a price for longer than that. Only rows on products of a crawled game are carried (a sister prices the rest).
+ * A store read in part (a failed collection, a cap) keeps its old rows only for products it gave no fresh row (`fresh`).
  */
 export function carryCrawl(args: {
   stores: readonly { base: string; market: Market }[];
@@ -312,6 +373,8 @@ export function carryCrawl(args: {
   prevById: Readonly<Record<string, { offers: readonly Offer[] }>>;
   prevKeyOf: ReadonlyMap<string, string>;
   crawledProduct: (id: number) => boolean;
+  /** Today's store key → products it has a fresh row for this run. */
+  fresh?: ReadonlyMap<string, ReadonlySet<number>>;
   now: Date;
   maxAgeH: number;
 }): { offers: Map<number, Offer[]>; carried: number } {
@@ -332,7 +395,7 @@ export function carryCrawl(args: {
     if (!args.crawledProduct(Number(id))) continue;
     for (const o of e.offers) {
       const key = wanted.get(o.source);
-      if (!key) continue;
+      if (!key || args.fresh?.get(key)?.has(Number(id))) continue;
       if (!offers.has(Number(id))) offers.set(Number(id), []);
       offers.get(Number(id))!.push({ ...o, source: key });
       carried++;
@@ -355,6 +418,8 @@ export function lineOfCollection(c: { handle: string; title?: string | null }, l
 const SINGLES = /\bsingles?\b|\bpromos?\b|\bproxy\b|\bsleeves?\b|\bplaymats?\b|\baccessor|\bsupplies\b/;
 const SEALEDISH = /\bsealed\b|\bbooster\b|\bbox(es)?\b|\bdecks?\b|\bpacks?\b|\bdisplay\b|\bproducts?\b/;
 export const MAX_HANDLES_PER_GAME = 4;
+/** Collections a store, all its games together (crawl-run.ts capHandles): 8 × 4 pages + robots + currency fit under 40. */
+export const MAX_HANDLES_PER_STORE = 8;
 
 /**
  * The collections worth reading for one game at one store: never a singles or accessories collection, sealed-looking

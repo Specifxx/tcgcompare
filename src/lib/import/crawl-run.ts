@@ -3,7 +3,7 @@
 // fetch, sleep and clock from the caller, so tests/crawl.test.ts runs them on fixtures.
 import type { Market } from "@/lib/site-types";
 import { CURRENCY } from "@/lib/site-types";
-import { chooseHandles, lineOfCollection, storeIdentity, toListing, type CrawlListing, type CrawlRun, type CrawlStore, type CrawlStoreRun, type ShopifyListing } from "./crawl";
+import { chooseHandles, lineOfCollection, MAX_HANDLES_PER_STORE, storeIdentity, toListing, type CrawlListing, type CrawlRun, type CrawlStore, type CrawlStoreRun, type ShopifyListing } from "./crawl";
 import { eachStore, RequestBudget, StopStore, StoreSession, type PoliteOptions } from "./polite-http";
 import type { GameLine } from "@/lib/site-types";
 
@@ -18,7 +18,7 @@ export interface RunOptions extends Omit<PoliteOptions, "budget" | "perStoreCap"
   budget: number;
   perStoreCap: number;
   concurrency?: number;
-  /** Stores read in this order: never read first, then the longest ago (meta.json crawl.seen). */
+  /** Stores read in this order: never tried first, then the longest ago (meta.json crawl.tried, else crawl.seen). */
   seen?: Readonly<Record<string, string>>;
   log?: (s: string) => void;
 }
@@ -52,49 +52,94 @@ export function groupStores(entries: readonly CrawlStore[]): StoreJob[] {
   return [...by.values()];
 }
 
-/** Reads every probed collection of every store, two stores at a time, within the budget. */
+const hostOfBase = (base: string) => {
+  try {
+    return new URL(base).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return base;
+  }
+};
+
+/**
+ * Items grouped by the shop they visit (its host): a shop listed in two markets is ONE shop, read by one session
+ * (one robots.txt, one queue, one request a second), never by two at once.
+ */
+export function byHost<T extends { base: string }>(items: readonly T[]): T[][] {
+  const m = new Map<string, T[]>();
+  for (const it of items) {
+    const h = hostOfBase(it.base);
+    if (!m.has(h)) m.set(h, []);
+    m.get(h)!.push(it);
+  }
+  return [...m.values()];
+}
+
+/** Reads every probed collection of every store, two shops at a time, within the budget. */
 export async function runCrawl(entries: readonly CrawlStore[], o: RunOptions): Promise<CrawlRun> {
   const now = o.now ?? Date.now;
   const budget = new RequestBudget(o.budget);
   const seen = o.seen ?? {};
   const age = (j: StoreJob) => Date.parse(seen[storeIdentity(j.base, j.market)] ?? "") || 0;
-  const jobs = groupStores(entries).sort((a, b) => age(a) - age(b) || a.key.localeCompare(b.key));
+  const jobs = groupStores(entries).sort((a, b) => age(a) - age(b) || a.key.localeCompare(b.key) || a.market.localeCompare(b.market));
+  // Sorted jobs keep their order inside a host; hosts go by their least recently tried market.
+  const hosts = byHost(jobs);
   const out: CrawlStoreRun[] = [];
   await eachStore(
-    jobs,
-    async (j) => {
-      const s = new StoreSession(j.base, { ...o, budget, perStoreCap: o.perStoreCap });
-      const run: CrawlStoreRun = { host: j.host, key: j.key, name: j.name, base: j.base, market: j.market, ok: false, requests: 0, listings: [] };
-      out.push(run);
-      try {
-        const cur = await shopCurrency(s, j.market);
-        if (!cur) run.reason = "currency-unknown";
-        else if (cur !== CURRENCY[j.market]) run.reason = `currency-mismatch: charges ${cur}, listed as ${j.market}`;
-        else {
-          const byId = new Map<number, { p: ShopifyListing; lines: Set<string> }>();
-          for (const { handle, line } of j.handles) {
-            for (let page = 1; page <= PRODUCT_PAGES; page++) {
-              const d = await s.getJson<{ products?: ShopifyListing[] }>(`/collections/${encodeURIComponent(handle)}/products.json?limit=${PAGE}&page=${page}&country=${ISO[j.market]}`);
-              const list = Array.isArray(d?.products) ? d!.products : null;
-              if (!list) break;
-              for (const p of list) {
+    hosts,
+    async (group) => {
+      // The cap counts per shop: a shop in two markets has two markets' allowance, in one session.
+      const s = new StoreSession(group[0].base, { ...o, budget, perStoreCap: o.perStoreCap * group.length });
+      for (const j of group) {
+        const before = s.requests;
+        const run: CrawlStoreRun = { host: j.host, key: j.key, name: j.name, base: j.base, market: j.market, ok: false, requests: 0, listings: [] };
+        out.push(run);
+        // Collections read to the end, kept even when the store is stopped later in the run.
+        const byId = new Map<number, { p: ShopifyListing; lines: Set<string> }>();
+        const failed: string[] = [];
+        let done = 0;
+        try {
+          const cur = await shopCurrency(s, j.market);
+          if (!cur) run.reason = "currency-unknown";
+          else if (cur !== CURRENCY[j.market]) run.reason = `currency-mismatch: charges ${cur}, listed as ${j.market}`;
+          else {
+            for (const { handle, line } of j.handles) {
+              const got: ShopifyListing[] = [];
+              let bad = false;
+              for (let page = 1; page <= PRODUCT_PAGES; page++) {
+                const f0 = s.failures;
+                const d = await s.getJson<{ products?: ShopifyListing[] }>(`/collections/${encodeURIComponent(handle)}/products.json?limit=${PAGE}&page=${page}&country=${ISO[j.market]}`);
+                if (s.failures > f0 || (d != null && !Array.isArray(d.products))) {
+                  bad = true; // a 5xx, a timeout or unreadable JSON: this collection was not read
+                  break;
+                }
+                const list = d ? d.products! : null;
+                if (!list) break; // a 404 or a path robots.txt disallows: honestly nothing here
+                got.push(...list);
+                if (list.length < PAGE) break;
+              }
+              if (bad) {
+                failed.push(handle);
+                continue;
+              }
+              done++;
+              for (const p of got) {
                 if (!p || typeof p.id !== "number" || !Array.isArray(p.variants)) continue;
                 if (!byId.has(p.id)) byId.set(p.id, { p, lines: new Set() });
                 byId.get(p.id)!.lines.add(line);
               }
-              if (list.length < PAGE) break;
             }
+            if (failed.length) run.reason = `errors: ${failed.length} of ${j.handles.length} collections failed (${failed.join(", ")})`;
+            else run.ok = true;
           }
-          run.listings = [...byId.values()].map(({ p, lines }) => toListing(p, j.base, [...lines].sort()));
-          run.ok = true;
+        } catch (e) {
+          if (!(e instanceof StopStore)) throw e;
+          run.reason = e.message;
         }
-      } catch (e) {
-        if (!(e instanceof StopStore)) throw e;
-        run.reason = e.message;
-        run.listings = [];
+        run.listings = [...byId.values()].map(({ p, lines }) => toListing(p, j.base, [...lines].sort()));
+        if (!run.ok && done > 0) run.partial = true;
+        run.requests = s.requests - before;
+        o.log?.(`[crawl] ${j.key} (${j.market}): ${run.ok ? `${run.listings.length} listings` : `not read to the end, ${run.reason}${run.partial ? `; ${done} collections kept, ${run.listings.length} listings` : ""}`}, ${run.requests} requests`);
       }
-      run.requests = s.requests;
-      o.log?.(`[crawl] ${j.key} (${j.market}): ${run.ok ? `${run.listings.length} listings` : `not read, ${run.reason}`}, ${s.requests} requests`);
     },
     o.concurrency ?? 2,
   );
@@ -117,7 +162,8 @@ export interface ProbeResult {
   requests: number;
 }
 
-/** Which collections at each store hold a game we crawl (by its line's `crawl` words). */
+/** Which collections at each store hold a game we crawl (by its line's `crawl` words). A shop listed in two markets
+ *  is asked once: its collections are the same in every market. */
 export async function runProbe(stores: readonly ProbeStore[], lines: readonly Pick<GameLine, "id" | "crawl">[], o: RunOptions): Promise<ProbeResult> {
   const now = o.now ?? Date.now;
   const budget = new RequestBudget(o.budget);
@@ -126,11 +172,11 @@ export async function runProbe(stores: readonly ProbeStore[], lines: readonly Pi
   const probed = new Set<string>();
   const blocked = new Set<string>();
   await eachStore(
-    stores,
-    async (st) => {
-      const base = st.base.replace(/\/+$/, "");
+    byHost(stores),
+    async (group) => {
+      const base = group[0].base.replace(/\/+$/, "");
       const s = new StoreSession(base, { ...o, budget, perStoreCap: o.perStoreCap });
-      const ident = storeIdentity(base, st.market);
+      const label = group.map((st) => `${st.key} (${st.market})`).join(", ");
       try {
         const cs: { handle: string; title?: string; products_count?: number }[] = [];
         for (let page = 1; page <= COLLECTION_PAGES; page++) {
@@ -147,23 +193,46 @@ export async function runProbe(stores: readonly ProbeStore[], lines: readonly Pi
           if (!byLine.has(line)) byLine.set(line, []);
           byLine.get(line)!.push(c);
         }
-        const host = new URL(base).hostname.replace(/^www\./, "").toLowerCase();
-        for (const [line, list] of byLine) {
-          const handles = chooseHandles(list);
-          if (handles.length) entries.push({ host, key: st.key, name: st.name, base, market: st.market, line, handles, probedAt: new Date(now()).toISOString() });
+        const host = hostOfBase(base);
+        const chosen = capHandles([...byLine].sort((a, b) => a[0].localeCompare(b[0])).map(([line, list]) => ({ line, handles: chooseHandles(list) })));
+        for (const st of group) {
+          const b = st.base.replace(/\/+$/, "");
+          for (const { line, handles } of chosen) if (handles.length) entries.push({ host, key: st.key, name: st.name, base: b, market: st.market, line, handles, probedAt: new Date(now()).toISOString() });
+          probed.add(storeIdentity(b, st.market));
         }
-        probed.add(ident);
-        o.log?.(`[probe] ${st.key} (${st.market}): ${cs.length} collections, games ${[...byLine.keys()].join(", ") || "none"}`);
+        o.log?.(`[probe] ${label}: ${cs.length} collections, games ${[...byLine.keys()].join(", ") || "none"}`);
       } catch (e) {
         if (!(e instanceof StopStore)) throw e;
-        if (e.reason === "blocked" || e.reason === "challenge") blocked.add(ident);
-        o.log?.(`[probe] ${st.key} (${st.market}): ${e.message}`);
+        if (e.reason === "blocked" || e.reason === "challenge") for (const st of group) blocked.add(storeIdentity(st.base, st.market));
+        o.log?.(`[probe] ${label}: ${e.message}`);
       }
     },
     o.concurrency ?? 2,
   );
   entries.sort((a, b) => a.key.localeCompare(b.key) || a.market.localeCompare(b.market) || a.line.localeCompare(b.line));
   return { entries, probed, blocked, requests: budget.used };
+}
+
+/**
+ * At most MAX_HANDLES_PER_STORE collections a store, across all its games, so that one market's full read
+ * (robots.txt, the currency, PRODUCT_PAGES pages of each) fits under the crawl's per-store cap (CRAWL_STORE_CAP, 40):
+ * a store whose read cannot finish would be read in part on every run. Games take turns, each its best first.
+ */
+export function capHandles(byLine: readonly { line: string; handles: string[] }[], max = MAX_HANDLES_PER_STORE): { line: string; handles: string[] }[] {
+  const out = byLine.map((x) => ({ line: x.line, handles: [] as string[] }));
+  let left = max;
+  for (let round = 0; left > 0; round++) {
+    let any = false;
+    for (let i = 0; i < byLine.length && left > 0; i++) {
+      const h = byLine[i].handles[round];
+      if (h == null) continue;
+      out[i].handles.push(h);
+      left--;
+      any = true;
+    }
+    if (!any) break;
+  }
+  return out.filter((x) => x.handles.length);
 }
 
 /** This week's probe over last week's list: a store probed again replaces its entries, one that blocked us leaves. */

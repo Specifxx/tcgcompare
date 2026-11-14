@@ -26,9 +26,11 @@ async function main() {
     console.log("[crawl] data/crawl/stores.json is empty or missing: nothing to read (run the Crawl probe workflow)");
     return;
   }
+  // Never tried first, then the longest ago (a store that keeps hitting its cap was tried, though never read to the end).
   let seen: Record<string, string> = {};
   try {
-    seen = (JSON.parse(fs.readFileSync(path.join(ROOT, "data", "public", "meta.json"), "utf8")) as Meta).crawl?.seen ?? {};
+    const c = (JSON.parse(fs.readFileSync(path.join(ROOT, "data", "public", "meta.json"), "utf8")) as Meta).crawl;
+    seen = { ...(c?.seen ?? {}), ...(c?.tried ?? {}) };
   } catch {}
   const minutes = Number(process.env.CRAWL_MAX_MINUTES ?? 45);
   const run = await runCrawl(entries, {
@@ -41,7 +43,8 @@ async function main() {
   fs.mkdirSync(path.dirname(CRAWL_OUT), { recursive: true });
   fs.writeFileSync(CRAWL_OUT, JSON.stringify(run) + "\n");
   const ok = run.stores.filter((s) => s.ok);
-  console.log(`[crawl] ${ok.length} of ${run.stores.length} stores read, ${run.requests}/${run.budget} requests, ${ok.reduce((a, s) => a + s.listings.length, 0)} listings`);
+  const partial = run.stores.filter((s) => !s.ok && s.partial);
+  console.log(`[crawl] ${ok.length} of ${run.stores.length} stores read, ${partial.length} in part (${partial.reduce((a, s) => a + s.listings.length, 0)} listings), ${run.requests}/${run.budget} requests, ${ok.reduce((a, s) => a + s.listings.length, 0)} listings`);
 }
 
 main().catch((e) => {

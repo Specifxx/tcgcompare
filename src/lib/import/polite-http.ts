@@ -133,6 +133,9 @@ export function isChallenge(status: number, headers: Headers, body: string): boo
 /** Everything this run asks one store goes through one session: one request at a time, robots.txt first. */
 export class StoreSession {
   requests = 0;
+  /** Requests that failed (5xx, timeout, a 200 that was not JSON): a caller compares it before and after a read to
+   *  tell a failed page from an honest "nothing here" (a 404, or a path robots.txt disallows). */
+  failures = 0;
   stopped: { reason: StopReason; detail: string } | null = null;
   private allows: ((p: string) => boolean) | null = null;
   private lastAt = -Infinity;
@@ -213,6 +216,7 @@ export class StoreSession {
         this.errors = 0;
         return v;
       } catch {
+        this.failures++;
         return null;
       }
     };
@@ -222,6 +226,7 @@ export class StoreSession {
   }
 
   private failed(p: string): null {
+    this.failures++;
     if (++this.errors >= MAX_ERRORS) this.stop("errors", `${MAX_ERRORS} failed requests in a row (last ${p})`);
     return null;
   }

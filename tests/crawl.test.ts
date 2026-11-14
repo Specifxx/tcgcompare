@@ -14,6 +14,7 @@ import {
   crawlVerdict,
   idsInListing,
   lineOfCollection,
+  MAX_HANDLES_PER_STORE,
   pickId,
   pickOffer,
   takeCrawl,
@@ -23,7 +24,7 @@ import {
   type PickContext,
   type ShopifyListing,
 } from "../src/lib/import/crawl";
-import { mergeProbe, runCrawl, runProbe } from "../src/lib/import/crawl-run";
+import { capHandles, mergeProbe, PRODUCT_PAGES, runCrawl, runProbe } from "../src/lib/import/crawl-run";
 import { eachStore, isChallenge, parseRobots, RequestBudget, StopStore, StoreSession } from "../src/lib/import/polite-http";
 import type { CrawlMeta, Product, SetInfo, StoreConfig } from "../src/lib/site-types";
 
@@ -121,8 +122,52 @@ test("the matcher disagrees, or the title names another kind of product: refused
   };
   const box = crawled(listing({ handle: "lof-booster-box-612345" }));
   assert.equal((pickId(box, c2) as { refuse: string }).refuse, "matcher-disagrees");
-  // A matcher that says nothing does not refuse.
-  assert.deepEqual(pickId(crawled(listing({ title: "LOF Booster Box (Sealed)", handle: "lof-612345" })), ctx), { id: 612345 });
+  // A matcher that says nothing does not refuse when TCGplayer's own photo carries the id.
+  assert.deepEqual(pickId(crawled(listing({ title: "LOF Booster Box (Sealed)", handle: "lof-612345", images: [{ src: "https://cdn.test/files/612345_in_1000x1000.jpg" }] })), ctx), { id: 612345 });
+});
+
+test("a handle or SKU number alone is not proof: the title must name the product or its set", () => {
+  // A store's own sequential SKU, or a trailing handle number, that happens to be a same-game product's id.
+  const sku = crawled(listing({ title: "Star Wars Unlimited Booster Box", handle: "swu-booster-box", variants: [{ id: 1, title: "Default Title", price: "129.99", available: true, sku: "612345" }] }));
+  assert.deepEqual(pickId(sku, ctx), { refuse: "unconfirmed" });
+  const handle = crawled(listing({ title: "Star Wars Unlimited Booster Box", handle: "swu-booster-box-612345" }));
+  assert.deepEqual(pickId(handle, ctx), { refuse: "unconfirmed" });
+  assert.deepEqual(pickId(crawled(listing({ title: "LOF Booster Box (Sealed)", handle: "lof-612345" })), ctx), { refuse: "unconfirmed" });
+  // The set named in the title, or TCGplayer's photo of it, confirms it.
+  assert.deepEqual(pickId(crawled(listing({ title: "Legends of the Force - Booster Box", handle: "swu-booster-box-612345" })), ctx), { id: 612345 });
+  assert.deepEqual(pickId(crawled(listing({ title: "Star Wars Unlimited Booster Box", handle: "swu-booster-box-612345", images: [{ src: "https://cdn.test/files/612345_in_1000x1000.jpg" }] })), ctx), { id: 612345 });
+});
+
+test("a handle id and a SKU id that differ: refused, whether or not the catalogue holds both", () => {
+  const l = crawled(listing({ handle: "swu-booster-box-999999", variants: [{ id: 1, title: "Default Title", price: "129.99", available: true, sku: "612345" }] }));
+  assert.deepEqual(l.ids, [{ id: 999999, where: "handle" }, { id: 612345, where: "sku" }]);
+  assert.equal((pickId(l, ctx) as { refuse: string }).refuse, "id-conflict");
+  const same = crawled(listing({ handle: "lof-booster-box-612345", variants: [{ id: 1, title: "Default Title", price: "129.99", available: true, sku: "TCG-612345" }] }));
+  assert.deepEqual(pickId(same, ctx), { id: 612345 });
+});
+
+test("opened, pre-owned, resealed, empty boxes and break spots are not the sealed box", () => {
+  for (const tail of ["Booster Box (Opened, 20 packs)", "Booster Box - Open Box", "Booster Box - Pre-Owned", "Booster Box Resealed", "Empty Booster Box", "Booster Box - Box Break Spot", "Booster Box (Missing 2 packs)", "Booster Box Repack"]) {
+    const l = crawled(listing({ title: `Legends of the Force ${tail}`, handle: "lof-booster-box-612345" }));
+    assert.equal((pickId(l, ctx) as { refuse: string }).refuse, "unfit", tail);
+  }
+  // Words that merely contain them are fine.
+  assert.deepEqual(pickId(crawled(listing({ title: "Legends of the Force Booster Box (Unopened)", handle: "lof-booster-box-612345" })), ctx), { id: 612345 });
+});
+
+test("a title naming another quantity, or a lone variant naming another product, is not the single box", () => {
+  // A pack count ("(24 packs)") is left alone: most real box listings state theirs, and the catalogue claims none.
+  for (const tail of ["Booster Box (6 Boxes)", "Booster Box - Sealed Display of 6", "Half Booster Box", "6 Boxes of Booster Box"]) {
+    const l = crawled(listing({ title: `Legends of the Force ${tail}`, handle: "lof-booster-box-612345" }));
+    assert.ok("refuse" in pickId(l, ctx), `${tail}: ${JSON.stringify(pickId(l, ctx))}`);
+  }
+  const pack = crawled(listing({ handle: "lof-booster-box-612345", variants: [{ id: 1, title: "Booster Pack", price: "5.99", available: true }] }));
+  assert.equal((pickId(pack, ctx) as { refuse: string }).refuse, "listing");
+  const vague = crawled(listing({ title: "Legends of the Force", handle: "lof-612345", variants: [{ id: 1, title: "Booster Pack", price: "5.99", available: true }] }));
+  assert.equal((pickId(vague, ctx) as { refuse: string }).refuse, "type-differs");
+  assert.deepEqual(pickOffer({ title: "LOF Booster Box", variants: [{ id: 1, title: "x6", price: "700", available: true }] }), { refuse: "variants-differ" });
+  // A lone variant that names the same kind is the product.
+  assert.deepEqual(pickId(crawled(listing({ handle: "lof-booster-box-612345", variants: [{ id: 1, title: "Sealed Booster Box", price: "129.99", available: true }] })), ctx), { id: 612345 });
 });
 
 test("foreign, unfit and multiple listings: refused", () => {
@@ -177,6 +222,12 @@ test("a store not read this run keeps its crawled rows for 72 hours after its la
   assert.equal(fresh.offers.get(612345)![0].source, "cards");
   assert.equal(carryCrawl({ ...base, readOk: new Set(), seen: { "cards.test|US": "2026-11-10T00:00:00Z" } }).carried, 0);
   assert.equal(carryCrawl({ ...base, readOk: new Set(["cards.test|US"]), seen: { "cards.test|US": "2026-11-14T00:00:00Z" } }).carried, 0);
+  // Read in part: the old row is carried only for a product the run gave no fresh row.
+  const part = { ...base, readOk: new Set<string>(), seen: { "cards.test|US": "2026-11-13T00:00:00Z" }, crawledProduct: () => true };
+  assert.equal(carryCrawl(part).carried, 2);
+  const c = carryCrawl({ ...part, fresh: new Map([["cards", new Set([612345])]]) });
+  assert.equal(c.carried, 1);
+  assert.deepEqual([...c.offers.keys()], [554433]);
 });
 
 // ── The probe's words ───────────────────────────────────────────────────────
@@ -389,4 +440,92 @@ test("the crawl is a no-op with no store list, and the ops check reads its meta"
     assert.ok(y.indexOf("scripts/crawl-uncovered.ts") > 0 && y.indexOf("scripts/crawl-uncovered.ts") < y.indexOf("scripts/import-all.ts"), `${wf}: the crawl runs before the import`);
   }
   assert.doesNotMatch(fs.readFileSync(".github/workflows/crawl-probe.yml", "utf8"), /\[deploy\]/);
+});
+
+// ── One shop, many markets; partial and failed reads ────────────────────────
+
+test("a shop listed in two markets is one session: one robots.txt, one request at a time, a second apart", async () => {
+  const net = fakeNet({
+    "https://two.test/robots.txt": { body: "User-agent: *\nDisallow: /checkout\n", headers: { "content-type": "text/plain" } },
+    "https://two.test/meta.json": { body: { currency: "USD" } },
+    "https://two.test/collections/swu/products.json": { body: { products: [listing({ id: 1, handle: "lof-booster-box-612345" })] } },
+    "https://other.test/meta.json": { body: { currency: "USD" } },
+  });
+  // A UK entry on the same host (the fake answers USD, so it is skipped for its currency, after asking).
+  const run = await runCrawl([entry("two.test", "US", ["swu"]), { ...entry("two.test", "UK", ["swu"]), key: "twouk" }, entry("other.test", "US", ["x"])], {
+    fetch: net.f,
+    sleep: net.sleep,
+    now: net.now,
+    budget: 100,
+    perStoreCap: 40,
+  });
+  assert.equal(net.stats().maxInFlight, 1, "never two requests in flight at one shop");
+  assert.equal(net.log.filter((x) => x.url === "https://two.test/robots.txt").length, 1);
+  const two = net.log.filter((x) => x.url.startsWith("https://two.test"));
+  for (let i = 1; i < two.length; i++) assert.ok(two[i].at - two[i - 1].at >= 1000, "a second apart across markets");
+  assert.equal(run.stores.find((s) => s.key === "two")!.ok, true);
+  assert.match(run.stores.find((s) => s.key === "twouk")!.reason!, /currency-mismatch/);
+  // The probe asks a two-market shop once, and lists it for both markets.
+  const pnet = fakeNet({ "https://two.test/collections.json": { body: { collections: [{ handle: "swu-sealed", title: "SWU Sealed", products_count: 3 }] } } });
+  const r = await runProbe([{ key: "two", name: "Two", base: "https://two.test", market: "US" }, { key: "twouk", name: "Two", base: "https://two.test", market: "UK" }], SITE.lines ?? [], { fetch: pnet.f, sleep: pnet.sleep, now: pnet.now, budget: 100, perStoreCap: 6 });
+  assert.equal(pnet.log.filter((x) => x.url.includes("/collections.json")).length, 1);
+  assert.deepEqual(r.entries.map((e) => e.market).sort(), ["UK", "US"]);
+  assert.equal(r.probed.size, 2);
+});
+
+test("a store stopped by its cap keeps the collections it read to the end, marked partial", async () => {
+  const full = Array.from({ length: 250 }, (_, i) => listing({ id: 1000 + i, handle: `p-${i}` }));
+  const net = fakeNet({
+    "https://cap.test/meta.json": { body: { currency: "USD" } },
+    "https://cap.test/collections/a/products.json": { body: { products: [listing({ id: 1, handle: "lof-booster-box-612345" })] } },
+    "https://cap.test/collections/b/products.json*": { body: { products: full } },
+  });
+  const run = await runCrawl([entry("cap.test", "US", ["a", "b"])], { fetch: net.f, sleep: net.sleep, now: net.now, budget: 100, perStoreCap: 5 });
+  const s = run.stores[0];
+  assert.equal(s.ok, false);
+  assert.equal(s.partial, true);
+  assert.match(s.reason!, /^store-cap/);
+  assert.equal(s.listings.length, 1, "collection a kept, the unfinished b left out");
+  const { keyOf } = crawlStoreKeys([], run.stores);
+  const got = takeCrawl(run, ctx, keyOf);
+  assert.deepEqual([...got.offers.keys()], [612345]);
+  assert.deepEqual([...got.fresh.get("cap")!], [612345]);
+});
+
+test("a failed collection page (5xx, timeout, bad JSON) is not a read: the store is not ok; a 404 is an honest nothing", async () => {
+  const good = { body: { products: [listing({ id: 1, handle: "lof-booster-box-612345" })] } };
+  for (const bad of [{ status: 503, body: "oops", headers: { "content-type": "text/plain" } }, { status: 200, body: "<p>maintenance</p>", headers: { "content-type": "text/plain" } }] as Route[]) {
+    const net = fakeNet({ "https://f.test/meta.json": { body: { currency: "USD" } }, "https://f.test/collections/a/products.json": good, "https://f.test/collections/b/products.json": bad });
+    const run = await runCrawl([entry("f.test", "US", ["a", "b"])], { fetch: net.f, sleep: net.sleep, now: net.now, budget: 100, perStoreCap: 40 });
+    assert.equal(run.stores[0].ok, false);
+    assert.equal(run.stores[0].partial, true);
+    assert.match(run.stores[0].reason!, /^errors: 1 of 2 collections failed \(b\)/);
+    assert.equal(run.stores[0].listings.length, 1);
+  }
+  // Every collection times out: not ok, nothing partial (its rows are carried).
+  const net = fakeNet({ "https://t.test/meta.json": { body: { currency: "USD" } } });
+  const f = (async (u: string, i?: RequestInit) => {
+    if (u.includes("/collections/")) throw new Error("timeout");
+    return net.f(u, i);
+  }) as unknown as typeof fetch;
+  const run = await runCrawl([entry("t.test", "US", ["a", "b"])], { fetch: f, sleep: net.sleep, now: net.now, budget: 100, perStoreCap: 40 });
+  assert.equal(run.stores[0].ok, false);
+  assert.ok(!run.stores[0].partial);
+  assert.match(run.stores[0].reason!, /^errors/);
+  // A 404 collection is read: nothing there.
+  const n404 = fakeNet({ "https://n.test/meta.json": { body: { currency: "USD" } } });
+  const r404 = await runCrawl([entry("n.test", "US", ["gone"])], { fetch: n404.f, sleep: n404.sleep, now: n404.now, budget: 100, perStoreCap: 40 });
+  assert.equal(r404.stores[0].ok, true);
+});
+
+test("the probe keeps at most MAX_HANDLES_PER_STORE collections a store, games taking turns", () => {
+  const got = capHandles([
+    { line: "a", handles: ["a1", "a2", "a3", "a4"] },
+    { line: "b", handles: ["b1", "b2", "b3", "b4"] },
+    { line: "c", handles: ["c1"] },
+  ]);
+  // Round 1: a1 b1 c1; round 2: a2 b2; round 3: a3 b3; round 4: a4 (8 in all).
+  assert.deepEqual(got, [{ line: "a", handles: ["a1", "a2", "a3", "a4"] }, { line: "b", handles: ["b1", "b2", "b3"] }, { line: "c", handles: ["c1"] }]);
+  assert.equal(got.flatMap((x) => x.handles).length, MAX_HANDLES_PER_STORE);
+  assert.ok(PRODUCT_PAGES * MAX_HANDLES_PER_STORE + 3 <= 40, "a full read fits under CRAWL_STORE_CAP");
 });
