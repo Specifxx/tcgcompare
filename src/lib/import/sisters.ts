@@ -9,12 +9,16 @@
 //   the TCGplayer product id.
 // - "sealed" sisters (DexCompare, MTG Compare): their products are their own, but a product whose photo is
 //   TCGplayer's (tcgplayer-cdn…/product/<id>_…) was built from that TCGplayer product. No photo id, no offers.
+// - "snapshot" sisters (OP Compare): the `snapshot` branch holds sealed.json.gz (its sealed products, whose id IS the
+//   TCGplayer product id) and o/<id range>.json.gz (every product's offers); the store list is src/lib/stores.ts on
+//   main, checked out beside it.
 //
 // Never a title match here. eBay, TCGplayer and Amazon rows are left behind (this site makes its own), and so is a
 // sister whose data is older than MAX_AGE_H.
 //
 // The workflow checks the sisters' data out beside this repo (SISTER_DIR, sparse); nothing is fetched over HTTP.
 import fs from "node:fs";
+import { gunzipSync } from "node:zlib";
 import path from "node:path";
 import { CURRENCY, MARKETS, type Market, type Offer, type StoreConfig } from "@/lib/site-types";
 
@@ -22,10 +26,10 @@ export interface SisterSource {
   id: string;
   /** Folder name under SISTER_DIR (the repository's name). */
   dir: string;
-  kind: "engine" | "sealed";
+  kind: "engine" | "sealed" | "snapshot";
   /** Where data/public lives inside the repository. */
   data: string;
-  /** The store list: src/content/stores.ts (engine) or src/data/stores.json (sealed). */
+  /** The store list: src/content/stores.ts (engine) or src/data/stores.json (sealed). A snapshot sister's is a path under SISTER_DIR. */
   stores: string;
 }
 
@@ -37,6 +41,7 @@ export const SISTERS: SisterSource[] = [
   { id: "gundam", dir: "GundamCompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts" },
   { id: "bandai", dir: "bandaicompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts" },
   { id: "cyberpunk", dir: "cyberpunkcompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts" },
+  { id: "op", dir: "OpCompare-snapshot", kind: "snapshot", data: ".", stores: "../OpCompare/src/lib/stores.ts" },
 ];
 
 export const MAX_AGE_H = 72;
@@ -57,7 +62,7 @@ interface RawStore { key: string; name: string; base: string; market: string }
 /** The stores of an engine sister's src/content/stores.ts, read as text (one object per line). */
 export function parseStoresTs(src: string): RawStore[] {
   const out: RawStore[] = [];
-  const re = /\{\s*key:\s*"([^"]+)",\s*name:\s*"([^"]+)",\s*base:\s*"([^"]+)",\s*market:\s*"([A-Z]+)"/g;
+  const re = /\{\s*key:\s*"([^"]+)",\s*name:\s*"([^"]+)",\s*base:\s*"([^"]+)",\s*(?:market|country):\s*"([A-Z]+)"/g;
   for (let m = re.exec(src); m; m = re.exec(src)) out.push({ key: m[1], name: m[2], base: m[3].replace(/\/+$/, ""), market: m[4] });
   return out;
 }
@@ -186,6 +191,42 @@ function readSealed(root: string, src: SisterSource, book: StoreBook, add: (id: 
   return { at: meta.generatedAt ?? null, products: seen.size };
 }
 
+const readGz = <T>(file: string): T => JSON.parse(gunzipSync(fs.readFileSync(file)).toString("utf8")) as T;
+
+/** The snapshot's own range rule (OP Compare, src/lib/price-snapshot.ts): offers of ids n*1024…n*1024+1023 share a file. */
+export const snapshotRange = (id: number) => String(Math.floor(id / 1024)).padStart(3, "0");
+
+interface SnapshotOffer { source: string; market: string; priceCents: number; currency: string; url: string; inStock: boolean; condition?: string | null; updatedAt?: string }
+
+function readSnapshot(root: string, src: SisterSource, book: StoreBook, add: (id: number, o: Offer) => void, now: Date): { at: string | null; products: number } {
+  const stores = new Map(parseStoresTs(fs.readFileSync(path.join(root, src.stores), "utf8")).map((s) => [s.key, s]));
+  const meta = readJson<{ lastImportAt?: string; generatedAt?: string }>(path.join(root, src.data, "meta.json"));
+  const sealed = readGz<{ id: number }[]>(path.join(root, src.data, "sealed.json.gz"));
+  const files = new Map<string, Record<string, SnapshotOffer[]>>();
+  const seen = new Set<number>();
+  for (const { id } of sealed) {
+    const r = snapshotRange(id);
+    if (!files.has(r)) {
+      const f = path.join(root, src.data, "o", `${r}.json.gz`);
+      files.set(r, fs.existsSync(f) ? readGz<Record<string, SnapshotOffer[]>>(f) : {});
+    }
+    for (const o of files.get(r)![String(id)] ?? []) {
+      if (!o.source?.startsWith("store:") || o.condition || !(o.priceCents > 0) || !/^https?:\/\//.test(o.url)) continue;
+      // A row its own import has not seen for MAX_AGE_H is a shop that stopped answering, not a price.
+      const age = o.updatedAt ? (now.getTime() - Date.parse(o.updatedAt)) / 3_600_000 : Infinity;
+      if (!(age <= MAX_AGE_H)) continue;
+      const raw = stores.get(o.source.slice(6));
+      if (!raw || !(MARKETS as string[]).includes(o.market) || CURRENCY[o.market as Market] !== o.currency) continue;
+      const key = book.key({ ...raw, market: o.market });
+      if (!key) continue;
+      const market = o.market as Market;
+      add(id, { source: key, market, currency: o.currency, cents: o.priceCents, inStock: !!o.inStock, url: o.url, title: "" });
+      seen.add(id);
+    }
+  }
+  return { at: meta.lastImportAt ?? meta.generatedAt ?? null, products: seen.size };
+}
+
 /** Reads every sister under `root`. A sister that is missing, unreadable or stale is reported and skipped. */
 export function loadSisterOffers(root: string, now = new Date(), sources: SisterSource[] = SISTERS): SisterResult {
   const book = new StoreBook();
@@ -207,7 +248,8 @@ export function loadSisterOffers(root: string, now = new Date(), sources: Sister
         if (!list.some((x) => x.market === o.market)) list.push(o);
         mineEbay.set(id, list);
       };
-      const got = src.kind === "engine" ? readEngine(path.join(root, src.dir), src, book, add, addEbay) : readSealed(path.join(root, src.dir), src, book, add);
+      const dir = path.join(root, src.dir);
+      const got = src.kind === "engine" ? readEngine(dir, src, book, add, addEbay) : src.kind === "snapshot" ? readSnapshot(dir, src, book, add, now) : readSealed(dir, src, book, add);
       const ageH = got.at ? (now.getTime() - new Date(got.at).getTime()) / 3_600_000 : Infinity;
       if (!(ageH <= MAX_AGE_H)) throw new Error(`data is ${Number.isFinite(ageH) ? `${Math.round(ageH)} hours` : "of unknown age"} old`);
       let n = 0;

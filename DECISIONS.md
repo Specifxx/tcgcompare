@@ -51,3 +51,12 @@ the hero); the look on top of it changes (`globals.css`, "The 2050 layer"):
 - The icon, favicon and share image are this site's own (a box drawn in the three lights); they were YGO Compare's.
 - Tested against a production build: 342 page loads across every page type on desktop and phone, all 200, one h1 each,
   no script error, no sideways scroll.
+
+## 2026-11-14: OP Compare's stores join, from its snapshot branch
+
+OP Compare keeps no public data on `main`: its `snapshot` branch is the only copy, and its sealed product id is
+TCGplayer's product id. `sisters.ts` gained a third kind, "snapshot": `sealed.json.gz` names the sealed ids, each id's
+offers are read from `o/<id / 1024>.json.gz`, and only `store:` rows with no condition, a price, the market's own
+currency and an `updatedAt` inside 72 hours are taken (a card of the same range is never read). The store list is
+`src/lib/stores.ts` on OP Compare's `main`, checked out beside it. On the 14 November snapshot: 5,258 store rows on
+187 One Piece products from 291 stores. Riftbound still waits: Rift Compare's public data carries no TCGplayer id.
