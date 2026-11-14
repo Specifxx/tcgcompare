@@ -97,6 +97,26 @@ jobs:
             data/public
             src/content
           sparse-checkout-cone-mode: true
+      # OP Compare keeps its public data on its `snapshot` branch (sealed ids are TCGplayer's) and its store list on main.
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: Specifxx/OpCompare
+          ref: snapshot
+          path: sisters/OpCompare-snapshot
+          sparse-checkout: |
+            o
+            sealed.json.gz
+            meta.json
+          sparse-checkout-cone-mode: false
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: Specifxx/OpCompare
+          path: sisters/OpCompare
+          sparse-checkout: |
+            src/lib/stores.ts
+          sparse-checkout-cone-mode: false
       - name: Import
         env:
           SISTER_DIR: sisters

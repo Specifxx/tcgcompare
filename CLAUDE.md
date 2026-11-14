@@ -20,7 +20,8 @@ Game facts live in `src/site.config.ts`; engine code never names a game.
 ## Store prices come from the sister sites, by TCGplayer product id only
 
 `lib/import/sisters.ts` reads each sister's published data from a sparse checkout (`SISTER_DIR`); nothing is fetched
-from a store by this repo. Never match a sister's offer by title. A sister whose data is over 72 hours old is skipped
+from a store by this repo. OP Compare is read from its `snapshot` branch (its sealed ids are TCGplayer's), its
+store list from its `main`. Never match a sister's offer by title. A sister whose data is over 72 hours old is skipped
 and reported in `meta.json`. eBay, TCGplayer and Amazon rows of a sister are left behind, except the sister's own eBay
 listing for the product, which is reused.
 
