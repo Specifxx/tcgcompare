@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AdBanners } from "@/components/AdBanners";
 import Link from "@/components/Link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { gameHubOfSet } from "@/lib/data";
@@ -76,6 +77,7 @@ export default function SetPage({ params }: { params: { slug: string } }) {
             <p className="mt-3 text-sm"><Link className="link font-semibold" href={preorderPath(s)}>{isPreorder(s) ? `${s.name} pre-order prices at every store →` : `${s.name} booster box prices at every store →`}</Link></p>
           )}
         </header>
+        <AdBanners {...adSearch(s.name, s)} page="set" className="mt-6" />
       </div>
       <SealedQuickBuy
         title={`Buy ${s.name} booster boxes and sealed`}

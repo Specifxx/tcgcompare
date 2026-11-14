@@ -26,6 +26,9 @@ interface Data {
   offers: Offer[];
   fx: Record<string, number>;
   amazon: Partial<Record<Market, string>> | null;
+  /** the pinned eBay search and TCGplayer link rows (owner, 2026-11-14) */
+  ebayQuery?: string | null;
+  tcgUrl?: string | null;
   name: string;
   sub: string;
   img: string | null;
@@ -154,7 +157,7 @@ export function QuickView() {
             <Skeleton />
           ) : data ? (
             <>
-              <PriceTable offers={data.offers} fx={data.fx} productId={data.id} page="quickview" amazon={data.amazon} tableId={null} />
+              <PriceTable ebayQuery={data.ebayQuery ?? undefined} tcgUrl={data.tcgUrl ?? undefined} offers={data.offers} fx={data.fx} productId={data.id} page="quickview" amazon={data.amazon} tableId={null} />
               {/* The small eBay + TCGplayer pair, as on the card page (owner, 2026-11-03). Never Amazon here. */}
               {data.ads && data.adSearch && <div className="mt-4"><CompactCardAds ads={data.ads} page="quickview" limit={6} {...data.adSearch} /></div>}
             </>
