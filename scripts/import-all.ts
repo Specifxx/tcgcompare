@@ -12,13 +12,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { SITE } from "@/site.config";
-import type { Catalog, EbayPick, Market, Meta, Offer, PriceEntry, Prices, StoreStatus } from "@/lib/site-types";
+import type { Catalog, EbayPick, Market, Meta, Offer, PriceEntry, Prices, StoreConfig, StoreStatus } from "@/lib/site-types";
 import { CURRENCY } from "@/lib/site-types";
 import { loadTcgcsv, referenceCents } from "@/lib/import/tcgcsv";
 import { fetchStore, storeCurrency } from "@/lib/import/shopify";
 import { readDemandSlugs } from "@/lib/import/demand";
 import { focusCatalog } from "@/lib/import/focus";
-import { loadSisterOffers } from "@/lib/import/sisters";
+import { loadSisterOffers, MAX_AGE_H as SISTER_MAX_AGE_H } from "@/lib/import/sisters";
+import { carryDownSisters, groupsToKeep, heldForDownSisters, updateCulled, type CulledMap, type SisterMemo } from "@/lib/import/continuity";
 import { OFFER_FLOOR, vetStores, type Refusal } from "@/lib/import/vet";
 import { buildIndex, handleOf, isForeign, isPreorder, isUnfitListing, looksSealed, matchCard, matchSealed, printingOf } from "@/lib/import/match";
 import {
@@ -89,7 +90,8 @@ async function main() {
   // 1. Catalogue + TCGplayer
   console.log(`[tcgcsv] category ${SITE.tcgcsvCategoryId}`);
   const prevCatalog = readJson<Catalog | null>(path.join(PUBLIC, "catalog.json"), null);
-  const loaded = await loadTcgcsv(now);
+  // A group the last catalogue still has a page in is read whatever its age (lib/import/continuity.ts).
+  const loaded = await loadTcgcsv(now, groupsToKeep(prevCatalog, SITE.catalogFocus?.evergreenGroups));
   // A game or a set TCGCSV could not serve today would drop its products (and 301 their pages) for a day: keep
   // yesterday's data instead and let the next run try again.
   if (loaded.failedLines.length || loaded.failedSets) throw new Error(`TCGCSV: ${loaded.failedLines.length} games and ${loaded.failedSets} sets could not be read; keeping yesterday's data`);
@@ -121,10 +123,28 @@ async function main() {
   let sisterStores: (typeof SITE.stores) | null = null;
   let refused: Refusal[] = [];
   let sisterEbay = new Map<number, Offer[]>();
+  let downStores = new Set<string>();
   if (process.env.SISTER_DIR) {
     // Store rows come from our sister sites' published data, by TCGplayer product id (lib/import/sisters.ts).
     const res = loadSisterOffers(process.env.SISTER_DIR, now);
-    sisterStatus = res.status;
+    // A sister that is down: its stores' rows from the previous import, for at most 72 hours after its data was last
+    // fresh (lib/import/continuity.ts). They go through the same vetting and price band as live rows.
+    const carry = carryDownSisters({
+      status: res.status,
+      prevStatus: prevMeta?.sisters,
+      prevById: prevPrices.byId,
+      live: res.offers,
+      liveStores: res.stores,
+      prevStores: readJson<StoreConfig[]>(path.join(PUBLIC, "stores.json"), []),
+      now,
+      maxAgeH: SISTER_MAX_AGE_H,
+    });
+    for (const [id, list] of carry.offers) res.offers.set(id, [...(res.offers.get(id) ?? []), ...list]);
+    res.stores.push(...carry.stores);
+    res.stores.sort((a, b) => a.key.localeCompare(b.key));
+    downStores = carry.downStores;
+    for (const [id, st] of Object.entries(carry.status)) if (!st.ok) console.warn(`[sister] ${id} down: ${st.carried ?? 0} rows carried from the previous import (data of ${st.at ?? "unknown"})`);
+    sisterStatus = carry.status;
     sisterStores = res.stores;
     sisterEbay = res.ebay;
     // Store vetting (lib/import/vet.ts): a blocked, domain-less or too-cheap-to-be-true store shows no row at all.
@@ -218,12 +238,22 @@ async function main() {
   }
 
   // 2b. The sealed focus (SITE.catalogFocus, lib/import/focus.ts): only sealed product with real demand keeps a page.
-  const culledNow: { slug: string; setId: number }[] = [];
   if (SITE.catalogFocus) {
     const kept = focusCatalog({ products, sets, offers: storeOffers, tcg, rule: SITE.catalogFocus, now, demand, previous: prevKept });
     const keptIds = new Set(kept.map((p) => p.id));
-    const hadPage = new Set(prevCatalog?.products.map((p) => p.id) ?? []);
-    for (const p of products) if (!keptIds.has(p.id)) { if (hadPage.has(p.id)) culledNow.push({ slug: p.slug, setId: p.setId }); byId.delete(p.id); }
+    // Never culled only because a sister was down this run (lib/import/continuity.ts).
+    const held = heldForDownSisters({ products, keptIds, previous: prevKept, prevById: prevPrices.byId, downStores });
+    if (held.length) {
+      for (const p of held) keptIds.add(p.id);
+      kept.splice(0, kept.length, ...products.filter((p) => keptIds.has(p.id)));
+      console.warn(`[focus] ${held.length} products held: a sister their store rows came from is down`);
+      for (const st of Object.values(sisterStatus ?? {}))
+        if (!st.ok) {
+          const mine = new Set(st.stores ?? []);
+          (st as SisterMemo).held = held.filter((p) => (prevPrices.byId[p.id]?.offers ?? []).some((o) => mine.has(o.source))).length;
+        }
+    }
+    for (const p of products) if (!keptIds.has(p.id)) byId.delete(p.id);
     for (const id of [...storeOffers.keys()]) if (!keptIds.has(id)) storeOffers.delete(id);
     console.log(`[focus] ${kept.length} of ${products.length} sealed products kept (${prevKept.size ? "with" : "without"} yesterday's list)`);
     products = kept;
@@ -406,13 +436,11 @@ async function main() {
     const live = new Set([...storeOffers.values()].flatMap((l) => l.map((o) => o.source)));
     writeJson(path.join(PUBLIC, "stores.json"), sisterStores.filter((st) => live.has(st.key)).map(({ key, name, base, market }) => ({ key, name, base, market })));
   }
-  // A product that had a page and lost it 301s to its set (lib/culled.ts); one that is back leaves the list.
+  // A product that had a page and lost it, for any reason (the focus, its group's age, TCGCSV no longer listing it),
+  // 301s to its set or its game (lib/culled.ts, lib/import/continuity.ts); one that is back leaves the list.
   if (SITE.catalogFocus) {
-    const culled = readJson<Record<string, string>>(path.join(PUBLIC, "culled.json"), {});
-    const setSlugById = new Map(loaded.sets.map((s) => [s.id, s.slug]));
-    for (const c of culledNow) if (setSlugById.has(c.setId)) culled[c.slug] = setSlugById.get(c.setId)!;
-    for (const p of products) delete culled[p.slug];
-    writeJson(path.join(PUBLIC, "culled.json"), Object.fromEntries(Object.entries(culled).sort((a, b) => a[0].localeCompare(b[0]))));
+    const culled = updateCulled({ existing: readJson<CulledMap>(path.join(PUBLIC, "culled.json"), {}), prev: prevCatalog, kept: products, setsToday: loaded.sets });
+    writeJson(path.join(PUBLIC, "culled.json"), culled);
   }
   writePrices(prices.byId, products);
   fs.rmSync(path.join(PUBLIC, "prices.json"), { force: true });

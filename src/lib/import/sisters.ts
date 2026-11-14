@@ -12,9 +12,14 @@
 // - "snapshot" sisters (OP Compare): the `snapshot` branch holds sealed.json.gz (its sealed products, whose id IS the
 //   TCGplayer product id) and o/<id range>.json.gz (every product's offers); the store list is src/lib/stores.ts on
 //   main, checked out beside it.
+// - "rift" sisters (Rift Compare, Riftbound): data/public/sealed-listings.json groups store rows by its own sealed
+//   classifier (groupKey = set|type), and each group's TCGplayer reference row (retailer "tcgplayer") names the
+//   TCGplayer product in its url. A group with one id, whose id no other group has, prices that id; anything else
+//   prices nothing. The row carries its store (retailer, retailerName, url host, country), so no store list is read.
 //
 // Never a title match here. eBay, TCGplayer and Amazon rows are left behind (this site makes its own), and so is a
-// sister whose data is older than MAX_AGE_H.
+// sister whose data is older than MAX_AGE_H, and every store the sister's own import has not read for MAX_AGE_H
+// (its meta.json `seen` time, or the row's own): a shop that stopped answering is not a price.
 //
 // The workflow checks the sisters' data out beside this repo (SISTER_DIR, sparse); nothing is fetched over HTTP.
 import fs from "node:fs";
@@ -26,10 +31,10 @@ export interface SisterSource {
   id: string;
   /** Folder name under SISTER_DIR (the repository's name). */
   dir: string;
-  kind: "engine" | "sealed" | "snapshot";
+  kind: "engine" | "sealed" | "snapshot" | "rift";
   /** Where data/public lives inside the repository. */
   data: string;
-  /** The store list: src/content/stores.ts (engine) or src/data/stores.json (sealed). A snapshot sister's is a path under SISTER_DIR. */
+  /** The store list: src/content/stores.ts (engine) or src/data/stores.json (sealed). A snapshot sister's is a path under SISTER_DIR; a rift sister's rows carry their store, so it has none. */
   stores: string;
 }
 
@@ -42,12 +47,19 @@ export const SISTERS: SisterSource[] = [
   { id: "bandai", dir: "bandaicompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts" },
   { id: "cyberpunk", dir: "cyberpunkcompare", kind: "engine", data: "data/public", stores: "src/content/stores.ts" },
   { id: "op", dir: "OpCompare-snapshot", kind: "snapshot", data: ".", stores: "../OpCompare/src/lib/stores.ts" },
+  { id: "rift", dir: "TCGEmpire", kind: "rift", data: "data/public", stores: "" },
 ];
 
 export const MAX_AGE_H = 72;
 const NOT_STORES = new Set(["ebay", "tcgplayer", "amazon"]);
 
-export interface SisterStatus { ok: boolean; offers: number; products: number; at: string | null; error?: string }
+/** Hours since `at` (an ISO time), Infinity when it is missing or unreadable. */
+const ageHours = (at: string | null | undefined, now: Date): number => {
+  const t = at ? Date.parse(at) : NaN;
+  return Number.isFinite(t) ? (now.getTime() - t) / 3_600_000 : Infinity;
+};
+
+export interface SisterStatus { ok: boolean; offers: number; products: number; at: string | null; error?: string; stores?: string[] }
 export interface SisterResult {
   offers: Map<number, Offer[]>;
   /** eBay listings an engine sister already found with its own calls (one per product and market): reused, never searched again. */
@@ -158,9 +170,16 @@ function readEngine(root: string, src: SisterSource, book: StoreBook, add: (id: 
   return { at: meta.updatedAt ?? null, products: seen.size };
 }
 
-function readSealed(root: string, src: SisterSource, book: StoreBook, add: (id: number, o: Offer) => void): { at: string | null; products: number } {
+function readSealed(root: string, src: SisterSource, book: StoreBook, add: (id: number, o: Offer) => void, now: Date): { at: string | null; products: number } {
   const stores = new Map(readJson<RawStore[]>(path.join(root, src.stores)).map((s) => [s.key, { ...s, base: s.base.replace(/\/+$/, "") }]));
-  const meta = readJson<{ generatedAt?: string }>(path.join(root, src.data, "meta.json"));
+  // `seen` is each store's last successful read by the sister's own import (its site shows a row older than 72 hours
+  // as "unknown", never in stock); a store missing from it was read with the export.
+  const meta = readJson<{ generatedAt?: string; seen?: Record<string, string> }>(path.join(root, src.data, "meta.json"));
+  const fresh = new Map<string, boolean>();
+  const isFresh = (store: string) => {
+    if (!fresh.has(store)) fresh.set(store, ageHours(meta.seen?.[store] ?? meta.generatedAt, now) <= MAX_AGE_H);
+    return fresh.get(store)!;
+  };
   const products = readJson<{ id: string; imageUrl?: string | null }[]>(path.join(root, src.data, "products.json"));
   // One TCGplayer id, one sister product: an id two of them share is ambiguous and prices neither.
   const count = new Map<number, number>();
@@ -180,7 +199,7 @@ function readSealed(root: string, src: SisterSource, book: StoreBook, add: (id: 
   for (const o of offers) {
     const id = tcgId.get(o.productId);
     const raw = stores.get(o.store);
-    if (id == null || !raw || NOT_STORES.has(o.store) || !(o.priceCents > 0) || !/^https?:\/\//.test(o.url)) continue;
+    if (id == null || !raw || NOT_STORES.has(o.store) || !(o.priceCents > 0) || !/^https?:\/\//.test(o.url) || !isFresh(o.store)) continue;
     // The store's row in this market only (a store config names one market; its other fronts are other rows).
     const key = book.key({ ...raw, market: o.market });
     if (!key) continue;
@@ -213,8 +232,7 @@ function readSnapshot(root: string, src: SisterSource, book: StoreBook, add: (id
     for (const o of files.get(r)![String(id)] ?? []) {
       if (!o.source?.startsWith("store:") || o.condition || !(o.priceCents > 0) || !/^https?:\/\//.test(o.url)) continue;
       // A row its own import has not seen for MAX_AGE_H is a shop that stopped answering, not a price.
-      const age = o.updatedAt ? (now.getTime() - Date.parse(o.updatedAt)) / 3_600_000 : Infinity;
-      if (!(age <= MAX_AGE_H)) continue;
+      if (!(ageHours(o.updatedAt, now) <= MAX_AGE_H)) continue;
       const raw = stores.get(o.source.slice(6));
       if (!raw || !(MARKETS as string[]).includes(o.market) || CURRENCY[o.market as Market] !== o.currency) continue;
       const key = book.key({ ...raw, market: o.market });
@@ -225,6 +243,70 @@ function readSnapshot(root: string, src: SisterSource, book: StoreBook, add: (id
     }
   }
   return { at: meta.lastImportAt ?? meta.generatedAt ?? null, products: seen.size };
+}
+
+interface RiftListing {
+  groupKey: string;
+  title?: string;
+  retailer: string;
+  retailerName?: string;
+  priceCents: number;
+  url: string;
+  inStock: boolean;
+  country: string;
+}
+
+/** TCGplayer's own product id in a tcgplayer.com/product/<id>/… link, or null. */
+export function tcgIdOfProductUrl(url: string | null | undefined): number | null {
+  const m = /^https:\/\/(?:www\.)?tcgplayer\.com\/product\/(\d+)(?:[/?#]|$)/.exec(url ?? "");
+  return m ? Number(m[1]) : null;
+}
+
+/** Rift Compare's marketplace and reference rows: never a store here. */
+const RIFT_NOT_STORES = /^(?:ebay(?:_[a-z]+)?|tcgplayer|amazon(?:_[a-z]+)?|cardmarket)$/;
+
+function readRift(root: string, src: SisterSource, book: StoreBook, add: (id: number, o: Offer) => void, now: Date): { at: string | null; products: number } {
+  const meta = readJson<{ generatedAt?: string; seen?: { SealedListing?: Record<string, string> } }>(path.join(root, src.data, "meta.json"));
+  const rows = readJson<RiftListing[]>(path.join(root, src.data, "sealed-listings.json"));
+  // One TCGplayer id per group and one group per id; a group that names two, or an id two groups name, prices nothing.
+  const idsOf = new Map<string, Set<number>>();
+  const groupsOf = new Map<number, Set<string>>();
+  for (const r of rows) {
+    if (r.retailer !== "tcgplayer") continue;
+    const id = tcgIdOfProductUrl(r.url);
+    if (id == null || !r.groupKey) continue;
+    if (!idsOf.has(r.groupKey)) idsOf.set(r.groupKey, new Set());
+    idsOf.get(r.groupKey)!.add(id);
+    if (!groupsOf.has(id)) groupsOf.set(id, new Set());
+    groupsOf.get(id)!.add(r.groupKey);
+  }
+  const tcgId = new Map<string, number>();
+  for (const [g, ids] of idsOf) {
+    if (ids.size !== 1) continue;
+    const id = [...ids][0];
+    if (groupsOf.get(id)!.size === 1) tcgId.set(g, id);
+  }
+  const seenAt = meta.seen?.SealedListing ?? {};
+  const seen = new Set<number>();
+  for (const r of rows) {
+    const id = tcgId.get(r.groupKey);
+    if (id == null || !r.retailer || RIFT_NOT_STORES.test(r.retailer) || !(r.priceCents > 0) || !/^https?:\/\//.test(r.url)) continue;
+    if (!(MARKETS as string[]).includes(r.country)) continue;
+    // A store and market Rift Compare's import has not read for MAX_AGE_H (or never stamped): skipped.
+    if (!(ageHours(seenAt[`${r.retailer}|${r.country}`], now) <= MAX_AGE_H)) continue;
+    let base: string;
+    try {
+      base = new URL(r.url).origin;
+    } catch {
+      continue;
+    }
+    const key = book.key({ key: r.retailer, name: r.retailerName || r.retailer, base, market: r.country });
+    if (!key) continue;
+    const market = r.country as Market;
+    add(id, { source: key, market, currency: CURRENCY[market], cents: r.priceCents, inStock: !!r.inStock, url: r.url, title: r.title ?? "" });
+    seen.add(id);
+  }
+  return { at: meta.generatedAt ?? null, products: seen.size };
 }
 
 /** Reads every sister under `root`. A sister that is missing, unreadable or stale is reported and skipped. */
@@ -249,19 +331,28 @@ export function loadSisterOffers(root: string, now = new Date(), sources: Sister
         mineEbay.set(id, list);
       };
       const dir = path.join(root, src.dir);
-      const got = src.kind === "engine" ? readEngine(dir, src, book, add, addEbay) : src.kind === "snapshot" ? readSnapshot(dir, src, book, add, now) : readSealed(dir, src, book, add);
-      const ageH = got.at ? (now.getTime() - new Date(got.at).getTime()) / 3_600_000 : Infinity;
+      const got =
+        src.kind === "engine"
+          ? readEngine(dir, src, book, add, addEbay)
+          : src.kind === "snapshot"
+            ? readSnapshot(dir, src, book, add, now)
+            : src.kind === "rift"
+              ? readRift(dir, src, book, add, now)
+              : readSealed(dir, src, book, add, now);
+      const ageH = ageHours(got.at, now);
       if (!(ageH <= MAX_AGE_H)) throw new Error(`data is ${Number.isFinite(ageH) ? `${Math.round(ageH)} hours` : "of unknown age"} old`);
       let n = 0;
+      const keys = new Set<string>();
       for (const [id, rows] of mine)
         for (const o of rows.values()) {
+          keys.add(o.source);
           if (!offers.has(id)) offers.set(id, []);
           offers.get(id)!.push(o);
           book.use(o.source);
           n++;
         }
       for (const [id, list] of mineEbay) ebay.set(id, list);
-      status[src.id] = { ok: true, offers: n, products: got.products, at: got.at };
+      status[src.id] = { ok: true, offers: n, products: got.products, at: got.at, stores: [...keys].sort() };
       console.log(`[sister] ${src.id}: ${n} offers on ${got.products} products (data of ${got.at})`);
     } catch (e) {
       const msg = (e as Error).message.slice(0, 200);

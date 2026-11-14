@@ -6,6 +6,7 @@ import { SITE_HOST } from "@/lib/site";
 import type { Product, SetInfo, TcgPrice } from "@/lib/site-types";
 import { slugify } from "@/lib/slug";
 import { fetchJson, sleep } from "./http";
+import { groupIsRead } from "./continuity";
 
 const BASE = "https://tcgcsv.com/tcgplayer";
 // TCGCSV blocks browser-like User-Agents (HTTP 401, seen 2026-10-26) and asks
@@ -86,7 +87,8 @@ function cents(v: number | null | undefined): number | null {
 }
 
 
-export async function loadTcgcsv(now = new Date()): Promise<{
+/** `keepGroups`: groups read whatever their age (lib/import/continuity.ts groupsToKeep). */
+export async function loadTcgcsv(now = new Date(), keepGroups: ReadonlySet<number> = new Set()): Promise<{
   sets: SetInfo[];
   products: Product[];
   tcg: Record<number, Record<string, TcgPrice>>;
@@ -102,12 +104,13 @@ export async function loadTcgcsv(now = new Date()): Promise<{
     : [{ cat: SITE.tcgcsvCategoryId }];
   const groups: (Group & { cat: number; line?: string })[] = [];
   // A set older than the focus reads (SITE.catalogFocus.groupMaxAgeMonths) is not fetched: thousands of old sets a
-  // day would be requests TCGCSV serves for nothing.
+  // day would be requests TCGCSV serves for nothing. A group the last catalogue still has a page in, or a catch-all
+  // group, is read whatever its date: dropping it would take live pages off the site.
   const oldest = SITE.catalogFocus ? now.getTime() - SITE.catalogFocus.groupMaxAgeMonths * 30.44 * 86_400_000 : -Infinity;
   for (const c of cats) {
     try {
       const all = (await fetchJson<{ results: Group[] }>(`${BASE}/${c.cat}/groups`, TCGCSV_INIT)).results;
-      const recent = all.filter((g) => !g.publishedOn || new Date(g.publishedOn).getTime() >= oldest);
+      const recent = all.filter((g) => groupIsRead(g, oldest, keepGroups));
       console.log(`[tcgcsv] category ${c.cat}${c.line ? ` (${c.line})` : ""}: ${recent.length} of ${all.length} sets read`);
       for (const g of recent) groups.push({ ...g, ...c });
     } catch (e) {

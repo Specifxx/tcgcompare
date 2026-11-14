@@ -899,9 +899,11 @@ a.hero-pill:hover {
   --neo-c: 79 110 255; /* electric blue */
   --neo-glow: 0.16;
 }
-/* Pages cross-fade into each other where the browser can (no script). */
-@view-transition {
-  navigation: auto;
+/* Pages cross-fade into each other where the browser can (no script), and only for a visitor who has not asked for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
 }
 /* The page's own sky: one fixed wash of the three lights behind everything. */
 body::after {
@@ -1005,6 +1007,11 @@ body::after {
   background-clip: text;
   color: transparent;
 }
+/* The light theme's page is near-white, where the cyan light reads at 2.0:1: the same three lights, a shade deeper, every point of
+   the sweep 5.2:1 or better on --bg and --surface (tests/contrast.test.ts). */
+:root[data-theme="light"] .hero-h1 .text-brand {
+  background-image: linear-gradient(100deg, #0369a1 0%, #4338ca 35%, #7c3aed 65%, #0369a1 100%);
+}
 .hero-h1 {
   text-shadow: 0 0 60px rgb(var(--neo-c) / calc(var(--neo-glow) * 0.6));
 }
@@ -1082,10 +1089,15 @@ body::after {
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
 }
+/* No flex gap: each chip carries its own space after it, so the second copy starts exactly one copy along and the -50% loop
+   wraps without a jump. */
 .neo-track {
   display: flex;
   width: max-content;
-  gap: 0.625rem;
+  gap: 0;
+}
+.neo-track > * {
+  margin-right: 0.625rem;
 }
 .neo-marquee:hover .neo-track,
 .neo-marquee:focus-within .neo-track {
@@ -1321,5 +1333,17 @@ a.card:hover {
   }
   .neo-chip:hover {
     transform: none;
+  }
+  /* The row stands still, so it scrolls instead: every game reachable by touch and mouse, no edge fade over the first chip,
+     and the loop's second copy gone. */
+  .neo-marquee {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+    padding-inline: 1rem;
+    scroll-padding-inline: 1rem;
+  }
+  .neo-track > [aria-hidden="true"] {
+    display: none;
   }
 }

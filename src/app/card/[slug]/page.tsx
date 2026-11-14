@@ -3,14 +3,15 @@ import Link from "@/components/Link";
 import { Fragment } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { retiredCardTarget } from "@/lib/card-redirects";
-import { culledSetSlug } from "@/lib/culled";
-import { gameHubOfSet } from "@/lib/data";
+import { culledEntry, culledRedirect } from "@/lib/culled";
+import { gameHubOfLine, gameHubOfSet } from "@/lib/data";
 import { SITE } from "@/site.config";
 import { byValue, historyOf, looseSingleSetId, meta, priceOf, productBySlug, productsInSet, refCents, setById, setBySlug } from "@/lib/data";
 import { imageAt } from "@/lib/image";
 import { money, pct } from "@/lib/format";
 import { shortName } from "@/lib/names";
 import { ebayQueryOf } from "@/lib/lines";
+import { ebayQueryFor, jsonLdOffers, usCheapestQuoted } from "@/lib/product-page";
 import { PriceTable } from "@/components/PriceTable";
 import { VaultOwn } from "@/components/vault/VaultOwn";
 import { PriceAlert } from "@/components/PriceAlert";
@@ -64,8 +65,8 @@ export default function CardPage({ params }: { params: { slug: string } }) {
     const to = retiredCardTarget(params.slug, (s) => (setBySlug(s)?.productCount ?? 0) > 0);
     if (to) permanentRedirect(to);
     // A product the sealed focus dropped (lib/import/focus.ts): its set, or its game when the set is empty too.
-    const culled = culledSetSlug(params.slug);
-    if (culled != null) permanentRedirect((setBySlug(culled)?.productCount ?? 0) > 0 ? `/sets/${culled}` : gameHubOfSet(culled));
+    const culled = culledEntry(params.slug);
+    if (culled) permanentRedirect(culledRedirect(culled, (s) => (setBySlug(s)?.productCount ?? 0) > 0, gameHubOfLine, gameHubOfSet));
     // A single that TCGplayer filed as sealed (lib/data.ts isLooseSingle): its set, or the sealed hub.
     const loose = looseSingleSetId(params.slug);
     if (loose != null) {
@@ -80,12 +81,14 @@ export default function CardPage({ params }: { params: { slug: string } }) {
   const m = meta();
   const series = historyOf(p);
   const name = shortName(p.name);
-  // The game's own words lead the eBay search unless the product's name already says them.
-  const gameWords = ebayQueryOf(set);
-  const ebayQuery = name.toLowerCase().includes(gameWords.toLowerCase().split(" ")[0]) ? name : `${gameWords} ${name}`.trim();
+  // The game's own words lead the eBay search unless the product's name already says the whole phrase (lib/product-page.ts).
+  const ebayQuery = ebayQueryFor(name, ebayQueryOf(set));
   const related = byValue(productsInSet(p.setId).filter((x) => x.id !== p.id && x.kind === p.kind)).slice(0, 6);
   const inStock = e.offers.filter((o) => o.inStock);
-  const usOffers = inStock.filter((o) => o.currency === "USD");
+  // In-stock US-dollar offers, never eBay or Amazon: no structured data carries an eBay price (2026-11-14).
+  const usOffers = jsonLdOffers(e.offers);
+  // The sentence below names one market's price (the US baseline), never eBay, never a foreign currency.
+  const usCheapest = usCheapestQuoted(e.offers);
   // Sealed only: the markets' tagged searches, upgraded to the item's own page and this build's price where the API found them.
   const amazon = p.kind === "sealed" && amazonCarries(p) ? amazonCells(p.id, amazonSearchUrls(`${SITE.game} ${name}`)) : null;
   return (
@@ -170,7 +173,7 @@ export default function CardPage({ params }: { params: { slug: string } }) {
             <h2>Is {name} worth it?</h2>
             <p>
               {name} {ref ? `sells for about ${money(ref)} on TCGplayer` : "has no TCGplayer market price yet"}
-              {e.change30d != null ? `, ${e.change30d >= 0 ? "up" : "down"} ${Math.abs(e.change30d)}% over 30 days` : ""}. {inStock.length ? `The cheapest in-stock listing we track is ${money(inStock[0].cents, inStock[0].currency)}.` : ""} Prices from {SITE.stores.length} stores, TCGplayer and eBay are checked every day.
+              {e.change30d != null ? `, ${e.change30d >= 0 ? "up" : "down"} ${Math.abs(e.change30d)}% over 30 days` : ""}. {usCheapest ? `The cheapest in-stock US price we track is ${money(usCheapest.cents, usCheapest.currency)}.` : ""} Prices from {SITE.stores.length} stores, TCGplayer and eBay are checked every day.
             </p>
           </section>
         </div>

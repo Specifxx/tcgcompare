@@ -5,13 +5,20 @@ import { canon } from "@/lib/site";
 import { fitTitle } from "@/lib/seo-title";
 import { GameTiles } from "@/components/GameTiles";
 import { isMultiGame } from "@/lib/lines";
+import { gameViews } from "@/lib/game-hubs";
+import { gamesDescription } from "@/lib/site-copy";
 
 export const revalidate = 86400;
-export const metadata: Metadata = {
-  title: fitTitle([`Card Games We Compare — ${SITE.gameShort}`, "Card Games We Compare"]),
-  description: `Every card game ${SITE.name} compares: ${SITE.game}. Pick one for its sets, booster boxes, cases and starter decks across every store.`,
-  ...canon("/games"),
-};
+// Written for many games (the copy came from BandaiCompare, whose SITE.game was its list of three): the number of games
+// with product today and the biggest few by name.
+export function generateMetadata(): Metadata {
+  const names = gameViews().map((v) => v.line.short);
+  return {
+    title: fitTitle([`Card Games We Compare — ${names.length} Trading Card Games | ${SITE.name}`, `Card Games We Compare | ${SITE.name}`, "Card Games We Compare"]),
+    description: gamesDescription(names, "Pick one for its sets, booster boxes, cases and starter decks across every store."),
+    ...canon("/games"),
+  };
+}
 
 export default function Games() {
   if (!isMultiGame) notFound();

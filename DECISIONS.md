@@ -60,3 +60,110 @@ offers are read from `o/<id / 1024>.json.gz`, and only `store:` rows with no con
 currency and an `updatedAt` inside 72 hours are taken (a card of the same range is never read). The store list is
 `src/lib/stores.ts` on OP Compare's `main`, checked out beside it. On the 14 November snapshot: 5,258 store rows on
 187 One Piece products from 291 stores. Riftbound still waits: Rift Compare's public data carries no TCGplayer id.
+
+## 2026-11-14: The product page's prices in markup and prose are one market's, never eBay
+
+The Product JSON-LD counted every in-stock US-dollar offer, eBay's reused listings included (69 products had an eBay
+`lowPrice`), and the "Is it worth it?" sentence named the first in-stock offer, which is ordered by raw cents across
+currencies (a pound price called the cheapest on 626 products, eBay on 104). Both now go through
+`src/lib/product-page.ts`: the AggregateOffer leaves out eBay and Amazon (`jsonLdOffers`), and the sentence names the
+US market's cheapest in-stock store or TCGplayer price in dollars (`usCheapestQuoted`), said as "US price", and is left
+out when there is none. The eBay search now adds the game's words unless the name holds the whole phrase as words
+(`ebayQueryFor`): "Starter" no longer stands for "Star Wars Unlimited", and the Japanese Pokemon line keeps "japanese".
+`tests/product-page.test.ts`.
+
+## 2026-11-14: A search page, and the pages the YGO / Bandai copy left behind
+
+- **`/search?q=`** is where Enter goes when no suggestion is picked; it went to `/cards?q=`, a 404 here (YGO Compare
+  301'd `/cards` to `/sealed`, which ignores the words). The page is one static, noindex shell like `/cart`: the browser
+  reads `q` (`SearchResults.tsx`, `useSearchParams` under Suspense) and asks `/api/search` for 60 hits, already
+  CDN-cached per lower-cased query, so a search costs no page render and no new function. Never in the sitemap.
+- **`/games/:slug/:type`** has its own CDN rule: `/games/:slug` matches one segment only, so the type hubs were
+  rendered fresh on every visit. `tests/vercel-cost.test.ts` lists it.
+- **`/sets`** leaves out a game with no sets (Naruto today), whose heading linked a 404 game hub.
+- **The cart's `utm_source`** is `SITE.domain`; it said `ygocompare.com`.
+- **`/games` and home descriptions** name the games with product today, biggest first, and stay generic about product
+  types (`lib/site-copy.ts`): `SITE.game` is one phrase here, so "compares: trading card game." read wrongly.
+
+## 2026-11-14: A page that existed never 404s, and a sister that is down does not empty its stores
+
+`lib/import/continuity.ts`, called by `scripts/import-all.ts`; pinned by `tests/continuity.test.ts`.
+
+- **Culled for any reason.** culled.json used to be built only from the products TCGCSV returned today, so a product
+  whose group was no longer read (the 60-month `groupMaxAgeMonths` window) simply vanished and its page 404'd. It is
+  now built from the previous catalogue: every product that had a page and has none today, whatever the reason (the
+  focus, the group's age, TCGCSV no longer listing it), with its set found in today's sets or the previous catalogue's.
+  On 14 November's data, 609 live products (Secret Lair Drop Series, Pokemon Miscellaneous, Challenger Decks…) sat in
+  groups TCGCSV dates 2021-11-19, which would have fallen out of the window on 19 November.
+- **Groups that still hold pages are read whatever their age.** The safest rule is data-driven: any group the previous
+  catalogue still has a product in is read, so a page is only ever lost through the focus, never through a date. The
+  catch-all groups (`SITE.catalogFocus.evergreenGroups`: 2576, 2632, 2203, 2374) are read always, even while empty,
+  because their publishedOn is the group's, not their products'. A group with no page left and no catch-all status
+  still ages out, which keeps the daily request count bounded.
+- **culled.json entries carry the game.** An entry is now `{ set, line }`; the old string form (set slug only) is still
+  read, and gains its line when the import knows the set. A culled product whose set has no page goes to its game's hub
+  (`/games/<slug>`), then to the set's hub as before. Battle Academy 2024 went to /sealed; it now goes to Pokemon.
+- **A sister that is down** (missing checkout, unreadable, stale): the previous import's rows of its stores are carried
+  for at most 72 hours after its data was last fresh (the same 72 hours a live sister row is held to), only where no
+  live sister has that store on that product, and only under a key the previous store directory gave the same shop.
+  They pass the same vetting and price band as live rows. Past 72 hours nothing is carried, but a product the last
+  import kept is never culled only because a store it had rows from is down with its sister: it is held. Each sister's
+  meta.json entry now lists its store keys (`stores`); a down one keeps `at` (its last fresh data) and says how many rows
+  were `carried` and products `held`. The hold has no end date on purpose: a sister down for days is an ops problem,
+  not a reason to 301 hundreds of pages and bring them back the day it returns.
+
+## 2026-11-14: Rift Compare's stores join, and every sealed sister's stores are judged one by one
+
+- **Per-store freshness.** The 72-hour rule was checked only on a sealed sister's (DexCompare, MTG Compare) export
+  time, so a shop the sister had not managed to read for days still came through as in stock and counted toward the
+  focus rule and the vetting medians. Their own sites show such a row as "unknown"; now `readSealed` skips any offer
+  whose store's `meta.json` `seen` time (the export time when a store has none) is over 72 hours old, as the snapshot
+  reader already did per row. On the 14 November data: MTG Compare loses 194 rows (124 in stock) from 6 stores,
+  DexCompare 103 (32 in stock) from 7.
+- **Rift Compare (Riftbound), a fourth kind "rift".** Its public data is on `main`: `data/public/sealed-listings.json`
+  groups every store row under its own sealed classifier's `groupKey` (set|type), and each group's `retailer:
+  "tcgplayer"` row links `tcgplayer.com/product/<id>`. That id prices the group's store rows only when the group names
+  one id and no other group names it; the join is Rift Compare's own matching, never a title of ours. eBay (`ebay`,
+  `ebay_<market>`), TCGplayer, Amazon and Cardmarket rows are left behind. Freshness is per store and market, from
+  `meta.seen.SealedListing["<retailer>|<country>"]`: a pair with no stamp or one over 72 hours old is skipped (one AU
+  shop, last read 27 October, was still published as in stock). The row carries its store (key, name, url host,
+  country), so no store list is read. The workflows check out only those two files (never `data/public/listings/`,
+  about 84 MB). On the 13 November export: 2,677 store rows (1,093 in stock) on 71 products, 66 of them in this
+  catalogue (2,667 rows), from 223 store-market pairs. A Riftbound group with no TCGplayer row (163 of them, such as
+  `REC|Booster Box`) gets nothing until Rift Compare publishes one.
+
+## 2026-11-14: The 2050 layer's light theme and reduced motion, fixed
+
+- The hero's coloured word kept the dark theme's lights in the light theme, where the cyan read 1.98:1 on the near-white
+  page. The light theme draws it with the same three lights a shade deeper (sky-700, indigo-700, violet-600): every point
+  of the sweep 5.2:1 or better on `--bg` and `--surface` (`tests/contrast.test.ts` samples the gradient).
+- `@view-transition` now sits inside `prefers-reduced-motion: no-preference`: the page cross-fade is motion too.
+- The marquee's chips carry their own space (`margin-right`) instead of the track's flex gap, so the -50% loop is exactly
+  one copy and no longer jumps 5px at each wrap.
+- Under reduced motion the row stands still, so it becomes a sideways scroller with no edge fade, and the hidden second
+  copy is not drawn: every game reachable by touch and mouse, each once. `tests/minimal-look.test.ts` pins all three.
+
+## 2026-11-14: The Amazon matcher reads one game at a time
+
+The Amazon pipeline came from YGO Compare unchanged, with a matcher built for one game. Run over the real catalogue
+with simulated Amazon titles ("<game> <set> <product>"), it matched 1,408 of the 2,182 products it would search and
+accepted 11 titles as another searched product, 4 of them in another game ("Union Arena SOLO LEVELING - Booster Box
+(First Edition)" as Lorcana's The First Chapter box, a Pokémon Classic Collection pack as Digimon's, six One Piece
+Double Pack Sets as the plain booster pack). `lib/import/amazon-match.ts` now holds an Amazon title to more than the
+store matcher:
+
+- The title must name the product's game and no other. Each line in `site.config.ts` carries its `amazon` words
+  (`any` phrases, `not` phrases for games that share a word: Magic's FINAL FANTASY products, Fusion World against the
+  older Dragon Ball Super game, the Shadowverse Vanguard collab, Weiß Schwarz's hololive sets).
+- It is read against that game's products only, with the "ME06: " release code taken off set names
+  (`IndexOptions.stripSetCodes`, off for the store import; the code still counts as a code of the set). A third of set
+  names carry one, and no title spells it.
+- A title naming a kind the product's name lacks (Double Pack, release event, Welcome, sleeved, blister, empty box,
+  mystery, repack…) is refused, and those products are out before `matchSealed` chooses.
+- Pokémon Japan is not searched: its titles say Japanese and the store matcher refuses every foreign title, so a
+  search could only ever spend budget. An English title never reaches a Japanese product, nor the reverse.
+- Searches say the game's name and the set without its code, not "trading card game".
+
+Same simulation after: 1,930 of 1,938 searched products match themselves, none matches another product. Still open:
+the page's Amazon search link and `amazonCarries` (US file and a one-game type list), and the credentials, which the
+owner has not set.

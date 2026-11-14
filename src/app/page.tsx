@@ -28,6 +28,7 @@ import { adSearch, cardAds } from "@/lib/card-ads";
 import { GameRows } from "@/components/GameRows";
 import { GameMarquee } from "@/components/GameMarquee";
 import { gameViews } from "@/lib/game-hubs";
+import { homeDescription } from "@/lib/site-copy";
 
 // The homepage leads with "<game> Booster Box Prices" (sealed only since 2026-11-06) and the number of stores compared.
 export function generateMetadata(): Metadata {
@@ -39,7 +40,7 @@ export function generateMetadata(): Metadata {
   const title = fitTitle([`${g} Booster Box Prices — Compare ${n} Stores${brand}`, `${g} Booster Box Prices — ${n} Stores${brand}`, `${g} Booster Box Prices${brand}`, `${g} Booster Box Prices — Compare ${n} Stores`, `${g} Booster Box Prices`]);
   return {
     title,
-    description: `Compare ${SITE.game} booster box, tin, structure deck and pre-order prices across TCGplayer, eBay and ${n} online stores. Cheapest in-stock first, in your currency, updated twice a day.`,
+    description: homeDescription(gameViews().map((v) => v.line.short), n),
     alternates: { canonical: "/", types: { "application/rss+xml": "/feed.xml" } },
     openGraph: { type: "website", siteName: SITE.name, url: "/", title: title.absolute },
   };

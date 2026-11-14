@@ -64,6 +64,10 @@ export interface GameLine {
   blurb: string;
   /** Accent colour of the game's tile and chips. */
   color: string;
+  /** How an Amazon title names this game (scripts/amazon-asins.ts, lib/import/amazon-match.ts): it must carry every
+   *  word of one `any` phrase and no whole `not` phrase. A title that names no game, or another game too, is refused.
+   *  Left out, the game's products are never matched on Amazon. */
+  amazon?: { any: string[]; not?: string[] };
 }
 
 /** The sealed focus (lib/import/focus.ts): which sealed products keep a page. */
@@ -78,8 +82,12 @@ export interface FocusConfig {
   minCents: number;
   /** This many stores in one market with it in stock keep a product whatever its age. */
   minStores: number;
-  /** TCGplayer sets older than this are not read at all (fewer requests to TCGCSV every day). */
+  /** TCGplayer sets older than this are not read at all (fewer requests to TCGCSV every day), unless the last
+   *  catalogue still has a page in them. */
   groupMaxAgeMonths: number;
+  /** Catch-all TCGplayer groups (promos, Secret Lair, miscellaneous) read whatever their publishedOn says: their
+   *  date is the group's, not their products'. */
+  evergreenGroups?: number[];
 }
 
 export interface SiteConfig {
@@ -394,7 +402,9 @@ export interface Meta {
    *  treats catalog.json's products as yesterday's kept list (hysteresis). */
   sealedFocused?: boolean;
   /** Our sister sites whose store rows were read today (lib/import/sisters.ts). */
-  sisters?: Record<string, { ok: boolean; offers: number; products: number; at: string | null; error?: string }>;
+  /** `stores`: the store keys its rows carried; a sister that is down keeps `at` (its last fresh data) and says how many
+   *  rows were `carried` from the previous import and how many products were `held` from the cull (lib/import/continuity.ts). */
+  sisters?: Record<string, { ok: boolean; offers: number; products: number; at: string | null; error?: string; stores?: string[]; carried?: number; held?: number }>;
 }
 
 export interface EbayPick {
