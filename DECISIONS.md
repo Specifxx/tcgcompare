@@ -278,3 +278,20 @@ US$99.
 - `AdBanners`: three calm text banners (eBay, TCGplayer, Amazon where its store has our tag), labelled Ad, directly
   under the hero or page header on home, game, set, sealed and product pages, tagged `<page>-banner-<source>`. Browser
   only with its height reserved (h-14), so the server HTML still carries no ad and nothing shifts.
+
+## 2026-11-14: Real game logos and real fantasy art, public domain only
+
+Owner: "I think we can use real game logos here" (the hero's game tiles) and "tcgprices animation can use real images e.g.
+dragons or fantasy, or swordmans … rather than just have a geometric thing".
+
+- Only files Wikimedia Commons marks public domain or CC0 are used (`scripts/commons-fetch.mjs`, run by
+  `commons-fetch.yml` on a `[commons-fetch]` push, wrote candidates for review; none is served from there). Card art,
+  key art and anything non-free are never used.
+- Logos: ten games have a wordmark that is public domain on Commons (too simple for copyright; still a trademark, shown
+  only to name the game): `GameLine.logo`, `public/games/<id>.webp`, sources in `public/games/SOURCES.md`. Drawn as the
+  background of a fixed-size light plate (never an `<img>`, so the hero still has no photo and nothing shifts) on the
+  hero's game tiles, the game list and each game hub. Games without one keep the icon; "All games" keeps its icon.
+  `SITE.disclaimer` names the marks as their owners'.
+- Art: three public-domain paintings (Hendrich's Sigurd and Fafnir, Uccello's Saint George and the Dragon, Arbo's
+  Valkyrie; `public/art/SOURCES.md`) fade into one another behind the hero words, dimmed, edge-masked, slow drift, 800 px
+  files on phones, still under reduced motion. CSS backgrounds of a box already there, so no layout shift.

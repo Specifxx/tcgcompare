@@ -25,6 +25,9 @@ export function GameTiles() {
                   ))}
                 </span>
               )}
+              {v.line.logo && (
+                <span className="game-logo mb-2" aria-hidden="true" style={{ backgroundImage: `url(${v.line.logo})` }} />
+              )}
               <span className="game-tile-name">{v.line.name}</span>
               <span className="game-tile-blurb mt-1 block text-sm">{v.line.blurb}</span>
               <span className="game-tile-stats mt-3 flex flex-wrap gap-1.5 text-xs">

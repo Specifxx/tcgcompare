@@ -64,6 +64,9 @@ export interface GameLine {
   blurb: string;
   /** Accent colour of the game's tile and chips. */
   color: string;
+  /** The game's own wordmark, /games/<id>.webp, only from a public-domain file (DECISIONS.md 2026-11-14). Left out, the
+   *  tile keeps its plain icon. Identifies the game; never decoration, never official-looking copy beside it. */
+  logo?: string;
   /** How an Amazon title names this game (scripts/amazon-asins.ts, lib/import/amazon-match.ts): it must carry every
    *  word of one `any` phrase and no whole `not` phrase. A title that names no game, or another game too, is refused.
    *  Left out, the game's products are never matched on Amazon. */

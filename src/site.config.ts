@@ -29,6 +29,11 @@ const g = (
 // "Japanese" (and the store matcher refuses every foreign title, so it is never searched), Magic's FINAL FANTASY and
 // Godzilla products are Magic's, Fusion World is not the older Dragon Ball Super game, the Shadowverse Vanguard
 // collab is Shadowverse's, and Weiß Schwarz's hololive sets are Weiß Schwarz's.
+// Games with a wordmark in public/games/<id>.webp: each from a Wikimedia Commons file marked public domain (too simple
+// for copyright; still its owner's trademark, shown only to name the game). The rest keep the plain icon. Sources in
+// public/games/SOURCES.md.
+const LOGOS = new Set(["mtg", "pkm", "pkj", "op", "ygo", "holo", "fw", "dbs", "nar", "ff"]);
+
 const AMAZON: Record<string, GameLine["amazon"]> = {
   mtg: { any: ["magic the gathering", "mtg"] },
   pkm: { any: ["pokemon"], not: ["japanese"] },
@@ -119,7 +124,7 @@ const LINES: GameLine[] = [
   g("wx", 67, "WIXOSS", "WIXOSS", "wixoss", "all", "wixoss", "#9a5a9a", "English booster boxes and starter decks."),
   g("bss", 72, "Battle Spirits Saga", "Battle Spirits", "battle-spirits-saga", "all", "battle spirits saga", "#b0553c", "Booster boxes and starter decks."),
   g("ac", 78, "Alpha Clash", "Alpha Clash", "alpha-clash", "all", "alpha clash tcg", "#5a8a4a", "Booster boxes and starter decks."),
-].map((l) => ({ ...l, ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}) }));
+].map((l) => ({ ...l, ...(LOGOS.has(l.id) ? { logo: `/games/${l.id}.webp` } : {}), ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}) }));
 
 export const SITE: SiteConfig = {
   // The affiliate sub-id prefix (eBay customid, Impact subId1): `tcgprices-us-card_pinned-1234`.
@@ -131,6 +136,7 @@ export const SITE: SiteConfig = {
   gameShort: "TCG",
   domain: "tcgprices.app",
   apexHost: true,
+  disclaimer: "Game names and logos are trademarks of their owners and are shown only to identify each game. The paintings behind the home page are public-domain works (Hendrich, Uccello, Arbo).",
   tagline: "Compare booster box prices for every trading card game",
   description:
     "Free sealed price comparison for every trading card game people buy: Pokémon, Magic, One Piece, Yu-Gi-Oh!, Lorcana, Riftbound, Star Wars: Unlimited, Flesh and Blood and more. Booster boxes, trainer boxes, bundles and decks across TCGplayer, eBay and card stores, updated twice a day.",

@@ -1,0 +1,28 @@
+name: Commons fetch
+
+# Fetches public-domain / CC0 candidate images from Wikimedia Commons (scripts/commons-fetch.mjs) and commits them to the
+# claude/* branch that asked, for review. Only for a push whose commit subject carries [commons-fetch]. Never main.
+
+on:
+  push:
+    branches: ["claude/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    if: contains(github.event.head_commit.message, '[commons-fetch]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/commons-fetch.mjs
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898298+github-actions[bot]@users.noreply.github.com"
+          git add assets-candidates
+          git commit -m "Commons candidates for review" || exit 0
+          git push origin HEAD:${GITHUB_REF_NAME}
