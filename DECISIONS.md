@@ -60,3 +60,16 @@ offers are read from `o/<id / 1024>.json.gz`, and only `store:` rows with no con
 currency and an `updatedAt` inside 72 hours are taken (a card of the same range is never read). The store list is
 `src/lib/stores.ts` on OP Compare's `main`, checked out beside it. On the 14 November snapshot: 5,258 store rows on
 187 One Piece products from 291 stores. Riftbound still waits: Rift Compare's public data carries no TCGplayer id.
+
+## 2026-11-14: A search page, and the pages the YGO / Bandai copy left behind
+
+- **`/search?q=`** is where Enter goes when no suggestion is picked; it went to `/cards?q=`, a 404 here (YGO Compare
+  301'd `/cards` to `/sealed`, which ignores the words). The page is one static, noindex shell like `/cart`: the browser
+  reads `q` (`SearchResults.tsx`, `useSearchParams` under Suspense) and asks `/api/search` for 60 hits, already
+  CDN-cached per lower-cased query, so a search costs no page render and no new function. Never in the sitemap.
+- **`/games/:slug/:type`** has its own CDN rule: `/games/:slug` matches one segment only, so the type hubs were
+  rendered fresh on every visit. `tests/vercel-cost.test.ts` lists it.
+- **`/sets`** leaves out a game with no sets (Naruto today), whose heading linked a 404 game hub.
+- **The cart's `utm_source`** is `SITE.domain`; it said `ygocompare.com`.
+- **`/games` and home descriptions** name the games with product today, biggest first, and stay generic about product
+  types (`lib/site-copy.ts`): `SITE.game` is one phrase here, so "compares: trading card game." read wrongly.

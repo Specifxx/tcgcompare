@@ -23,6 +23,8 @@ const CDN_PAGES: [string, string][] = [
   ["src/app/sets/[slug]/page.tsx", "/sets/:slug"],
   ["src/app/sealed/[type]/page.tsx", "/sealed/:type"],
   ["src/app/games/[slug]/page.tsx", "/games/:slug"],
+  // A path pattern matches one segment per parameter: "/games/:slug" does not cover a game's type hub.
+  ["src/app/games/[slug]/[type]/page.tsx", "/games/:slug/:type"],
   ["src/app/preorders/[slug]/page.tsx", "/preorders/:slug"],
 ];
 

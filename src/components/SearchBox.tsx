@@ -44,7 +44,7 @@ export function SearchBox({ big = false, size, placeholder }: { big?: boolean; s
           router.push(hrefOf(hits[active]));
         } else {
           // A pasted store link goes to the "Is this a good price?" checker (lib/link-check.ts), in the fragment: one CDN copy.
-        router.push(/^\s*(https?:\/\/|[a-z0-9-]+(\.[a-z0-9-]+)+\/)/i.test(q) ? `/tools/is-this-a-good-price#link=${encodeURIComponent(q.trim())}` : `/cards?q=${encodeURIComponent(q.trim())}`);
+        router.push(/^\s*(https?:\/\/|[a-z0-9-]+(\.[a-z0-9-]+)+\/)/i.test(q) ? `/tools/is-this-a-good-price#link=${encodeURIComponent(q.trim())}` : `/search?q=${encodeURIComponent(q.trim())}`);
         }
         setOpen(false);
       }}
