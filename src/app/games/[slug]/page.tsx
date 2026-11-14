@@ -41,6 +41,9 @@ export default function GamePage({ params }: { params: { slug: string } }) {
       <div>
         <Breadcrumbs items={[{ name: "Games", href: "/games" }, { name: line.name }]} />
         <header className="game-hero">
+          {line.logo && (
+            <span className="game-logo mb-3" aria-hidden="true" style={{ backgroundImage: `url(${line.logo})` }} />
+          )}
           <h1 className="font-display text-3xl font-black md:text-4xl">{line.name} prices</h1>
           <p className="mt-2 max-w-2xl text-muted">{line.blurb}</p>
           <p className="mt-2 text-sm text-muted">{v.sets.length} sets · {v.sealed} sealed products, compared across TCGplayer, eBay, Amazon and {SITE.stores.length} stores.</p>

@@ -3,7 +3,8 @@ import type { CSSProperties, ReactNode } from "react";
 
 // The home page's hero (owner, 2026-11-13: "get rid of the products on the hero … minimalistic, dynamic, aesthetic and smooth
 // without having everything there"). Words, the search and a few ways in, centred, on a ground of two slow glows and a dot grid
-// (globals.css .hero-bg: gradients only, no canvas, no image). Never a product card, a badge for a feature or a second banner: at
+// (globals.css .hero-bg). Since 2026-11-14 (owner: "real images e.g. dragons or fantasy … rather than just a geometric thing")
+// three public-domain paintings fade into one another behind it (.hero-art, CSS backgrounds, public/art/SOURCES.md). Never a product card, a badge for a feature or a second banner: at
 // most one small pill above the headline. Server components: no script of their own.
 
 /** Each part's place in the entrance (globals.css .rise: 70ms apart). */
@@ -13,6 +14,11 @@ export function Hero({ children }: { children: ReactNode }) {
   return (
     <section className="hero">
       <div className="hero-bg" aria-hidden="true">
+        <span className="hero-art">
+          <i />
+          <i />
+          <i />
+        </span>
         <span className="hero-orb" />
         <span className="hero-floor" />
       </div>
@@ -101,6 +107,8 @@ export interface Way {
   icon: WayShape;
   /** The tile's own light (a game's colour). */
   color?: string;
+  /** A game's wordmark (GameLine.logo): drawn on a small light plate in place of the icon; the label stays as text. */
+  logo?: string;
 }
 
 /**
@@ -113,11 +121,15 @@ export function WaysIn({ links, label }: { links: Way[]; label: string }) {
       {links.map((l) => (
         <li key={l.href} className="flex">
           <Link href={l.href} className="way flex-1" style={l.color ? ({ "--game": l.color } as CSSProperties) : undefined}>
+            {l.logo ? (
+              <span className="way-logo" aria-hidden="true" style={{ backgroundImage: `url(${l.logo})` }} />
+            ) : (
             <span className="way-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" focusable="false">
                 {SHAPES[l.icon]()}
               </svg>
             </span>
+            )}
             <span className="min-w-0">{l.label}</span>
           </Link>
         </li>

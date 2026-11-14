@@ -93,11 +93,18 @@ test("the hero: a section of words, a pill, a search and ways in; server markup,
       React.createElement(WaysIn, { label: "Popular pages", links: [{ href: "/sealed/booster-box", label: "Booster boxes", icon: "box" }, { href: "/tools/deal-finder", label: "Deals", icon: "tag" }] }),
     ),
   );
-  assert.match(html, /^<section class="hero"><div class="hero-bg" aria-hidden="true"><span class="hero-orb"><\/span><span class="hero-floor"><\/span><\/div><div class="hero-in">/);
+  assert.match(html, /^<section class="hero"><div class="hero-bg" aria-hidden="true"><span class="hero-art"><i><\/i><i><\/i><i><\/i><\/span><span class="hero-orb"><\/span><span class="hero-floor"><\/span><\/div><div class="hero-in">/);
   assert.match(html, /<a (?=[^>]*class="hero-pill rise")(?=[^>]*href="\/preorders\/glorious-victors")[^>]*><span class="hero-pill-dot" aria-hidden="true"><\/span>Glorious Victors pre-orders/);
   assert.match(html, /<ul class="ways rise" style="--i:4" aria-label="Popular pages">/);
   assert.match(html, /<li class="flex"><a (?=[^>]*class="way flex-1")(?=[^>]*href="\/sealed\/booster-box")[^>]*><span class="way-icon" aria-hidden="true"><svg /);
   assert.equal(count(html, /class="way flex-1"/g), 2);
+  // A game's wordmark replaces the icon as a plate's background, never an <img>, and the label stays as text.
+  const logoWay = render(React.createElement(WaysIn, { label: "Games", links: [{ href: "/games/x", label: "Magic", icon: "box", logo: "/games/mtg.webp" }] }));
+  assert.match(logoWay, /<span class="way-logo" aria-hidden="true" style="background-image:url\(\/games\/mtg.webp\)"><\/span><span class="min-w-0">Magic<\/span>/);
+  // The art behind it (owner, 2026-11-14): public-domain paintings as CSS backgrounds, still under reduced motion.
+  const art = css.slice(css.indexOf("\n.hero-art {"));
+  assert.match(art, /url\("\/art\/[a-z-]+(-800)?\.webp"\)/);
+  assert.match(art, /prefers-reduced-motion: reduce\) \{\s*\.hero-art i \{ animation: none; \}/);
   assert.deepEqual(riseAt(3), { "--i": 3 });
   assert.equal(render(React.createElement(HeroPill, null, "United States")), '<p class="hero-pill rise">United States</p>');
   const hero = src("components/home/Hero.tsx");
