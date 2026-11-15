@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-14T16:53:03.876Z",
+ "generatedAt": "2026-11-15T02:03:27.398Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -9,6 +9,20 @@
   }
  },
  "items": [
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Marvel: Darkhold Destiny - Collector Booster Display",
+   "url": "https://tcgprices.app/card/marvel-darkhold-destiny-collector-booster-display",
+   "cents": 45588,
+   "currency": "USD",
+   "store": "Minted TCG",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723266_200w.jpg",
+   "refCents": 67491,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 32
+  },
   {
    "kind": "deal",
    "cluster": "cards",
@@ -41,33 +55,6 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "The Dominance of God Booster Box Case",
-   "url": "https://tcgprices.app/card/the-dominance-of-god-booster-box-case",
-   "cents": 239988,
-   "currency": "USD",
-   "store": "Wulf Gaming",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712902_200w.jpg",
-   "refCents": 314303,
-   "refLabel": "TCGplayer market price",
-   "savingPct": 24
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Disney Lorcana: Into the Inkdark Booster Box Case",
-   "url": "https://tcgprices.app/card/disney-lorcana-into-the-inkdark-booster-box-case",
-   "cents": 76999,
-   "currency": "USD",
-   "store": "The Castle Games",
-   "refCents": 99999,
-   "refLabel": "TCGplayer market price",
-   "savingPct": 23
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
    "title": "Carrying On His Will Booster Box Case",
    "url": "https://tcgprices.app/card/carrying-on-his-will-booster-box-case",
    "cents": 480000,
@@ -91,6 +78,20 @@
    "refCents": 450160,
    "refLabel": "TCGplayer market price",
    "savingPct": 16
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Dominance of God Booster Box Case",
+   "url": "https://tcgprices.app/card/the-dominance-of-god-booster-box-case",
+   "cents": 239988,
+   "currency": "USD",
+   "store": "Wulf Gaming",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712902_200w.jpg",
+   "refCents": 264983,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 9
   },
   {
    "kind": "preorder",
@@ -131,6 +132,17 @@
    "kind": "preorder",
    "cluster": "cards",
    "region": "US",
+   "title": "Reach the God Booster Box",
+   "url": "https://tcgprices.app/preorders/reach-the-god",
+   "cents": 14499,
+   "currency": "USD",
+   "store": "The Collection Realm",
+   "releaseDate": "2026-12-11"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
    "title": "Starter Deck 13: The Saiyan Raised on Earth Starter Deck",
    "url": "https://tcgprices.app/preorders/starter-deck-13-the-saiyan-raised-on-earth",
    "cents": 1599,
@@ -150,17 +162,6 @@
    "store": "Gamers Guild AZ",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/721537_200w.jpg",
    "releaseDate": "2027-01-22"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Legacy Booster Box",
-   "url": "https://tcgprices.app/preorders/legacy",
-   "cents": 15999,
-   "currency": "USD",
-   "store": "Kollect Korner",
-   "releaseDate": "2027-01-29"
   }
  ]
 }
