@@ -18,7 +18,15 @@ import { SISTERS } from "@/lib/import/sisters";
 
 const ROOT = process.cwd();
 const OUT = path.join(ROOT, "data", "crawl", "stores.json");
-const OWN = path.join(ROOT, "data", "crawl", "own-stores.json");
+const CRAWL_DIR = path.join(ROOT, "data", "crawl");
+// own-stores.json plus one file per research batch (own-stores-<region>.json), so batches never conflict.
+const ownFiles = () => {
+  try {
+    return fs.readdirSync(CRAWL_DIR).filter((f) => /^own-stores(-[a-z0-9-]+)?\.json$/.test(f)).sort().map((f) => path.join(CRAWL_DIR, f));
+  } catch {
+    return [];
+  }
+};
 const readJson = <T>(f: string, fb: T): T => {
   try {
     return JSON.parse(fs.readFileSync(f, "utf8")) as T;
@@ -68,7 +76,17 @@ async function main() {
   // Our own stores (data/crawl/own-stores.json, owner 2026-11-15: "the most stores of any site"): shops no sister lists,
   // read for every game. A host a sister lists is left to the sister (its rows would double). They are probed in
   // their own pass, so the sisters' pass never sees them even once an earlier run put them in stores.json.
-  const own = readJson<ProbeStore[]>(OWN, []).filter((s) => s && s.key && s.base && s.market);
+  // The same shop (host and market) or key in two files is read once: the first file wins.
+  const seenOwn = new Set<string>();
+  const own = ownFiles()
+    .flatMap((f) => readJson<ProbeStore[]>(f, []))
+    .filter((s) => s && s.key && s.base && s.market)
+    .filter((s) => {
+      const ids = [`h:${hostOf(s.base)}|${s.market}`, `k:${s.key}`];
+      if (ids.some((id) => seenOwn.has(id))) return false;
+      ids.forEach((id) => seenOwn.add(id));
+      return true;
+    });
   const ownHosts = new Set(own.map((s) => hostOf(s.base)));
   const sisterHosts = new Set(platforms.keys());
   const ownList = own.filter((s) => {

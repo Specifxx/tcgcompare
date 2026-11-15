@@ -314,3 +314,11 @@ Unlimited post asked for single pack prices.
 - A booster box's single pack (`lib/packs.ts`, same set and same edition by name only; a promo pack pairs with nothing)
   shows beside the box on the set page's quick buy and under the price on the box's page. The focus keeps a kept box's
   pack when TCGplayer prices it or a store lists it. No pack count is claimed.
+
+## 2026-11-15: Own-store lists by research batch (own-stores-<region>.json)
+
+Owner: "the most stores of any site". `scripts/crawl-probe.ts` now reads `data/crawl/own-stores.json` and every
+`data/crawl/own-stores-<name>.json`, so parallel research batches add their own file instead of editing one list; the
+same host and market (or key) in two files is read once, the first file wins. First batch: 24 AU and 60 EU Shopify
+shops (`docs/store-research/2026-11-15-au-eu.md`), each answering `/meta.json` in its market's currency. The weekly
+probe still decides which of their collections are read, and vetting still judges each store on every import.
