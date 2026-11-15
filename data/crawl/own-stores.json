@@ -78,6 +78,12 @@
   "market": "EU"
  },
  {
+  "key": "cardcollective",
+  "name": "Card Collective",
+  "base": "https://cardcollective.eu",
+  "market": "EU"
+ },
+ {
   "key": "cardgames24",
   "name": "cardgames24",
   "base": "https://cardgames24.de",
@@ -336,9 +342,21 @@
   "market": "US"
  },
  {
+  "key": "awesomeccg",
+  "name": "awesomeccg",
+  "base": "https://awesomeccg.com",
+  "market": "US"
+ },
+ {
   "key": "boosterpackcards",
   "name": "Booster Pack Cards",
   "base": "https://boosterpackcards.com",
+  "market": "US"
+ },
+ {
+  "key": "cardboardfiat",
+  "name": "cardboardfiat",
+  "base": "https://cardboardfiat.com",
   "market": "US"
  },
  {
@@ -354,6 +372,12 @@
   "market": "US"
  },
  {
+  "key": "escollectible",
+  "name": "escollectible",
+  "base": "https://escollectible.com",
+  "market": "US"
+ },
+ {
   "key": "fabfoundry",
   "name": "FaB Foundry",
   "base": "https://www.fabfoundry.co",
@@ -363,6 +387,24 @@
   "key": "gamekastle",
   "name": "Game Kastle",
   "base": "https://gamekastle.com",
+  "market": "US"
+ },
+ {
+  "key": "gamersguildusa",
+  "name": "gamersguildusa",
+  "base": "https://gamersguildusa.com",
+  "market": "US"
+ },
+ {
+  "key": "goldstarcollectibles",
+  "name": "goldstarcollectibles",
+  "base": "https://goldstarcollectibles.com",
+  "market": "US"
+ },
+ {
+  "key": "haikupop",
+  "name": "haikupop",
+  "base": "https://haikupop.com",
   "market": "US"
  },
  {
@@ -378,6 +420,12 @@
   "market": "US"
  },
  {
+  "key": "lionhearthobby",
+  "name": "lionhearthobby",
+  "base": "https://lionhearthobby.com",
+  "market": "US"
+ },
+ {
   "key": "littlewars",
   "name": "Little Wars",
   "base": "https://shop.littlewars.com",
@@ -387,6 +435,12 @@
   "key": "lumiusinc",
   "name": "Lumius Inc",
   "base": "https://lumiusinc.com",
+  "market": "US"
+ },
+ {
+  "key": "magicdragonusa",
+  "name": "magicdragonusa",
+  "base": "https://magicdragonusa.com",
   "market": "US"
  },
  {
@@ -444,6 +498,24 @@
   "market": "US"
  },
  {
+  "key": "tcgguy",
+  "name": "tcgguy",
+  "base": "https://tcgguy.com",
+  "market": "US"
+ },
+ {
+  "key": "tcghubandhobbies",
+  "name": "tcghubandhobbies",
+  "base": "https://tcghubandhobbies.com",
+  "market": "US"
+ },
+ {
+  "key": "tcgom",
+  "name": "tcgom",
+  "base": "https://tcgom.com",
+  "market": "US"
+ },
+ {
   "key": "thefourthplace",
   "name": "The Fourth Place",
   "base": "https://thefourthplaceforgeeks.com",
@@ -474,6 +546,12 @@
   "market": "US"
  },
  {
+  "key": "tier1cardsandgames",
+  "name": "tier1cardsandgames",
+  "base": "https://tier1cardsandgames.com",
+  "market": "US"
+ },
+ {
   "key": "tradingcardmarket",
   "name": "Trading Card Market",
   "base": "https://tradingcardmarket.com",
@@ -489,6 +567,18 @@
   "key": "vgmxthenerdemporium",
   "name": "VGMX The Nerd Emporium",
   "base": "https://vgmx.com",
+  "market": "US"
+ },
+ {
+  "key": "vrarestore",
+  "name": "vrarestore",
+  "base": "https://vrarestore.com",
+  "market": "US"
+ },
+ {
+  "key": "yourgamehaven",
+  "name": "yourgamehaven",
+  "base": "https://yourgamehaven.com",
   "market": "US"
  }
 ]
