@@ -102,9 +102,81 @@
   "market": "AU"
  },
  {
+  "key": "amazingstories",
+  "name": "Amazing Stories",
+  "base": "https://amazingstoriesgames.ca",
+  "market": "CA"
+ },
+ {
+  "key": "armadillogames",
+  "name": "Armadillo Games",
+  "base": "https://armadillogames.ca",
+  "market": "CA"
+ },
+ {
+  "key": "cmdstore",
+  "name": "Cmdstore.ca",
+  "base": "https://cmdstore.ca",
+  "market": "CA"
+ },
+ {
   "key": "doescards",
   "name": "Doe's Cards",
   "base": "https://doescards.ca",
+  "market": "CA"
+ },
+ {
+  "key": "factorfictiongames",
+  "name": "Fact Or Fiction Games",
+  "base": "https://fofgames.ca",
+  "market": "CA"
+ },
+ {
+  "key": "galactictradingpost",
+  "name": "Galactic Trading Post",
+  "base": "https://galactictp.com",
+  "market": "CA"
+ },
+ {
+  "key": "legendswarehouse",
+  "name": "Legends Warehouse",
+  "base": "https://legendswarehouse.ca",
+  "market": "CA"
+ },
+ {
+  "key": "nerdhavengames",
+  "name": "Nerd Haven Games",
+  "base": "https://nerdhaven.games",
+  "market": "CA"
+ },
+ {
+  "key": "outoftheboxca",
+  "name": "Out Of The Box",
+  "base": "https://outoftheboxtcg.com",
+  "market": "CA"
+ },
+ {
+  "key": "ransomgames",
+  "name": "Ransom Games",
+  "base": "https://ransomgames.ca",
+  "market": "CA"
+ },
+ {
+  "key": "theupperhand",
+  "name": "The Upper Hand",
+  "base": "https://theupperhand.ca",
+  "market": "CA"
+ },
+ {
+  "key": "tournamentcapitalgaming",
+  "name": "Tournament Capital Gaming",
+  "base": "https://tournamentcapitalgaming.com",
+  "market": "CA"
+ },
+ {
+  "key": "wiredvillage",
+  "name": "WiredVillage Boardgames",
+  "base": "https://wiredvillagegames.com",
   "market": "CA"
  },
  {
@@ -300,9 +372,33 @@
   "market": "UK"
  },
  {
+  "key": "cardgalaxy",
+  "name": "Card Galaxy",
+  "base": "https://cardgalaxy.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "clownfishgames",
+  "name": "Clownfish Games",
+  "base": "https://clownfish-games.co.uk",
+  "market": "UK"
+ },
+ {
   "key": "deckmarket",
   "name": "Deck Market",
   "base": "https://deckmarket.net",
+  "market": "UK"
+ },
+ {
+  "key": "eclipsecards",
+  "name": "Eclipse Cards",
+  "base": "https://eclipsecards.com",
+  "market": "UK"
+ },
+ {
+  "key": "endgameldn",
+  "name": "Endgame LDN",
+  "base": "https://www.endgameldn.com",
   "market": "UK"
  },
  {
@@ -312,9 +408,57 @@
   "market": "UK"
  },
  {
+  "key": "eprgaming",
+  "name": "EPR Gaming",
+  "base": "https://eprgaming.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "fanboythree",
+  "name": "Fan Boy Three",
+  "base": "https://fanboy3.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "hammerheadtcg",
+  "name": "Hammerhead TCG",
+  "base": "https://www.hammerheadtcg.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "hamptonhobbiesandgames",
+  "name": "Hampton Hobbies and Games",
+  "base": "https://hamptonhobbiesandgames.co.uk",
+  "market": "UK"
+ },
+ {
   "key": "infinitycollectables",
   "name": "Infinity Collectables",
   "base": "https://infinitycollectables.com",
+  "market": "UK"
+ },
+ {
+  "key": "lenniestoys",
+  "name": "Lennies Toys",
+  "base": "https://lennies.com",
+  "market": "UK"
+ },
+ {
+  "key": "leodisgames",
+  "name": "Leodis Games",
+  "base": "https://leodisgames.com",
+  "market": "UK"
+ },
+ {
+  "key": "lockettlabs",
+  "name": "Lockett Labs",
+  "base": "https://lockett-labs.com",
+  "market": "UK"
+ },
+ {
+  "key": "marleycollects",
+  "name": "Marley Collects",
+  "base": "https://marleycollects.com",
   "market": "UK"
  },
  {
@@ -327,6 +471,12 @@
   "key": "peakycollectibles",
   "name": "Peaky Collectibles",
   "base": "https://peakycollectibles.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "pokaratcg",
+  "name": "Pokara TCG",
+  "base": "https://pokaratcg.co.uk",
   "market": "UK"
  },
  {
@@ -354,9 +504,27 @@
   "market": "UK"
  },
  {
+  "key": "shinyquestcard",
+  "name": "Shiny Quest Card",
+  "base": "https://shinyquestcard.com",
+  "market": "UK"
+ },
+ {
+  "key": "sweetsnthings",
+  "name": "Sweets n Things",
+  "base": "https://www.sweetsnthings.co.uk",
+  "market": "UK"
+ },
+ {
   "key": "thecardshub",
   "name": "The Cards Hub",
   "base": "https://thecardshub.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "thecardtel",
+  "name": "The Cardtel",
+  "base": "https://thecardtel.co.uk",
   "market": "UK"
  },
  {
@@ -387,6 +555,12 @@
   "key": "westendgames",
   "name": "West End Games",
   "base": "https://westendgames.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "westwiltstcg",
+  "name": "WestWiltsTCG",
+  "base": "https://westwiltstcg.com",
   "market": "UK"
  },
  {
