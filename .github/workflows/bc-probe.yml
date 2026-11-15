@@ -1,0 +1,29 @@
+name: BigCommerce probe
+
+# Manual, one-off: reads a few category pages of one BigCommerce shop politely (scripts/bc-probe.ts) and prints what
+# its server HTML holds. Writes nothing and commits nothing.
+
+on:
+  workflow_dispatch:
+    inputs:
+      paths:
+        description: "Comma-separated paths to read"
+        default: "/magic-the-gathering,/pokemon,/sitemap/categories"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsx scripts/bc-probe.ts
+        env:
+          BC_PATHS: ${{ inputs.paths }}
