@@ -74,6 +74,8 @@ export interface CrawlListing {
 }
 
 export interface CrawlStoreRun {
+  /** A store of data/crawl/own-stores.json: its listings may also be taken by title (pickByTitle). */
+  own?: boolean;
   host: string;
   key: string;
   name: string;
@@ -212,6 +214,8 @@ export interface PickContext {
   lineOf: (p: Product) => string | undefined;
   /** The store matcher's index of ONE game. */
   indexOf: (line: string) => MatchIndex;
+  /** Whether a price (cents in `market`'s currency) is 60-160% of the product's TCGplayer market price; false when it has none. */
+  inBand?: (id: number, cents: number, market: Market) => boolean;
 }
 
 export type Refused =
@@ -281,6 +285,34 @@ export function pickId(l: CrawlListing, ctx: PickContext): IdPick {
   return { id };
 }
 
+/**
+ * A listing of an own-list shop (data/crawl/own-stores.json) with NO TCGplayer id, taken by its title (owner's go,
+ * 2026-11-15: the id-only rule left most new shops empty). Strict: in stock, no other TCGplayer-shaped id, none of
+ * pickId's refusals, the one-game matcher lands on exactly one product (across all the listing's games), the title
+ * names a product type and it is the product's own, the quantity agrees, and the price is 60-160% of TCGplayer's
+ * market price (a product with no market price is refused). Anything doubtful is no match.
+ */
+export function pickByTitle(l: CrawlListing, ctx: PickContext, market: Market): IdPick {
+  if (l.refuse) return { refuse: "listing", detail: l.refuse };
+  if (!ctx.inBand) return { refuse: "no-id" };
+  if (l.ids.length) return { refuse: "no-id" };
+  if (!l.inStock) return { refuse: "unconfirmed", detail: "out of stock" };
+  if (isUnfitListing(l.title) || NOT_SEALED_AS_SOLD.test(l.title)) return { refuse: "unfit" };
+  if (isForeign(l.title) || isForeign(handleOf(l.url))) return { refuse: "foreign" };
+  if (OTHER_QUANTITY.test(l.title)) return { refuse: "multiple", detail: "quantity" };
+  const said = sealedTypeOf(l.title);
+  if (said === "Other") return { refuse: "unconfirmed", detail: "no product type" };
+  const hits = l.lines.map((line) => matchSealed(l.title, ctx.indexOf(line))).filter((m): m is NonNullable<typeof m> => !!m);
+  if (hits.length !== 1) return { refuse: "unconfirmed", detail: hits.length ? "two games" : "no match" };
+  const p = hits[0].product;
+  if (p.kind !== "sealed" || p.sealedType === "Insert") return { refuse: "not-sealed" };
+  if (isMulti(l.title) !== isMulti(p.name)) return { refuse: "multiple" };
+  if (said !== sealedTypeOf(p.name)) return { refuse: "type-differs", detail: `${said} / ${sealedTypeOf(p.name)}` };
+  if (l.variantKind && l.variantKind !== sealedTypeOf(p.name)) return { refuse: "type-differs", detail: l.variantKind };
+  if (!ctx.inBand(p.id, l.cents, market)) return { refuse: "unconfirmed", detail: "price outside 60-160% of market" };
+  return { id: p.id };
+}
+
 // ── Into the import ─────────────────────────────────────────────────────────
 
 const hostOf = (url: string): string => {
@@ -322,6 +354,8 @@ export interface CrawlTake {
   /** Today's store key → the products it was taken for this run (carryCrawl leaves those to the fresh row). */
   fresh: Map<string, Set<number>>;
   taken: number;
+  /** Of `taken`, those taken by title (own-list shops, pickByTitle). */
+  titled?: number;
   refused: Record<string, number>;
   listings: number;
 }
@@ -332,6 +366,7 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
   const fresh = new Map<string, Set<number>>();
   const refused: Record<string, number> = {};
   let taken = 0;
+  let titled = 0;
   let listings = 0;
   for (const s of run.stores) {
     // A partial read still yields the collections it read to the end.
@@ -341,7 +376,14 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
     const best = new Map<number, Offer>();
     for (const l of s.listings) {
       listings++;
-      const r = pickId(l, ctx);
+      let r = pickId(l, ctx);
+      if ("refuse" in r && r.refuse === "no-id" && s.own) {
+        const byTitle = pickByTitle(l, ctx, s.market);
+        if ("id" in byTitle) {
+          r = byTitle;
+          titled++;
+        } else if (byTitle.refuse !== "no-id") r = { refuse: byTitle.refuse, detail: byTitle.detail };
+      }
       if ("refuse" in r) {
         refused[r.refuse] = (refused[r.refuse] ?? 0) + 1;
         continue;
@@ -358,7 +400,7 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
       fresh.get(key)!.add(id);
     }
   }
-  return { offers, fresh, taken, refused, listings };
+  return { offers, fresh, taken, refused, listings, titled };
 }
 
 /**

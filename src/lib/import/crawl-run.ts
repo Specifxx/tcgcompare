@@ -38,6 +38,7 @@ interface StoreJob {
   name: string;
   base: string;
   market: Market;
+  own?: boolean;
   handles: { handle: string; line: string }[];
 }
 
@@ -45,7 +46,7 @@ export function groupStores(entries: readonly CrawlStore[]): StoreJob[] {
   const by = new Map<string, StoreJob>();
   for (const e of entries) {
     const id = storeIdentity(e.base, e.market);
-    if (!by.has(id)) by.set(id, { host: e.host, key: e.key, name: e.name, base: e.base.replace(/\/+$/, ""), market: e.market, handles: [] });
+    if (!by.has(id)) by.set(id, { host: e.host, key: e.key, name: e.name, base: e.base.replace(/\/+$/, ""), market: e.market, ...(e.own ? { own: true } : {}), handles: [] });
     const job = by.get(id)!;
     for (const h of e.handles) if (!job.handles.some((x) => x.handle === h && x.line === e.line)) job.handles.push({ handle: h, line: e.line });
   }
@@ -91,7 +92,7 @@ export async function runCrawl(entries: readonly CrawlStore[], o: RunOptions): P
       const s = new StoreSession(group[0].base, { ...o, budget, perStoreCap: o.perStoreCap * group.length });
       for (const j of group) {
         const before = s.requests;
-        const run: CrawlStoreRun = { host: j.host, key: j.key, name: j.name, base: j.base, market: j.market, ok: false, requests: 0, listings: [] };
+        const run: CrawlStoreRun = { host: j.host, key: j.key, name: j.name, base: j.base, market: j.market, ...(j.own ? { own: true } : {}), ok: false, requests: 0, listings: [] };
         out.push(run);
         // Collections read to the end, kept even when the store is stopped later in the run.
         const byId = new Map<number, { p: ShopifyListing; lines: Set<string> }>();
