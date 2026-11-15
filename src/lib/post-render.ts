@@ -6,6 +6,7 @@
 //   {{rarity:NAME:N}}        the N most valuable cards of one rarity
 //   {{sealed:SETID}}         the set's sealed products, cheapest in-stock offer
 //   {{card:ID}}              link to a product page with its name
+//   {{study:boxes}} / {{study:beat}}   per-game tables (lib/game-study.ts); {{fact:KEY}} one figure from them
 //   {{attrstats:FACET}}      per value of an attribute hub (SITE.cardHubs): cards, median, $10+, most valuable
 import { byValue, priceOf, productById, products, productsInSet, refCents, setById, summaryOf } from "./data";
 import { money, pct } from "./format";
@@ -14,6 +15,7 @@ import { escapeHtml } from "./html";
 import { sourceNameServer } from "./sources";
 import type { Product } from "./site-types";
 import { facetStats } from "./hubs";
+import { beatTable, boxTable, fact } from "./game-study";
 
 function table(rows: Product[], withSet: boolean): string {
   // A sealed-only catalogue has no cards: the table is left out rather than drawn empty.
@@ -37,6 +39,9 @@ export function renderPost(html: string): string {
     .replace(/\{\{toplist:(\d+):(\d+)\}\}/g, (_, s, n) => table(byValue(productsInSet(Number(s)).filter((p) => p.kind === "card")).slice(0, Number(n)), false))
     .replace(/\{\{topall:(\d+)\}\}/g, (_, n) => table(byValue(products().filter((p) => p.kind === "card")).slice(0, Number(n)), true))
     .replace(/\{\{rarity:([^:}]+):(\d+)\}\}/g, (_, r, n) => table(byValue(products().filter((p) => p.kind === "card" && p.rarity === r)).slice(0, Number(n)), true))
+    .replace(/\{\{study:boxes\}\}/g, () => boxTable())
+    .replace(/\{\{study:beat\}\}/g, () => beatTable())
+    .replace(/\{\{fact:([a-zA-Z]+)\}\}/g, (_, k) => fact(k))
     .replace(/\{\{attrstats:([a-z0-9-]+)\}\}/g, (_, f) => {
       const rows = facetStats(f)
         .map((r) => `<tr><td><a href="/cards/${f}/${r.hub.slug}">${escapeHtml(r.hub.label)}</a></td><td>${r.count}</td><td>${money(r.median)}</td><td>${r.over10}</td><td>${r.top ? `<a href="/card/${r.top.slug}">${escapeHtml(shortName(r.top.name))}</a> ${money(refCents(r.top.id))}` : "—"}</td></tr>`)

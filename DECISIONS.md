@@ -339,3 +339,16 @@ product's own; one box is one box (`isMulti`); and the price is 60-160% of the p
 product with no market price is never taken. Sister shops and every shop with an id keep the id-only rule.
 `meta.json` `crawl.titled` counts the listings taken this way. If it ever shows a wrong match, tighten the band or end
 the exception here; never loosen it.
+
+## 2026-11-15: Guides are data studies, written once and kept true by tokens (owner: "unique, insightful, real search terms")
+
+The blog was empty. A guide here answers one question only this site's data can answer, and its numbers are tokens
+(`{{study:boxes}}`, `{{study:beat}}`, `{{fact:KEY}}`, `lib/game-study.ts`, `lib/post-render.ts`) over the committed files, so
+it is true after every daily import without an edit. First two: how much a booster box costs per game (TCGplayer US
+market price, released sets, median, 5+ boxes a game) and how often a US store undercuts TCGplayer per game (30+
+products; item price only, USD against USD). Rules: never a per-pack figure (pack counts are not verified), never a
+claim a table cannot back, never repeat `/price-report` (the all-games figure; the guide is the per-game cut and links
+to it). Titles, descriptions and keywords hold no token (only the body and FAQ answers are rendered).
+Search evidence: tcgprices.app had no Search Console impressions on 15 Nov, so the topics come from the sister sites' real
+queries ("how many packs in a booster box", "cheapest booster box", "where to buy sealed"); a topic is not written
+without one. `tests/guides-data.test.ts` pins that no token reaches a reader.
