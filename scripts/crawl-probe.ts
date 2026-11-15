@@ -18,6 +18,7 @@ import { SISTERS } from "@/lib/import/sisters";
 
 const ROOT = process.cwd();
 const OUT = path.join(ROOT, "data", "crawl", "stores.json");
+const OWN = path.join(ROOT, "data", "crawl", "own-stores.json");
 const readJson = <T>(f: string, fb: T): T => {
   try {
     return JSON.parse(fs.readFileSync(f, "utf8")) as T;
@@ -64,23 +65,45 @@ async function main() {
   const blocklist = readJson<Record<string, string>>(path.join(ROOT, "data", "store-blocklist.json"), {});
   const refused = new Set(readJson<{ refused?: { key: string }[] }>(path.join(ROOT, "data", "public", "store-vetting.json"), {}).refused?.map((r) => r.key) ?? []);
   const platforms = process.env.SISTER_DIR ? sisterPlatforms(process.env.SISTER_DIR) : new Map<string, "shopify" | "other">();
+  // Our own stores (data/crawl/own-stores.json, owner 2026-11-15: "the most stores of any site"): shops no sister lists,
+  // read for every game. A host a sister lists is left to the sister (its rows would double). They are probed in
+  // their own pass, so the sisters' pass never sees them even once an earlier run put them in stores.json.
+  const own = readJson<ProbeStore[]>(OWN, []).filter((s) => s && s.key && s.base && s.market);
+  const ownHosts = new Set(own.map((s) => hostOf(s.base)));
+  const sisterHosts = new Set(platforms.keys());
+  const ownList = own.filter((s) => {
+    const h = hostOf(s.base);
+    return h && blocklist[h] == null && !refused.has(s.key) && !sisterHosts.has(h) && !/\.myshopify\.com$/.test(h);
+  });
   const list = stores.filter((s) => {
     const h = hostOf(s.base);
-    return h && blocklist[h] == null && !refused.has(s.key) && platforms.get(h) !== "other" && !/\.myshopify\.com$/.test(h);
+    return h && !ownHosts.has(h) && blocklist[h] == null && !refused.has(s.key) && platforms.get(h) !== "other" && !/\.myshopify\.com$/.test(h);
   });
-  console.log(`[probe] ${list.length} of ${stores.length} stores (${platforms.size} hosts with a known platform)`);
+  console.log(`[probe] ${list.length} of ${stores.length} stores (${platforms.size} hosts with a known platform), ${ownList.length} of ${own.length} own stores`);
   const minutes = Number(process.env.PROBE_MAX_MINUTES ?? 100);
+  const deadline = Date.now() + minutes * 60_000;
+  const budget = Number(process.env.PROBE_BUDGET ?? 8000);
   const r = await runProbe(
     list.map((s) => ({ ...s, market: s.market as Market })),
     SITE.lines ?? [],
-    { budget: Number(process.env.PROBE_BUDGET ?? 8000), perStoreCap: 6, deadline: Date.now() + minutes * 60_000, log: console.log },
+    { budget, perStoreCap: 6, deadline, log: console.log },
   );
-  const merged = mergeProbe(readJson<CrawlStore[]>(OUT, []), r);
+  const ownLines = (SITE.lines ?? []).map((l) => ({ id: l.id, crawl: l.crawl ?? l.ownCrawl }));
+  const ro = await runProbe(
+    ownList.map((s) => ({ key: s.key, name: s.name, base: s.base, market: s.market as Market })),
+    ownLines,
+    { budget, perStoreCap: 6, deadline, log: console.log },
+  );
+  for (const e of ro.entries) e.own = true;
+  // An own store that left the list (or went to a sister) leaves the crawl list with it.
+  const ownIdents = new Set(ownList.map((s) => `${hostOf(s.base)}|${s.market}`));
+  const prev = readJson<CrawlStore[]>(OUT, []).filter((e) => !e.own || ownIdents.has(`${e.host}|${e.market}`));
+  const merged = mergeProbe(mergeProbe(prev, r), ro);
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, JSON.stringify(merged, null, 1) + "\n");
   const perLine = new Map<string, number>();
   for (const e of merged) perLine.set(e.line, (perLine.get(e.line) ?? 0) + 1);
-  console.log(`[probe] ${r.probed.size} stores probed, ${r.blocked.size} blocked us, ${r.requests} requests; ${merged.length} store-game entries: ${[...perLine].map(([k, n]) => `${k} ${n}`).join(", ")}`);
+  console.log(`[probe] ${r.probed.size + ro.probed.size} stores probed (${ro.probed.size} own), ${r.blocked.size + ro.blocked.size} blocked us, ${r.requests + ro.requests} requests; ${merged.length} store-game entries: ${[...perLine].map(([k, n]) => `${k} ${n}`).join(", ")}`);
 }
 
 if (process.argv[1] && /crawl-probe\.ts$/.test(process.argv[1]))

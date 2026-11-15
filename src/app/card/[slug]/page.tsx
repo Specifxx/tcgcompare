@@ -30,6 +30,7 @@ import { abs } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ShareButton } from "@/components/ShareButton";
 import { attrHref, rarityHref, sealedHref } from "@/lib/hubs";
+import { packOfBox } from "@/lib/packs";
 
 import { cardTitleCandidates, fitTitle } from "@/lib/seo-title";
 import { cardIndexable, priceValidUntil } from "@/lib/indexing";
@@ -84,6 +85,8 @@ export default function CardPage({ params }: { params: { slug: string } }) {
   const name = shortName(p.name);
   // The game's own words lead the eBay search unless the product's name already says the whole phrase (lib/product-page.ts).
   const ebayQuery = ebayQueryFor(name, ebayQueryOf(set));
+  const pack = p.kind === "sealed" ? packOfBox(p, productsInSet(p.setId)) : null;
+  const packCents = pack ? refCents(pack.id) : null;
   const related = byValue(productsInSet(p.setId).filter((x) => x.id !== p.id && x.kind === p.kind)).slice(0, 6);
   const inStock = e.offers.filter((o) => o.inStock);
   // In-stock US-dollar offers, never eBay or Amazon: no structured data carries an eBay price (2026-11-14).
@@ -147,6 +150,9 @@ export default function CardPage({ params }: { params: { slug: string } }) {
               <p className="text-sm">7d <span className={(e.change7d ?? 0) >= 0 ? "text-up" : "text-down"}>{pct(e.change7d)}</span> · 30d <span className={(e.change30d ?? 0) >= 0 ? "text-up" : "text-down"}>{pct(e.change30d)}</span></p>
               <p className="text-sm text-muted">{inStock.length} in-stock listing{inStock.length === 1 ? "" : "s"} worldwide</p>
             </div>
+            {pack && packCents != null && (
+              <p className="mt-2 text-sm text-muted">Single pack: <b className="tabular text-ink">{money(packCents)}</b> TCGplayer market · <Link className="link" href={`/card/${pack.slug}`}>compare single pack prices</Link></p>
+            )}
             <VaultOwn id={p.id} name={`${name}${p.number ? ` ${p.number}` : ""}`} href={`/card/${p.slug}`} image={p.image ? imageAt(p.image, "200w") : null} prices={lowestByMarket(e.offers)} className="mt-3" />
             {Object.keys(e.tcg).length > 1 && (
               <p className="mt-2 flex flex-wrap gap-2 text-xs">

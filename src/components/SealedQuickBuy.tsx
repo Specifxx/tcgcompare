@@ -6,9 +6,10 @@
 // price and its button on the first screen; this does the same per product,
 // in the visitor's market, through /go like every buy button (from=set_quickbuy).
 import Link from "@/components/Link";
-import { goHref } from "@/lib/affiliate";
+import { goHref, subId, tagged } from "@/lib/affiliate";
+import { CartAddButton } from "./cart/CartAddButton";
 import { money } from "@/lib/format";
-import { MARKET_LABEL, type Offer } from "@/lib/site-types";
+import { MARKET_LABEL, type Market, type Offer } from "@/lib/site-types";
 import { useMarket } from "./ClientPrefs";
 import { sourceName } from "./PriceTable";
 
@@ -20,6 +21,8 @@ export interface QuickBuyItem {
   /** summaryOf(id).best: the cheapest in-stock offer per market, plus TCGplayer. */
   best: Offer[];
   stores: number;
+  /** The booster box's single pack (lib/packs.ts), when the set has one: what one pack costs. */
+  pack?: { slug: string; best: Offer[] } | null;
 }
 
 export function SealedQuickBuy({ items, title }: { items: QuickBuyItem[]; title: string }) {
@@ -46,11 +49,15 @@ export function SealedQuickBuy({ items, title }: { items: QuickBuyItem[]; title:
                   {" · "}
                   <Link href={`/card/${p.slug}`} className="link">compare {p.stores} store{p.stores === 1 ? "" : "s"}</Link>
                 </p>
+                {p.pack && <PackLine pack={p.pack} market={market} />}
               </div>
               {o ? (
-                <a href={goHref(o, p.id, "set_quickbuy")} rel="sponsored nofollow noopener" target="_blank" className="btn-buy min-h-10 shrink-0 whitespace-nowrap">
-                  Buy now <span aria-hidden="true">↗</span>
-                </a>
+                <span className="inline-flex shrink-0 items-center gap-2">
+                  {o.source !== "tcgplayer" && <CartAddButton href={tagged(o.url, subId(o.market, "set_quickbuy_cart", p.id), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={p.name} priceCents={o.cents} currency={o.currency} image={p.image} className="text-muted" />}
+                  <a href={goHref(o, p.id, "set_quickbuy")} rel="sponsored nofollow noopener" target="_blank" className="btn-buy min-h-10 shrink-0 whitespace-nowrap">
+                    Buy now <span aria-hidden="true">↗</span>
+                  </a>
+                </span>
               ) : (
                 <Link href={`/card/${p.slug}`} className="btn-ghost min-h-10 shrink-0 px-3 py-1.5">Compare</Link>
               )}
@@ -59,5 +66,20 @@ export function SealedQuickBuy({ items, title }: { items: QuickBuyItem[]; title:
         })}
       </ul>
     </section>
+  );
+}
+
+/** "Single pack from $4.49 at Store": the pack's cheapest in-stock price in the visitor's market, else TCGplayer's. */
+function PackLine({ pack, market }: { pack: NonNullable<QuickBuyItem["pack"]>; market: Market }) {
+  const local = pack.best.find((o) => o.market === market && o.inStock && o.source !== "tcgplayer");
+  const tcg = pack.best.find((o) => o.source === "tcgplayer" && o.inStock);
+  const o = local ?? tcg;
+  if (!o) return null;
+  return (
+    <p className="text-xs text-muted">
+      Single pack <b className="tabular-nums text-fg">{money(o.cents, o.currency)}</b> at {sourceName(o)}
+      {" · "}
+      <Link href={`/card/${pack.slug}`} className="link">compare pack prices</Link>
+    </p>
   );
 }

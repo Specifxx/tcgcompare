@@ -473,6 +473,10 @@ function mergeOwnCrawl(a: {
     run = null;
   }
   const crawlLines = new Set((SITE.lines ?? []).filter((l) => l.crawl).map((l) => l.id));
+  // Own stores (data/crawl/own-stores.json) are read for every game; one a sister now lists is left to the sister.
+  const sisterIdents = new Set(res.stores.map((s) => storeIdentity(s.base, s.market)));
+  const ownIdents = new Set(entries.filter((e) => e.own).map((e) => storeIdentity(e.base, e.market)).filter((id) => !sisterIdents.has(id)));
+  const ownLines = new Set((SITE.lines ?? []).filter((l) => l.crawl || l.ownCrawl).map((l) => l.id));
   const lineOfSet = new Map(sets.map((st) => [st.id, st.line]));
   const all = new Map(products.map((p) => [p.id, p]));
   const lineOf = (p: { setId: number }) => lineOfSet.get(p.setId);
@@ -507,10 +511,10 @@ function mergeOwnCrawl(a: {
     keyOf,
     prevById: a.prevById,
     prevKeyOf,
-    crawledProduct: (id) => {
+    crawledProduct: (id, ident) => {
       const p = all.get(id);
       const line = p && lineOf(p);
-      return !!line && crawlLines.has(line);
+      return !!line && (ownIdents.has(ident) ? ownLines : crawlLines).has(line);
     },
     fresh: got.fresh,
     now,

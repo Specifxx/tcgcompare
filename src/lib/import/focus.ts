@@ -16,6 +16,7 @@
 // Hysteresis: a product the last import kept stays while it still has a market price and is inside its age window
 // plus `GRACE_MONTHS`, so a page does not flap between a 301 and a 200 on the day it crosses a line.
 import type { FocusConfig, Offer, Product, SetInfo, TcgPrice } from "@/lib/site-types";
+import { boxStem, packStem } from "@/lib/packs";
 
 export type FocusRule = FocusConfig;
 
@@ -60,7 +61,7 @@ export function focusCatalog(args: {
   const setById = new Map(sets.map((s) => [s.id, s]));
   const ageMonths = (s: SetInfo | undefined): number | null =>
     s?.releasedOn ? (now.getTime() - new Date(s.releasedOn).getTime()) / MONTH : null;
-  return products.filter((p) => {
+  const kept = products.filter((p) => {
     if (p.kind !== "sealed") return false;
     if (demand.has(p.slug)) return true;
     if (p.sealedType === "Insert" || p.rarity) return false;
@@ -79,4 +80,16 @@ export function focusCatalog(args: {
     const limit = isHeadline ? rule.headlineMaxAgeMonths : rule.otherMaxAgeMonths;
     return age <= limit || (previous.has(p.id) && age <= limit + GRACE_MONTHS);
   });
+  // A kept booster box keeps its single pack (lib/packs.ts), so the box's page can show what one pack costs. Only a pack
+  // TCGplayer prices or a store lists, never a dead listing.
+  const boxes = new Set(kept.map((p) => (boxStem(p) ? `${p.setId}|${boxStem(p)}` : null)).filter((x): x is string => !!x));
+  const keptIds = new Set(kept.map((p) => p.id));
+  const packs = products.filter((p) => {
+    if (p.kind !== "sealed" || keptIds.has(p.id) || p.rarity || !packStem(p) || !boxes.has(`${p.setId}|${packStem(p)}`)) return false;
+    const o = offers.get(p.id) ?? [];
+    return marketCents(tcg[p.id]) != null || storesInOneMarket(o, false) >= 1;
+  });
+  if (!packs.length) return kept;
+  const all = new Set([...keptIds, ...packs.map((p) => p.id)]);
+  return products.filter((p) => all.has(p.id));
 }

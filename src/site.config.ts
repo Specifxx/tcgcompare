@@ -92,6 +92,22 @@ const CRAWL: Record<string, GameLine["crawl"]> = {
   ac: { any: ["alpha clash"] },
 };
 
+// The sisters' games, for the stores of data/crawl/own-stores.json only (no sister reads those): the words a collection
+// handle or title uses. Pokémon Japan is left out (a store's Japanese range is not told from its English one by name).
+const OWN_CRAWL: Record<string, GameLine["ownCrawl"]> = {
+  mtg: { any: ["magic the gathering", "magic gathering", "mtg"], not: ["final fantasy"] },
+  pkm: { any: ["pokemon"], not: ["japanese", "japan", "jpn", "korean", "chinese"] },
+  op: { any: ["one piece"] },
+  ygo: { any: ["yu gi oh", "yugioh"] },
+  rb: { any: ["riftbound"] },
+  lor: { any: ["lorcana"] },
+  gun: { any: ["gundam"], not: ["gunpla", "model kit"] },
+  ua: { any: ["union arena"] },
+  fw: { any: ["fusion world"] },
+  dg: { any: ["digimon"] },
+  cp: { any: ["cyberpunk"] },
+};
+
 const LINES: GameLine[] = [
   g("mtg", 1, "Magic: The Gathering", "Magic", "magic-the-gathering", "magic", "magic the gathering", "#b8742a", "Play Booster and Collector Booster boxes, bundles, Commander decks and Secret Lair-era sealed product."),
   g("pkm", 3, "Pokémon", "Pokémon", "pokemon", "pokemon", "pokemon", "#d9a514", "Booster boxes, Elite Trainer Boxes, booster bundles, tins and premium collections from every current set."),
@@ -124,7 +140,7 @@ const LINES: GameLine[] = [
   g("wx", 67, "WIXOSS", "WIXOSS", "wixoss", "all", "wixoss", "#9a5a9a", "English booster boxes and starter decks."),
   g("bss", 72, "Battle Spirits Saga", "Battle Spirits", "battle-spirits-saga", "all", "battle spirits saga", "#b0553c", "Booster boxes and starter decks."),
   g("ac", 78, "Alpha Clash", "Alpha Clash", "alpha-clash", "all", "alpha clash tcg", "#5a8a4a", "Booster boxes and starter decks."),
-].map((l) => ({ ...l, ...(LOGOS.has(l.id) ? { logo: `/games/${l.id}.webp` } : {}), ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}) }));
+].map((l) => ({ ...l, ...(LOGOS.has(l.id) ? { logo: `/games/${l.id}.webp` } : {}), ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}), ...(OWN_CRAWL[l.id] ? { ownCrawl: OWN_CRAWL[l.id] } : {}) }));
 
 export const SITE: SiteConfig = {
   // The affiliate sub-id prefix (eBay customid, Impact subId1): `tcgprices-us-card_pinned-1234`.

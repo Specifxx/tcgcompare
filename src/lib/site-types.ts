@@ -74,6 +74,9 @@ export interface GameLine {
   /** Our own crawl (lib/import/crawl.ts), only for a game no sister site covers: the words a store's collection handle
    *  or title uses for this game (every word of one `any` phrase, no whole `not` phrase). Left out, never crawled. */
   crawl?: { any: string[]; not?: string[] };
+  /** The same words for a game a sister site covers: used ONLY for the stores of data/crawl/own-stores.json, which no
+   *  sister reads (lib/import/crawl.ts). Never read for a store a sister lists. */
+  ownCrawl?: { any: string[]; not?: string[] };
 }
 
 /** The sealed focus (lib/import/focus.ts): which sealed products keep a page. */
