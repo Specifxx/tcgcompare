@@ -53,6 +53,8 @@ export interface CrawlStore {
   line: string;
   handles: string[];
   probedAt: string;
+  /** A store of data/crawl/own-stores.json (no sister lists it): every game is read, the sisters' games too. */
+  own?: boolean;
 }
 
 /** A store listing as the crawl hands it to the import: no decision about the product yet, only what the listing says. */
@@ -372,7 +374,8 @@ export function carryCrawl(args: {
   keyOf: ReadonlyMap<string, string>;
   prevById: Readonly<Record<string, { offers: readonly Offer[] }>>;
   prevKeyOf: ReadonlyMap<string, string>;
-  crawledProduct: (id: number) => boolean;
+  /** Whether a previous row for this product may be carried for this store (`ident` = host|market). */
+  crawledProduct: (id: number, ident: string) => boolean;
   /** Today's store key → products it has a fresh row for this run. */
   fresh?: ReadonlyMap<string, ReadonlySet<number>>;
   now: Date;
@@ -380,7 +383,7 @@ export function carryCrawl(args: {
 }): { offers: Map<number, Offer[]>; carried: number } {
   const offers = new Map<number, Offer[]>();
   let carried = 0;
-  const wanted = new Map<string, string>(); // previous key → today's key
+  const wanted = new Map<string, { key: string; ident: string }>(); // previous key → today's key and identity
   for (const s of args.stores) {
     const ident = storeIdentity(s.base, s.market);
     if (args.readOk.has(ident)) continue;
@@ -388,14 +391,15 @@ export function carryCrawl(args: {
     if (!Number.isFinite(at) || (args.now.getTime() - at) / 3_600_000 > args.maxAgeH) continue;
     const prev = args.prevKeyOf.get(ident);
     const key = args.keyOf.get(ident);
-    if (prev && key) wanted.set(prev, key);
+    if (prev && key) wanted.set(prev, { key, ident });
   }
   if (!wanted.size) return { offers, carried };
   for (const [id, e] of Object.entries(args.prevById)) {
-    if (!args.crawledProduct(Number(id))) continue;
     for (const o of e.offers) {
-      const key = wanted.get(o.source);
-      if (!key || args.fresh?.get(key)?.has(Number(id))) continue;
+      const w = wanted.get(o.source);
+      if (!w || !args.crawledProduct(Number(id), w.ident)) continue;
+      const key = w.key;
+      if (args.fresh?.get(key)?.has(Number(id))) continue;
       if (!offers.has(Number(id))) offers.set(Number(id), []);
       offers.get(Number(id))!.push({ ...o, source: key });
       carried++;

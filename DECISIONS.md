@@ -295,3 +295,22 @@ dragons or fantasy, or swordmans … rather than just have a geometric thing".
 - Art: three public-domain paintings (Hendrich's Sigurd and Fafnir, Uccello's Saint George and the Dragon, Arbo's
   Valkyrie; `public/art/SOURCES.md`) fade into one another behind the hero words, dimmed, edge-masked, slow drift, 800 px
   files on phones, still under reduced motion. CSS backgrounds of a box already there, so no layout shift.
+
+## 2026-11-15: Our own store list, cart in the quick views, single pack prices (owner)
+
+Owner: "this site's going to contain the most stores out of all of our sites", and Reddit users on the Star Wars
+Unlimited post asked for single pack prices.
+
+- `data/crawl/own-stores.json` (`scripts/own-stores-merge.py` merges researched candidates into it) lists Shopify
+  shops no sister lists. The weekly probe reads them in their own pass for EVERY game (`GameLine.ownCrawl` holds the words
+  for the sisters' games; the entries carry `own: true`), the twice-daily crawl reads the collections it found, and a
+  listing is still taken only by the TCGplayer product id it carries. A shop a sister lists is skipped by the probe and
+  guarded in the import (`mergeOwnCrawl`): its rows would double. A candidate with no TCG collection simply gets no
+  entry. Same politeness rules as before; the crawl budget is 12,000 requests and 90 minutes a run, stores tried longest
+  ago first, so what one run cannot reach the next does. Candidates come from research (never a paid API); vetting
+  (`vet.ts`) judges them like any store.
+- `PriceTable` rows in the quick view (`compact`) and the set page's quick buy carry the labelled "Add to cart" button
+  too, as on the sister sites.
+- A booster box's single pack (`lib/packs.ts`, same set and same edition by name only; a promo pack pairs with nothing)
+  shows beside the box on the set page's quick buy and under the price on the box's page. The focus keeps a kept box's
+  pack when TCGplayer prices it or a store lists it. No pack count is claimed.

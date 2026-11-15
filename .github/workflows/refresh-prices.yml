@@ -23,7 +23,7 @@ permissions:
 jobs:
   import:
     runs-on: ubuntu-latest
-    timeout-minutes: 170
+    timeout-minutes: 220
     steps:
       - uses: actions/checkout@v4
         with:
@@ -134,7 +134,12 @@ jobs:
       # weekly Crawl probe has found stores; never fatal: without it the import carries the last rows for 72 hours.
       - name: Own crawl (games no sister covers)
         continue-on-error: true
-        timeout-minutes: 55
+        timeout-minutes: 100
+        env:
+          # The sisters' collections plus data/crawl/own-stores.json (owner, 2026-11-15): more stores, so a longer read;
+          # the stores tried longest ago go first, so what one run cannot reach the next does.
+          CRAWL_BUDGET: "12000"
+          CRAWL_MAX_MINUTES: "90"
         run: npx tsx scripts/crawl-uncovered.ts
       - name: Import
         env:
