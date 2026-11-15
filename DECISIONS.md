@@ -322,3 +322,9 @@ Owner: "the most stores of any site". `scripts/crawl-probe.ts` now reads `data/c
 same host and market (or key) in two files is read once, the first file wins. First batch: 24 AU and 60 EU Shopify
 shops (`docs/store-research/2026-11-15-au-eu.md`), each answering `/meta.json` in its market's currency. The weekly
 probe still decides which of their collections are read, and vetting still judges each store on every import.
+
+First measured result of the own store list (2026-11-15 import): 187 candidate shops listed, 92 held a game's collections,
+the crawl read 928 of 941 stores (6,372 requests), took 1,790 of 183,120 listings (was 1,428), and the store directory went
+from 1,167 to 1,186 stores. Most shops carry no TCGplayer product id in their handle, SKU or photo, so the id-only rule
+refuses their listings (`no-id`); a shop is counted only once one of its listings is taken. Taking those listings by title
+for the own list would raise the count a lot but breaks "never take a crawl listing by its title": the owner's call.
