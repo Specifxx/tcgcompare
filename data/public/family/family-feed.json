@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-15T17:43:01.758Z",
+ "generatedAt": "2026-11-15T21:30:08.789Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -19,7 +19,7 @@
    "currency": "USD",
    "store": "Vegas Singles",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/282401_200w.jpg",
-   "refCents": 57600,
+   "refCents": 57592,
    "refLabel": "TCGplayer market price",
    "savingPct": 34
   },
@@ -61,9 +61,9 @@
    "currency": "USD",
    "store": "Collector Store",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/501999_200w.jpg",
-   "refCents": 114266,
+   "refCents": 110906,
    "refLabel": "TCGplayer market price",
-   "savingPct": 26
+   "savingPct": 23
   },
   {
    "kind": "deal",
@@ -92,6 +92,17 @@
    "refCents": 450160,
    "refLabel": "TCGplayer market price",
    "savingPct": 16
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Diva Fever Booster Box",
+   "url": "https://tcgprices.app/preorders/diva-fever",
+   "cents": 4099,
+   "currency": "USD",
+   "store": "cardboardfiat",
+   "releaseDate": "2026-11-20"
   },
   {
    "kind": "preorder",
@@ -149,18 +160,6 @@
    "currency": "USD",
    "store": "Gamers Guild AZ",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/721534_200w.jpg",
-   "releaseDate": "2027-01-22"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Starter Deck 14: The Prince of Saiyan Starter Deck",
-   "url": "https://tcgprices.app/preorders/starter-deck-14-the-prince-of-saiyan",
-   "cents": 1599,
-   "currency": "USD",
-   "store": "Gamers Guild AZ",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/721537_200w.jpg",
    "releaseDate": "2027-01-22"
   }
  ]
