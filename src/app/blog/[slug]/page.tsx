@@ -27,7 +27,7 @@ export default function PostPage({ params }: { params: { slug: string } }) {
   return (
     <article className="mx-auto max-w-3xl">
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Article", headline: p.title, description: p.description, datePublished: p.date, dateModified: p.updated ?? p.date, image: abs(p.image?.src ?? "/opengraph-image.jpg"), author: { "@type": "Organization", name: SITE.name, url: abs("/about") }, publisher: { "@type": "Organization", name: SITE.name, url: abs("/"), logo: { "@type": "ImageObject", url: abs("/icon.svg") } }, mainEntityOfPage: abs(`/blog/${p.slug}`) }} />
-      {p.faq && <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: p.faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) }} />}
+      {p.faq && <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: p.faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: renderPost(f.a) } })) }} />}
       <Breadcrumbs items={[{ name: "Guides", href: "/blog" }, { name: p.title }]} />
       <p className="text-xs text-muted">{p.updated ? `Updated ${p.updated}` : p.date}</p>
       <h1 className="mt-2 font-display text-3xl font-black md:text-4xl">{p.title}</h1>
@@ -42,7 +42,7 @@ export default function PostPage({ params }: { params: { slug: string } }) {
       {p.faq && (
         <section className="mt-8">
           <h2 className="mb-3 text-xl font-bold">FAQ</h2>
-          {p.faq.map((f) => (<div key={f.q} className="border-b border-ink-800 py-3"><h3 className="font-medium">{f.q}</h3><p className="mt-1 text-sm text-muted">{f.a}</p></div>))}
+          {p.faq.map((f) => (<div key={f.q} className="border-b border-ink-800 py-3"><h3 className="font-medium">{f.q}</h3><p className="mt-1 text-sm text-muted" dangerouslySetInnerHTML={{ __html: renderPost(f.a) }} /></div>))}
         </section>
       )}
       {/* Every article hands the reader on to more reading and a tool, as Rift Compare's do (its "Related tools" row). */}
