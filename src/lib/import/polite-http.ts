@@ -225,6 +225,21 @@ export class StoreSession {
     return p;
   }
 
+  /** GET an HTML or text page, one request at a time. null when robots.txt disallows the path or it did not answer 200. */
+  getText(pathAndQuery: string): Promise<string | null> {
+    const run = async (): Promise<string | null> => {
+      if (!(await this.allowed(pathAndQuery))) return null;
+      const r = await this.send(pathAndQuery);
+      if (!r || r.status >= 500) return this.failed(pathAndQuery);
+      if (r.status !== 200) return null;
+      this.errors = 0;
+      return r.body;
+    };
+    const p = this.queue.then(run, run);
+    this.queue = p.catch(() => undefined);
+    return p;
+  }
+
   private failed(p: string): null {
     this.failures++;
     if (++this.errors >= MAX_ERRORS) this.stop("errors", `${MAX_ERRORS} failed requests in a row (last ${p})`);
