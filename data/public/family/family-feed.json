@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-15T11:52:06.281Z",
+ "generatedAt": "2026-11-15T17:43:01.758Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -9,6 +9,20 @@
   }
  },
  "items": [
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Sword & Shield Ultra-Premium Collection: Charizard",
+   "url": "https://tcgprices.app/card/sword-and-shield-ultra-premium-collection-charizard",
+   "cents": 38000,
+   "currency": "USD",
+   "store": "Vegas Singles",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/282401_200w.jpg",
+   "refCents": 57600,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 34
+  },
   {
    "kind": "deal",
    "cluster": "cards",
@@ -78,20 +92,6 @@
    "refCents": 450160,
    "refLabel": "TCGplayer market price",
    "savingPct": 16
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
-   "title": "The Dominance of God Booster Box Case",
-   "url": "https://tcgprices.app/card/the-dominance-of-god-booster-box-case",
-   "cents": 239988,
-   "currency": "USD",
-   "store": "Wulf Gaming",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712902_200w.jpg",
-   "refCents": 264983,
-   "refLabel": "TCGplayer market price",
-   "savingPct": 9
   },
   {
    "kind": "preorder",
