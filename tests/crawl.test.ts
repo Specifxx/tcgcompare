@@ -545,6 +545,8 @@ test("pickByTitle: one product, its own type, in stock, in the price band; anyth
   assert.equal("refuse" in pickByTitle(l({ handle: "x-999999" }), c, "US"), true);
   assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box (6 Boxes)" }), c, "US"), true);
   assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box Opened" }), c, "US"), true);
+  // a handle that names another kind than the title (a box handle under a pack title) is two readings
+  assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Pack", handle: "star-wars-unlimited-legends-of-the-force-booster-box-sealed-copy" }), c, "US"), true);
   // never without the band callback
   assert.equal("refuse" in pickByTitle(l(), ctx, "US"), true);
   // takeCrawl uses it only for an own store

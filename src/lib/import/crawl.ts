@@ -302,10 +302,16 @@ export function pickByTitle(l: CrawlListing, ctx: PickContext, market: Market): 
   if (OTHER_QUANTITY.test(l.title)) return { refuse: "multiple", detail: "quantity" };
   const said = sealedTypeOf(l.title);
   if (said === "Other") return { refuse: "unconfirmed", detail: "no product type" };
+  // The handle is the shop's own second statement of the product: a handle that says another kind (a "booster box"
+  // handle under a "Booster Pack" title, a "jumbo" pack) is two readings, so neither is taken.
+  const handleWords = handleOf(l.url).replace(/[-_]+/g, " ");
+  const handleSaid = sealedTypeOf(handleWords);
+  if (handleSaid !== "Other" && handleSaid !== said) return { refuse: "type-differs", detail: `handle ${handleSaid} / ${said}` };
   const hits = l.lines.map((line) => matchSealed(l.title, ctx.indexOf(line))).filter((m): m is NonNullable<typeof m> => !!m);
   if (hits.length !== 1) return { refuse: "unconfirmed", detail: hits.length ? "two games" : "no match" };
   const p = hits[0].product;
   if (p.kind !== "sealed" || p.sealedType === "Insert") return { refuse: "not-sealed" };
+  if (/\bjumbo\b/i.test(`${l.title} ${handleWords}`) !== /\bjumbo\b/i.test(p.name)) return { refuse: "unconfirmed", detail: "jumbo" };
   if (isMulti(l.title) !== isMulti(p.name)) return { refuse: "multiple" };
   if (said !== sealedTypeOf(p.name)) return { refuse: "type-differs", detail: `${said} / ${sealedTypeOf(p.name)}` };
   if (l.variantKind && l.variantKind !== sealedTypeOf(p.name)) return { refuse: "type-differs", detail: l.variantKind };
