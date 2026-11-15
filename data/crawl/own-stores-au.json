@@ -1,0 +1,146 @@
+[
+ {
+  "key": "alphagaming",
+  "name": "Alpha Gaming",
+  "base": "https://alphagaming.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "battlebull",
+  "name": "Red Twelve - BattleBull",
+  "base": "https://battlebull.com",
+  "market": "AU"
+ },
+ {
+  "key": "curacards",
+  "name": "CuraCards",
+  "base": "https://curacards.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "figtek",
+  "name": "Figtek Entertainment",
+  "base": "https://figtekentertainment.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "gamesbandit",
+  "name": "Games Bandit",
+  "base": "https://gamesbandit.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "goldfields",
+  "name": "Goldfields Toys & Games",
+  "base": "https://goldfieldsgames.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "gtmodbury",
+  "name": "Gametraders Modbury Heights",
+  "base": "https://gametradersinglefarm.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "gtrousehill",
+  "name": "Gametraders Rouse Hill",
+  "base": "https://gametradersrousehill.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "heapskeen",
+  "name": "Heapskeen Games",
+  "base": "https://heapskeengames.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "horizongaming",
+  "name": "Horizon Gaming",
+  "base": "https://horizon-gaming.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "lootlounge",
+  "name": "LootLounge",
+  "base": "https://lootlounge.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "monstermart",
+  "name": "Monster Mart",
+  "base": "https://monstermart.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "pachis",
+  "name": "Pachi's Collectibles",
+  "base": "https://pachiscollectibles.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "pocketgames",
+  "name": "Pocket Games",
+  "base": "https://pocketgames.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "qollectorau",
+  "name": "QollectorAU",
+  "base": "https://qollectorau.com",
+  "market": "AU"
+ },
+ {
+  "key": "rhydonmycards",
+  "name": "Rhydon My Cards",
+  "base": "https://rhydonmycards.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "sirsquaretoes",
+  "name": "Sir Square Toes Games Shop",
+  "base": "https://sirsquaretoes.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "t3games",
+  "name": "T3 Games",
+  "base": "https://t3games.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "tcgandchill",
+  "name": "TCGandChill",
+  "base": "https://tcgandchill.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "techzonegeelong",
+  "name": "Techzone Geelong",
+  "base": "https://techzonegeelong.com",
+  "market": "AU"
+ },
+ {
+  "key": "theninthvault",
+  "name": "The Ninth Vault",
+  "base": "https://theninthvault.com",
+  "market": "AU"
+ },
+ {
+  "key": "timetoplay",
+  "name": "Time To Play",
+  "base": "https://www.timetoplay.games",
+  "market": "AU"
+ },
+ {
+  "key": "toyempire",
+  "name": "Toy Empire",
+  "base": "https://toyempire.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "westozcards",
+  "name": "West Oz Cards",
+  "base": "https://www.westozcards.com.au",
+  "market": "AU"
+ }
+]

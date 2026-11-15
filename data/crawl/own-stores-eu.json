@@ -1,0 +1,362 @@
+[
+ {
+  "key": "animeloot",
+  "name": "Animeloot",
+  "base": "https://animeloot.de",
+  "market": "EU"
+ },
+ {
+  "key": "area151",
+  "name": "Area151",
+  "base": "https://area151.es",
+  "market": "EU"
+ },
+ {
+  "key": "balucards",
+  "name": "Balucards",
+  "base": "https://balucards.de",
+  "market": "EU"
+ },
+ {
+  "key": "baroncollections",
+  "name": "BaronCollections",
+  "base": "https://baroncollections.fr",
+  "market": "EU"
+ },
+ {
+  "key": "bayzing",
+  "name": "Bayzing",
+  "base": "https://bayzing.com",
+  "market": "EU"
+ },
+ {
+  "key": "brothersincards",
+  "name": "Brothers in Cards",
+  "base": "https://brothersincards.nl",
+  "market": "EU"
+ },
+ {
+  "key": "buffyourgame",
+  "name": "BuffYourGame",
+  "base": "https://buffyourgame.pt",
+  "market": "EU"
+ },
+ {
+  "key": "cardgazer",
+  "name": "Cardgazer TCG",
+  "base": "https://cardgazertcg.de",
+  "market": "EU"
+ },
+ {
+  "key": "cardsrfun",
+  "name": "CardsRfun",
+  "base": "https://cardsrfun.de",
+  "market": "EU"
+ },
+ {
+  "key": "crowsarena",
+  "name": "Crows Arena",
+  "base": "https://crowsarena.com",
+  "market": "EU"
+ },
+ {
+  "key": "divinecards",
+  "name": "Divine Cards",
+  "base": "https://divine-cards.at",
+  "market": "EU"
+ },
+ {
+  "key": "dracaugames",
+  "name": "DracauGames",
+  "base": "https://www.dracaugames.com",
+  "market": "EU"
+ },
+ {
+  "key": "dragoncard",
+  "name": "The Dragoncard",
+  "base": "https://www.dragoncard.nl",
+  "market": "EU"
+ },
+ {
+  "key": "gamesacademy",
+  "name": "Games Academy",
+  "base": "https://shop.gamesacademy.it",
+  "market": "EU"
+ },
+ {
+  "key": "grancards",
+  "name": "GranCards",
+  "base": "https://grancards.com",
+  "market": "EU"
+ },
+ {
+  "key": "irishpokefinds",
+  "name": "Irish Poké Finds",
+  "base": "https://irishpokefinds.ie",
+  "market": "EU"
+ },
+ {
+  "key": "kerailykortti",
+  "name": "Keräilykortti.fi",
+  "base": "https://xn--kerilykortti-icb.fi",
+  "market": "EU"
+ },
+ {
+  "key": "kofuku",
+  "name": "Kofuku.de",
+  "base": "https://kofuku.de",
+  "market": "EU"
+ },
+ {
+  "key": "laboutiquedelsobre",
+  "name": "La Boutique del Sobre",
+  "base": "https://www.laboutiquedelsobre.com",
+  "market": "EU"
+ },
+ {
+  "key": "ludisphere",
+  "name": "Ludisphere",
+  "base": "https://ludisphere.fr",
+  "market": "EU"
+ },
+ {
+  "key": "madridnortetcg",
+  "name": "Madrid Norte TCG",
+  "base": "https://madridnortetcg.com",
+  "market": "EU"
+ },
+ {
+  "key": "masterseteu",
+  "name": "MASTERSET",
+  "base": "https://masterset.store",
+  "market": "EU"
+ },
+ {
+  "key": "misticards",
+  "name": "MistiCards",
+  "base": "https://misticards.com",
+  "market": "EU"
+ },
+ {
+  "key": "mrjoshop",
+  "name": "MrJoShop",
+  "base": "https://mrjoshop.com",
+  "market": "EU"
+ },
+ {
+  "key": "mucollectibles",
+  "name": "MuCollectibles",
+  "base": "https://www.mucollectibles.de",
+  "market": "EU"
+ },
+ {
+  "key": "nextgentcg",
+  "name": "NextGen TCG",
+  "base": "https://nextgen-tcg.de",
+  "market": "EU"
+ },
+ {
+  "key": "onitcgcard",
+  "name": "ONITCGCARD",
+  "base": "https://onitcgcard.com",
+  "market": "EU"
+ },
+ {
+  "key": "oportogg",
+  "name": "OportoGG",
+  "base": "https://oportogg.com",
+  "market": "EU"
+ },
+ {
+  "key": "otakuyatcg",
+  "name": "OTAKUYA TCG",
+  "base": "https://tcg.otakuya.es",
+  "market": "EU"
+ },
+ {
+  "key": "playmaniac",
+  "name": "Play-Maniac",
+  "base": "https://www.play-maniac.de",
+  "market": "EU"
+ },
+ {
+  "key": "playshop",
+  "name": "PlayShop",
+  "base": "https://playshop.fr",
+  "market": "EU"
+ },
+ {
+  "key": "plugstarsath",
+  "name": "Plugstars Ath",
+  "base": "https://plugstarsath.com",
+  "market": "EU"
+ },
+ {
+  "key": "pocketcards",
+  "name": "Pocketcards.at",
+  "base": "https://pocketcards.at",
+  "market": "EU"
+ },
+ {
+  "key": "pokeireland",
+  "name": "Poke Ireland",
+  "base": "https://pokeireland.ie",
+  "market": "EU"
+ },
+ {
+  "key": "pokejotta",
+  "name": "Jotta Collectz",
+  "base": "https://pokejotta.com",
+  "market": "EU"
+ },
+ {
+  "key": "pokestop",
+  "name": "PokeStop",
+  "base": "https://poke-stop.eu",
+  "market": "EU"
+ },
+ {
+  "key": "poneglyphcards",
+  "name": "PoneglyphCards",
+  "base": "https://poneglyphcards.it",
+  "market": "EU"
+ },
+ {
+  "key": "primeprotector",
+  "name": "Prime Protector",
+  "base": "https://primeprotector.at",
+  "market": "EU"
+ },
+ {
+  "key": "pruckis",
+  "name": "Prückis Cards",
+  "base": "https://pruckis.de",
+  "market": "EU"
+ },
+ {
+  "key": "sccards",
+  "name": "ScCards",
+  "base": "https://sccards.it",
+  "market": "EU"
+ },
+ {
+  "key": "sgorbati",
+  "name": "Sgorbati Piacenza",
+  "base": "https://sgorbati.biz",
+  "market": "EU"
+ },
+ {
+  "key": "shoguntcg",
+  "name": "Shogun TCG",
+  "base": "https://www.shoguntcg.nl",
+  "market": "EU"
+ },
+ {
+  "key": "slabstore",
+  "name": "Slabstore",
+  "base": "https://pokecardsstore.it",
+  "market": "EU"
+ },
+ {
+  "key": "speldorado",
+  "name": "Speldorado",
+  "base": "https://speldorado.com",
+  "market": "EU"
+ },
+ {
+  "key": "spieleabend",
+  "name": "spieleabend.shop",
+  "base": "https://spieleabend.shop",
+  "market": "EU"
+ },
+ {
+  "key": "spieleheldtcg",
+  "name": "Spieleheld TCG",
+  "base": "https://spieleheldtcg.at",
+  "market": "EU"
+ },
+ {
+  "key": "spieles",
+  "name": "spiel-es.de",
+  "base": "https://spiel-es.de",
+  "market": "EU"
+ },
+ {
+  "key": "sportshobbyshopie",
+  "name": "The Sports Hobby Shop",
+  "base": "https://thesportshobbyshop.ie",
+  "market": "EU"
+ },
+ {
+  "key": "starzcollectibles",
+  "name": "Starz Collectibles",
+  "base": "https://starzcollectibles.de",
+  "market": "EU"
+ },
+ {
+  "key": "sunnysidetcg",
+  "name": "Sunny Side",
+  "base": "https://sunnysidetcg.com",
+  "market": "EU"
+ },
+ {
+  "key": "tcglegends",
+  "name": "TCG Legends",
+  "base": "https://tcglegends.nl",
+  "market": "EU"
+ },
+ {
+  "key": "tcglevel",
+  "name": "TCG Level",
+  "base": "https://tcglevel.com",
+  "market": "EU"
+ },
+ {
+  "key": "tcgreus",
+  "name": "TcgReus",
+  "base": "https://www.tcgreus.nl",
+  "market": "EU"
+ },
+ {
+  "key": "tcgstars",
+  "name": "TCG Stars",
+  "base": "https://www.tcgstars.nl",
+  "market": "EU"
+ },
+ {
+  "key": "toyfulie",
+  "name": "Toyful",
+  "base": "https://toyful.ie",
+  "market": "EU"
+ },
+ {
+  "key": "varietycards",
+  "name": "Variety Cards",
+  "base": "https://variety-cards.de",
+  "market": "EU"
+ },
+ {
+  "key": "vcollect",
+  "name": "VCOLLECT",
+  "base": "https://vcollect.fr",
+  "market": "EU"
+ },
+ {
+  "key": "vegastore",
+  "name": "VegaStore",
+  "base": "https://www.vegastore.fr",
+  "market": "EU"
+ },
+ {
+  "key": "weeaboverse",
+  "name": "Weeaboverse",
+  "base": "https://weeaboverse.it",
+  "market": "EU"
+ },
+ {
+  "key": "zenocards",
+  "name": "Zeno Cards",
+  "base": "https://zenocards.com",
+  "market": "EU"
+ }
+]
