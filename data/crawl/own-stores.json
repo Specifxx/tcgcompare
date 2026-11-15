@@ -114,6 +114,30 @@
   "market": "CA"
  },
  {
+  "key": "atomicbreathcollectibles",
+  "name": "Atomic Breath Collectibles",
+  "base": "https://atomicbreathcollectibles.com",
+  "market": "CA"
+ },
+ {
+  "key": "bordercitygames",
+  "name": "Border City Games",
+  "base": "https://bordercitygames.ca",
+  "market": "CA"
+ },
+ {
+  "key": "cardboardgaming",
+  "name": "Card Board Gaming",
+  "base": "https://cardboardgaming.ca",
+  "market": "CA"
+ },
+ {
+  "key": "carsncards",
+  "name": "Cars N Cards",
+  "base": "https://www.carsncards.com",
+  "market": "CA"
+ },
+ {
   "key": "cmdstore",
   "name": "Cmdstore.ca",
   "base": "https://cmdstore.ca",
@@ -123,6 +147,18 @@
   "key": "doescards",
   "name": "Doe's Cards",
   "base": "https://doescards.ca",
+  "market": "CA"
+ },
+ {
+  "key": "epicpokestore",
+  "name": "EpicPokeStore",
+  "base": "https://epicpokestore.com",
+  "market": "CA"
+ },
+ {
+  "key": "essentialcards",
+  "name": "Essential Cards",
+  "base": "https://essentialcards.ca",
   "market": "CA"
  },
  {
@@ -138,9 +174,51 @@
   "market": "CA"
  },
  {
+  "key": "keefscards",
+  "name": "Keef's Cards",
+  "base": "https://keefscards.com",
+  "market": "CA"
+ },
+ {
+  "key": "komodocollectibles",
+  "name": "Komodo Collectibles",
+  "base": "https://komodocollectibles.ca",
+  "market": "CA"
+ },
+ {
+  "key": "koscollectibles",
+  "name": "K-OS Collectibles",
+  "base": "https://koscollectibles.ca",
+  "market": "CA"
+ },
+ {
   "key": "legendswarehouse",
   "name": "Legends Warehouse",
   "base": "https://legendswarehouse.ca",
+  "market": "CA"
+ },
+ {
+  "key": "magikartcards",
+  "name": "Magikart Cards",
+  "base": "https://magikartcards.com",
+  "market": "CA"
+ },
+ {
+  "key": "mirajtrading",
+  "name": "Miraj Trading",
+  "base": "https://www.mirajtrading.com",
+  "market": "CA"
+ },
+ {
+  "key": "mkcards",
+  "name": "MK Cards",
+  "base": "https://mkkards.com",
+  "market": "CA"
+ },
+ {
+  "key": "multivers",
+  "name": "Multivers",
+  "base": "https://multivers.ca",
   "market": "CA"
  },
  {
@@ -156,9 +234,75 @@
   "market": "CA"
  },
  {
+  "key": "pkmncanada",
+  "name": "PKMN Canada",
+  "base": "https://pkmn.ca",
+  "market": "CA"
+ },
+ {
+  "key": "pokemoo",
+  "name": "PokeMoo",
+  "base": "https://pokemoo.ca",
+  "market": "CA"
+ },
+ {
+  "key": "pokezone",
+  "name": "Poke Zone",
+  "base": "https://pokezone.ca",
+  "market": "CA"
+ },
+ {
+  "key": "quazacollect",
+  "name": "Quaza Collect",
+  "base": "https://quazacollect.com",
+  "market": "CA"
+ },
+ {
   "key": "ransomgames",
   "name": "Ransom Games",
   "base": "https://ransomgames.ca",
+  "market": "CA"
+ },
+ {
+  "key": "redclawgaming",
+  "name": "Red Claw Gaming",
+  "base": "https://www.redclawgaming.com",
+  "market": "CA"
+ },
+ {
+  "key": "scuffedcards",
+  "name": "Scuffed Cards",
+  "base": "https://scuffedcards.com",
+  "market": "CA"
+ },
+ {
+  "key": "squirtlesquadcardshop",
+  "name": "Squirtle Squad Card Shop",
+  "base": "https://squirtlesquadcardshop.com",
+  "market": "CA"
+ },
+ {
+  "key": "thegamerstable",
+  "name": "The Gamers Table",
+  "base": "https://gamerstable.ca",
+  "market": "CA"
+ },
+ {
+  "key": "theguildhouse",
+  "name": "The Guild House",
+  "base": "https://theguildhouse.ca",
+  "market": "CA"
+ },
+ {
+  "key": "thestrawhat",
+  "name": "The Straw Hat",
+  "base": "https://thestrawhat.ca",
+  "market": "CA"
+ },
+ {
+  "key": "thetimevault",
+  "name": "The Time Vault",
+  "base": "https://thetimevault.ca",
   "market": "CA"
  },
  {
@@ -168,9 +312,21 @@
   "market": "CA"
  },
  {
+  "key": "tngames",
+  "name": "T&N Games",
+  "base": "https://store.tngames.ca",
+  "market": "CA"
+ },
+ {
   "key": "tournamentcapitalgaming",
   "name": "Tournament Capital Gaming",
   "base": "https://tournamentcapitalgaming.com",
+  "market": "CA"
+ },
+ {
+  "key": "vtrgaming",
+  "name": "VTRGaming",
+  "base": "https://vtrgaming.ca",
   "market": "CA"
  },
  {
@@ -354,6 +510,12 @@
   "market": "SG"
  },
  {
+  "key": "afkgaming",
+  "name": "AFK Gaming",
+  "base": "https://afkgaming.co.uk",
+  "market": "UK"
+ },
+ {
   "key": "ajtoys",
   "name": "AJ Toys & Books",
   "base": "https://ajtoys.co.uk",
@@ -363,6 +525,12 @@
   "key": "binderly",
   "name": "Binderly",
   "base": "https://binderly.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "booghe",
+  "name": "Booghe",
+  "base": "https://booghe.co.uk",
   "market": "UK"
  },
  {
@@ -378,9 +546,27 @@
   "market": "UK"
  },
  {
+  "key": "cardsandgames",
+  "name": "Cards & Games",
+  "base": "https://cardsandgames.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "chiefcards",
+  "name": "Chief Cards",
+  "base": "https://chiefcards.co.uk",
+  "market": "UK"
+ },
+ {
   "key": "clownfishgames",
   "name": "Clownfish Games",
   "base": "https://clownfish-games.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "cupofcards",
+  "name": "Cup of Cards",
+  "base": "https://cupofcards.com",
   "market": "UK"
  },
  {
@@ -414,9 +600,33 @@
   "market": "UK"
  },
  {
+  "key": "evolvault",
+  "name": "Evol Vault",
+  "base": "https://evolvault.com",
+  "market": "UK"
+ },
+ {
+  "key": "exit23",
+  "name": "Exit 23 Games",
+  "base": "https://exit23.games",
+  "market": "UK"
+ },
+ {
   "key": "fanboythree",
   "name": "Fan Boy Three",
   "base": "https://fanboy3.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "gotchageek",
+  "name": "Gotcha Geek",
+  "base": "https://gotchageek.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "gumgumgames",
+  "name": "Gum Gum Games",
+  "base": "https://gumgumgames.co.uk",
   "market": "UK"
  },
  {
@@ -438,6 +648,18 @@
   "market": "UK"
  },
  {
+  "key": "jkgames",
+  "name": "JK Games",
+  "base": "https://jkgames.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "jurassiccards",
+  "name": "Jurassic Cards",
+  "base": "https://jurassiccards.co.uk",
+  "market": "UK"
+ },
+ {
   "key": "lenniestoys",
   "name": "Lennies Toys",
   "base": "https://lennies.com",
@@ -456,9 +678,27 @@
   "market": "UK"
  },
  {
+  "key": "manaforgegames",
+  "name": "Manaforge Games",
+  "base": "https://manaforgegames.co.uk",
+  "market": "UK"
+ },
+ {
   "key": "marleycollects",
   "name": "Marley Collects",
   "base": "https://marleycollects.com",
+  "market": "UK"
+ },
+ {
+  "key": "monsutagames",
+  "name": "Monsuta Games",
+  "base": "https://monsutagames.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "mtgprecons",
+  "name": "MTG Precons",
+  "base": "https://mtgprecons.co.uk",
   "market": "UK"
  },
  {
@@ -468,9 +708,21 @@
   "market": "UK"
  },
  {
+  "key": "pantheoncards",
+  "name": "Pantheon Cards",
+  "base": "https://pantheoncards.store",
+  "market": "UK"
+ },
+ {
   "key": "peakycollectibles",
   "name": "Peaky Collectibles",
   "base": "https://peakycollectibles.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "peeblescomicsandgames",
+  "name": "Peebles Comics & Games",
+  "base": "https://peeblescomicsandgames.co.uk",
   "market": "UK"
  },
  {
@@ -480,9 +732,21 @@
   "market": "UK"
  },
  {
+  "key": "pokenazcards",
+  "name": "PokeNazCards",
+  "base": "https://pokenazcards.co.uk",
+  "market": "UK"
+ },
+ {
   "key": "pokepals",
   "name": "PokePals UK",
   "base": "https://pokepals.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "pokerangers",
+  "name": "PokeRangers",
+  "base": "https://pokerangers.co.uk",
   "market": "UK"
  },
  {
@@ -504,6 +768,12 @@
   "market": "UK"
  },
  {
+  "key": "serioustcg",
+  "name": "SeriousTCG",
+  "base": "https://serioustcg.com",
+  "market": "UK"
+ },
+ {
   "key": "shinyquestcard",
   "name": "Shiny Quest Card",
   "base": "https://shinyquestcard.com",
@@ -513,6 +783,12 @@
   "key": "sweetsnthings",
   "name": "Sweets n Things",
   "base": "https://www.sweetsnthings.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "thecardcollectoruk",
+  "name": "TheCardCollector-UK",
+  "base": "https://thecardcollector-uk.com",
   "market": "UK"
  },
  {
@@ -534,6 +810,18 @@
   "market": "UK"
  },
  {
+  "key": "thegeekinme",
+  "name": "The Geek In Me",
+  "base": "https://thegeekinme.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "thetcgshop",
+  "name": "The TCG Shop",
+  "base": "https://thetcgshop.co.uk",
+  "market": "UK"
+ },
+ {
   "key": "thevaulttcg",
   "name": "The Vault TCG",
   "base": "https://thevaulttcg.co.uk",
@@ -552,6 +840,12 @@
   "market": "UK"
  },
  {
+  "key": "vaultofcards",
+  "name": "Vault of Cards",
+  "base": "https://vaultofcards.co.uk",
+  "market": "UK"
+ },
+ {
   "key": "westendgames",
   "name": "West End Games",
   "base": "https://westendgames.co.uk",
@@ -561,6 +855,24 @@
   "key": "westwiltstcg",
   "name": "WestWiltsTCG",
   "base": "https://westwiltstcg.com",
+  "market": "UK"
+ },
+ {
+  "key": "wishlistcollectables",
+  "name": "Wishlist Collectables",
+  "base": "https://wishlistcollectables.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "wolfyscollectablecards",
+  "name": "Wolfy's Collectable Cards",
+  "base": "https://wolfyscollectablecards.co.uk",
+  "market": "UK"
+ },
+ {
+  "key": "wrightcards",
+  "name": "Wright Cards",
+  "base": "https://wrightcards.com",
   "market": "UK"
  },
  {
