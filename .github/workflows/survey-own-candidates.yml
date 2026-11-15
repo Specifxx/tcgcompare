@@ -1,0 +1,29 @@
+name: Survey own-store candidates
+
+# Checks researched shops before they join data/crawl/own-stores.json (scripts/survey-own-candidates.ts): robots.txt,
+# /meta.json and /collections.json only, politely. Only a claude/** push whose subject carries [survey]; it commits
+# nothing and never deploys. The verdicts are in the log.
+
+on:
+  push:
+    branches: ["claude/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  survey:
+    if: contains(github.event.head_commit.message, '[survey]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Survey
+        env:
+          SURVEY_FILE: data/crawl/own-candidates.json
+        run: npx tsx scripts/survey-own-candidates.ts
