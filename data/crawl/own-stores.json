@@ -12,6 +12,18 @@
   "market": "AU"
  },
  {
+  "key": "clickandcollectables",
+  "name": "Click and Collectables",
+  "base": "https://clickandcollectables.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "evogames",
+  "name": "Evo Games",
+  "base": "https://evogamescards.com.au",
+  "market": "AU"
+ },
+ {
   "key": "fpvfaster",
   "name": "FpvFaster",
   "base": "https://www.fpvfaster.com.au",
@@ -30,9 +42,45 @@
   "market": "AU"
  },
  {
+  "key": "greenskingames",
+  "name": "greenskingames",
+  "base": "https://greenskingames.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "hereticshaven",
+  "name": "Heretics Haven TCG",
+  "base": "https://tcg.hereticshaven.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "icarustechgamesandcollectables",
+  "name": "icarustechgamesandcollectables",
+  "base": "https://icarustechgamesandcollectables.com",
+  "market": "AU"
+ },
+ {
+  "key": "illusivetcg",
+  "name": "Illusive TCG",
+  "base": "https://illusivetcg.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "joltgames",
+  "name": "joltgames",
+  "base": "https://joltgames.com.au",
+  "market": "AU"
+ },
+ {
   "key": "mrcollectable",
   "name": "Mr Collectable",
   "base": "https://www.mrcollectable.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "spectrumgaming",
+  "name": "spectrumgaming",
+  "base": "https://spectrumgaming.com.au",
   "market": "AU"
  },
  {
@@ -45,6 +93,12 @@
   "key": "toysrusau",
   "name": "Toys R Us Australia",
   "base": "https://toysrus.com.au",
+  "market": "AU"
+ },
+ {
+  "key": "warbandvault",
+  "name": "warbandvault",
+  "base": "https://warbandvault.com",
   "market": "AU"
  },
  {
