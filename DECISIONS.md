@@ -328,3 +328,14 @@ the crawl read 928 of 941 stores (6,372 requests), took 1,790 of 183,120 listing
 from 1,167 to 1,186 stores. Most shops carry no TCGplayer product id in their handle, SKU or photo, so the id-only rule
 refuses their listings (`no-id`); a shop is counted only once one of its listings is taken. Taking those listings by title
 for the own list would raise the count a lot but breaks "never take a crawl listing by its title": the owner's call.
+
+## 2026-11-15: Own-list shops may be taken by title, strictly (owner chose "Yes, with strict guards")
+
+The id-only rule left 165 of 187 new shops with nothing taken. For the shops of `data/crawl/own-stores.json` ONLY
+(`CrawlStoreRun.own`), a listing that carries no TCGplayer-shaped id at all is taken by `pickByTitle`
+(`lib/import/crawl.ts`): in stock; none of pickId's refusals (opened, resealed, foreign, break, repack, quantity); the
+one-game matcher lands on exactly one product across the listing's games; the title names a product type and it is the
+product's own; one box is one box (`isMulti`); and the price is 60-160% of the product's TCGplayer market price, so a
+product with no market price is never taken. Sister shops and every shop with an id keep the id-only rule.
+`meta.json` `crawl.titled` counts the listings taken this way. If it ever shows a wrong match, tighten the band or end
+the exception here; never loosen it.

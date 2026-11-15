@@ -529,3 +529,28 @@ test("the probe keeps at most MAX_HANDLES_PER_STORE collections a store, games t
   assert.equal(got.flatMap((x) => x.handles).length, MAX_HANDLES_PER_STORE);
   assert.ok(PRODUCT_PAGES * MAX_HANDLES_PER_STORE + 3 <= 40, "a full read fits under CRAWL_STORE_CAP");
 });
+
+// ── Own-list shops: a listing with no id is taken by title, strictly ────────
+
+test("pickByTitle: one product, its own type, in stock, in the price band; anything doubtful is no match", async () => {
+  const { pickByTitle } = await import("../src/lib/import/crawl");
+  const band = (id: number, cents: number) => id === 612345 && cents >= 7800 && cents <= 20800;
+  const c: PickContext = { ...ctx, inBand: band };
+  const l = (over: Partial<ShopifyListing> = {}) => crawled(listing(over));
+  assert.deepEqual(pickByTitle(l(), c, "US"), { id: 612345 });
+  // no market price / price outside the band / out of stock
+  assert.equal("refuse" in pickByTitle(l({ variants: [{ id: 11, title: "Default Title", price: "29.99", available: true }] }), c, "US"), true);
+  assert.equal("refuse" in pickByTitle(l({ variants: [{ id: 11, title: "Default Title", price: "129.99", available: false }] }), c, "US"), true);
+  // another TCGplayer-shaped id, a case, a pack for a box, opened
+  assert.equal("refuse" in pickByTitle(l({ handle: "x-999999" }), c, "US"), true);
+  assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box (6 Boxes)" }), c, "US"), true);
+  assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box Opened" }), c, "US"), true);
+  // never without the band callback
+  assert.equal("refuse" in pickByTitle(l(), ctx, "US"), true);
+  // takeCrawl uses it only for an own store
+  const run = (own: boolean) => ({ at: "", budget: 0, requests: 0, stores: [{ ...(own ? { own: true } : {}), host: "cards.test", key: "cards", name: "Cards", base: "https://cards.test", market: "US" as const, ok: true, requests: 1, listings: [l()] }] });
+  const keyOf = new Map([["cards.test|US", "cards"]]);
+  assert.equal(takeCrawl(run(true), c, keyOf).taken, 1);
+  assert.equal(takeCrawl(run(true), c, keyOf).titled, 1);
+  assert.equal(takeCrawl(run(false), c, keyOf).taken, 0);
+});

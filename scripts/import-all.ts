@@ -150,7 +150,16 @@ async function main() {
     // Our own crawl of the games no sister covers (lib/import/crawl.ts): scripts/crawl-uncovered.ts ran just before
     // and left its listings in data/crawl/listings.json. Each is taken only by the TCGplayer id it carries, then goes
     // through the same vetting and price band as a sister's row below.
-    crawlMeta = mergeOwnCrawl({ res, products, sets, prevMeta, prevById: prevPrices.byId, now, crawlOffers });
+    crawlMeta = mergeOwnCrawl({
+      res, products, sets, prevMeta, prevById: prevPrices.byId, now, crawlOffers,
+      // An own-list shop's listing taken by title must sit at 60-160% of TCGplayer's market price (lib/import/crawl.ts pickByTitle).
+      inBand: (id, cents, market) => {
+        const ref = byId.has(id) ? referenceCents(tcg[id]) : null;
+        if (ref == null || ref <= 0) return false;
+        const usd = cents / (fx[CURRENCY[market]] ?? 1);
+        return usd >= ref * 0.6 && usd <= ref * 1.6;
+      },
+    });
     sisterStores = res.stores;
     // Store vetting (lib/import/vet.ts): a blocked, domain-less or too-cheap-to-be-true store shows no row at all.
     const blocklist = JSON.parse(fs.readFileSync(path.join(process.cwd(), "data", "store-blocklist.json"), "utf8")) as Record<string, string>;
@@ -464,6 +473,7 @@ function mergeOwnCrawl(a: {
   prevById: Prices["byId"];
   now: Date;
   crawlOffers: WeakSet<Offer>;
+  inBand: (id: number, cents: number, market: Market) => boolean;
 }): CrawlMeta {
   const { res, products, sets, prevMeta, now } = a;
   const entries = readJson<CrawlStore[]>(path.join(process.cwd(), "data", "crawl", "stores.json"), []);
@@ -491,7 +501,7 @@ function mergeOwnCrawl(a: {
   };
   const storesOf = [...new Map([...entries, ...(run?.stores ?? [])].map((s) => [storeIdentity(s.base, s.market), s])).values()];
   const { keyOf, added } = crawlStoreKeys(res.stores, storesOf);
-  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf }, keyOf) : { offers: new Map<number, Offer[]>(), fresh: new Map<string, Set<number>>(), taken: 0, refused: {}, listings: 0 };
+  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf, inBand: a.inBand }, keyOf) : { offers: new Map<number, Offer[]>(), fresh: new Map<string, Set<number>>(), taken: 0, refused: {}, listings: 0 };
   const readOk = new Set((run?.stores ?? []).filter((s) => s.ok).map((s) => storeIdentity(s.base, s.market)));
   const seen: Record<string, string> = { ...(prevMeta?.crawl?.seen ?? {}) };
   for (const id of readOk) seen[id] = run!.at;
@@ -546,6 +556,7 @@ function mergeOwnCrawl(a: {
     budget: run?.budget ?? 0,
     listings: got.listings,
     taken: got.taken,
+    titled: got.titled ?? 0,
     refused: got.refused,
     offers: 0,
     carried: carry.carried,

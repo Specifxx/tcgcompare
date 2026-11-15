@@ -47,7 +47,9 @@ For the games no sister prices (the `crawl` words in `site.config.ts`; never a g
   ("(6 Boxes)", "Display of 6", "Half"), the title's and a lone variant's product type the same as the id's, and
   `matchSealed` on that game alone agreeing or saying nothing; an id from the handle or a SKU alone (no TCGplayer
   photo of it) also needs the matcher to land on it or the title to name its set. The matcher only refuses; never
-  take a crawl listing by its title. A listing whose variants are different products is refused whole.
+  take a crawl listing by its title, EXCEPT for the shops of `data/crawl/own-stores.json` (owner's yes, 2026-11-15, DECISIONS.md):
+  there a listing with no id at all is taken by `pickByTitle` (strict: in stock, one product across the games, its own
+  type, quantity one, price 60-160% of TCGplayer's market). A listing whose variants are different products is refused whole.
 - The offers then go through the same vetting, offer floor and 4x band as a sister's. A store not read this run
   keeps its crawled rows for 72 hours after its last good read (`meta.json` `crawl.seen`), never longer. A collection
   page that fails (5xx, timeout, bad JSON) makes the store not read; a store stopped part way (a failed collection,

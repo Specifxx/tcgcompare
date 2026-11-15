@@ -434,6 +434,8 @@ export interface CrawlMeta {
   requests: number;
   budget: number;
   listings: number;
+  /** Of `taken`, listings taken by title (own-list shops only, lib/import/crawl.ts pickByTitle). */
+  titled?: number;
   taken: number;
   /** Listings refused, by pickId's reason. */
   refused: Record<string, number>;
