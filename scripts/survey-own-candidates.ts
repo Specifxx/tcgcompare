@@ -59,9 +59,7 @@ async function main() {
     },
     4,
   );
-  console.log("SURVEY_JSON_BEGIN");
-  console.log(JSON.stringify(out));
-  console.log("SURVEY_JSON_END");
+  console.log(`[survey] ${out.filter((r) => r.verdict === "ok").length} of ${out.length} ok`);
 }
 
 main().catch((e) => {
