@@ -1,172 +1,382 @@
 [
  {
-  "base": "https://twentysidedstore.com",
-  "name": "Twenty Sided Store",
+  "base": "https://onedropgameshop.com",
+  "name": "One Drop Game Shop",
   "market": "US"
  },
  {
-  "base": "https://phillycardscomics.com",
-  "name": "Philly Cards & Comics",
+  "base": "https://millennialtoybox.com",
+  "name": "Millennial Toybox",
   "market": "US"
  },
  {
-  "base": "https://virginiabeachcardshop.com",
-  "name": "Virginia Beach Card Shop",
+  "base": "https://gauntletgames-store.com",
+  "name": "Gauntlet Games",
   "market": "US"
  },
  {
-  "base": "https://cards2gotcg.com",
-  "name": "Cards 2 Go TCG",
+  "base": "https://dungeonsgate.com",
+  "name": "Dungeon's Gate",
   "market": "US"
  },
  {
-  "base": "https://401pokesupply.com",
-  "name": "401 Poke Supply",
+  "base": "https://theplugtradingcards.com",
+  "name": "The Plug Trading Cards",
   "market": "US"
  },
  {
-  "base": "https://monmouthcards.com",
-  "name": "Monmouth Sports Cards",
+  "base": "https://oakspokebox.com",
+  "name": "Oak's Poke Box",
   "market": "US"
  },
  {
-  "base": "https://columbiasportscard.com",
-  "name": "Columbia Sports Cards",
+  "base": "https://toyboxmichigan.com",
+  "name": "Toy Box Michigan",
   "market": "US"
  },
  {
-  "base": "https://retroislandny.com",
-  "name": "Retro Island",
+  "base": "https://amazingfantasies.com",
+  "name": "Amazing Fantasies",
   "market": "US"
  },
  {
-  "base": "https://kickscollectivepa.com",
-  "name": "Kicks Collective PA",
+  "base": "https://punchoutgaming.com",
+  "name": "Punch Out Gaming",
   "market": "US"
  },
  {
-  "base": "https://cardvaultbytombrady.com",
-  "name": "CardVault by Tom Brady",
+  "base": "https://tabletopgameandhobby.com",
+  "name": "TableTop Game and Hobby",
   "market": "US"
  },
  {
-  "base": "https://collectibletagsshop.com",
-  "name": "Collectible Tags",
+  "base": "https://lootboxgamestore.com",
+  "name": "Loot Box Game Store",
   "market": "US"
  },
  {
-  "base": "https://mobrostc.com",
-  "name": "MoBros TC (The Shop by MoBros)",
+  "base": "https://hobiihouse.com",
+  "name": "Hobii House",
   "market": "US"
  },
  {
-  "base": "https://letsplaytcg.com",
-  "name": "Let's Play Collectibles",
+  "base": "https://timewarpcards.com",
+  "name": "TimeWarp Cards & Games",
   "market": "US"
  },
  {
-  "base": "https://aegistcg.com",
-  "name": "Aegis TCG",
+  "base": "https://neocollectorshop.com",
+  "name": "Neo Collector Shop",
   "market": "US"
  },
  {
-  "base": "https://cardboardcolosseumnj.com",
-  "name": "Cardboard Colosseum",
+  "base": "https://evolvecardsandcollectibles.com",
+  "name": "Evolve Cards and Collectibles",
   "market": "US"
  },
  {
-  "base": "https://round2gaming.com",
-  "name": "Round 2 Gaming",
+  "base": "https://tedspokepawn.com",
+  "name": "Ted's Poke Pawn",
   "market": "US"
  },
  {
-  "base": "https://topdeckgamesonline.com",
-  "name": "Top Deck Games",
+  "base": "https://nickymigzcollectibles.com",
+  "name": "Nicky Migz Collectibles",
   "market": "US"
  },
  {
-  "base": "https://pghpulls.com",
-  "name": "Pittsburgh Pulls",
+  "base": "https://imperialtradingcards.com",
+  "name": "Imperial Trading Cards",
   "market": "US"
  },
  {
-  "base": "https://cardcratetcg.com",
-  "name": "CardCrate",
+  "base": "https://pinkbunnygames.com",
+  "name": "Pink Bunny Games",
   "market": "US"
  },
  {
-  "base": "https://clubhousecardspgh.com",
-  "name": "Clubhouse Cards",
+  "base": "https://thegamecapital.com",
+  "name": "The Game Capital",
   "market": "US"
  },
  {
-  "base": "https://chasingbulktcg.com",
-  "name": "Chasing Bulk TCG",
+  "base": "https://grailcollectibles.io",
+  "name": "Grail Collectibles AZ",
   "market": "US"
  },
  {
-  "base": "https://connecticuthobby.com",
-  "name": "Connecticut Hobby",
+  "base": "https://oasisgamesslc.com",
+  "name": "Oasis Games",
   "market": "US"
  },
  {
-  "base": "https://dzcollectiblesli.com",
-  "name": "DZCollectibles",
+  "base": "https://wizardswest.com",
+  "name": "Wizards of the West",
   "market": "US"
  },
  {
-  "base": "https://gamehavenmd.com",
-  "name": "The Game Haven",
+  "base": "https://gamenightgames.com",
+  "name": "Game Night Games",
   "market": "US"
  },
  {
-  "base": "https://houseofcardsmd.com",
-  "name": "House Of Cards",
+  "base": "https://sumocardshop.com",
+  "name": "Sumo Card Shop",
   "market": "US"
  },
  {
-  "base": "https://tapnroll.com",
-  "name": "Tap N Roll",
+  "base": "https://nearmintgames.com",
+  "name": "Near Mint Games",
   "market": "US"
  },
  {
-  "base": "https://greenmountainsportscardsandgaming.com",
-  "name": "Green Mountain Sportscards and Gaming",
+  "base": "https://sparkysgaming.com",
+  "name": "Sparky's Gaming",
   "market": "US"
  },
  {
-  "base": "https://theendgames.co",
-  "name": "The End Games",
+  "base": "https://rockymountaintoycompany.com",
+  "name": "Rocky Mountain Toy Company",
   "market": "US"
  },
  {
-  "base": "https://montasy.com",
-  "name": "Montasy Comics NYC",
+  "base": "https://thewastelandgaming.com",
+  "name": "The Wasteland Gaming",
   "market": "US"
  },
  {
-  "base": "https://houseofcarsvirginia.com",
-  "name": "House of Cars Virginia",
+  "base": "https://dreamersvault.com",
+  "name": "Dreamers Vault",
   "market": "US"
  },
  {
-  "base": "https://mushroomcity.store",
-  "name": "Mushroom City",
+  "base": "https://castlecomicscards.com",
+  "name": "Castle Comics & Cards",
   "market": "US"
  },
  {
-  "base": "https://phantom-attic.com",
-  "name": "Phantom of the Attic",
+  "base": "https://mainphaseone.com",
+  "name": "Main Phase One",
   "market": "US"
  },
  {
-  "base": "https://papertigercards.com",
-  "name": "Paper Tiger Cards & Comics",
+  "base": "https://level7games.com",
+  "name": "Level 7 Games",
   "market": "US"
  },
  {
-  "base": "https://justpressplayonline.com",
-  "name": "Just Press Play",
+  "base": "https://missingnogames.com",
+  "name": "MissingNo. Games",
+  "market": "US"
+ },
+ {
+  "base": "https://cardboardlegacy.com",
+  "name": "Cardboard Legacy",
+  "market": "US"
+ },
+ {
+  "base": "https://levelupstg.com",
+  "name": "Level Up Lounge",
+  "market": "US"
+ },
+ {
+  "base": "https://dragonskeep.com",
+  "name": "The Dragon's Keep",
+  "market": "US"
+ },
+ {
+  "base": "https://dnacardsandcollectibles.com",
+  "name": "DNA Cards and Collectibles",
+  "market": "US"
+ },
+ {
+  "base": "https://ripvalley.com",
+  "name": "RIP Valley",
+  "market": "US"
+ },
+ {
+  "base": "https://inkwellcollectibles.com",
+  "name": "Inkwell Collectibles",
+  "market": "US"
+ },
+ {
+  "base": "https://madcardsandcollectables.com",
+  "name": "Mad Cards and Collectables",
+  "market": "US"
+ },
+ {
+  "base": "https://lovogames.com",
+  "name": "Lovo Games",
+  "market": "US"
+ },
+ {
+  "base": "https://authoritygamesmesa.com",
+  "name": "Authority Games",
+  "market": "US"
+ },
+ {
+  "base": "https://thegamersxp.com",
+  "name": "The Gamers XP",
+  "market": "US"
+ },
+ {
+  "base": "https://kingcitygames.com",
+  "name": "King City Games",
+  "market": "US"
+ },
+ {
+  "base": "https://highplainsdiceandgames.com",
+  "name": "High Plains Dice and Games",
+  "market": "US"
+ },
+ {
+  "base": "https://thegameogre.com",
+  "name": "Game Ogre",
+  "market": "US"
+ },
+ {
+  "base": "https://the-local-game-store.com",
+  "name": "The Local Game Store",
+  "market": "US"
+ },
+ {
+  "base": "https://fabledcollections.com",
+  "name": "Fabled Collections Game Store",
+  "market": "US"
+ },
+ {
+  "base": "https://thedorkden.com",
+  "name": "The Dork Den",
+  "market": "US"
+ },
+ {
+  "base": "https://epiclootgames.com",
+  "name": "Epic Loot Games",
+  "market": "US"
+ },
+ {
+  "base": "https://apexgaming.gg",
+  "name": "Apex Gaming",
+  "market": "US"
+ },
+ {
+  "base": "https://tcb.games",
+  "name": "TCB Games",
+  "market": "US"
+ },
+ {
+  "base": "https://deltacardshop.com",
+  "name": "Delta Cards & Collectibles",
+  "market": "US"
+ },
+ {
+  "base": "https://denvercardshop.com",
+  "name": "Denver Card Shop",
+  "market": "US"
+ },
+ {
+  "base": "https://slabcitystl.com",
+  "name": "Slab City STL",
+  "market": "US"
+ },
+ {
+  "base": "https://thestlguildhall.com",
+  "name": "The STL Guild Hall",
+  "market": "US"
+ },
+ {
+  "base": "https://bestdealvegas.com",
+  "name": "Best Deal Vegas",
+  "market": "US"
+ },
+ {
+  "base": "https://casehitmke.com",
+  "name": "CASE HIT",
+  "market": "US"
+ },
+ {
+  "base": "https://608cardshop.com",
+  "name": "The 608 Card Shop",
+  "market": "US"
+ },
+ {
+  "base": "https://immortalsinc.com",
+  "name": "Immortals Inc",
+  "market": "US"
+ },
+ {
+  "base": "https://shufflersden.com",
+  "name": "Shuffler's Den",
+  "market": "US"
+ },
+ {
+  "base": "https://collectorscache.com",
+  "name": "Collector's Cache",
+  "market": "US"
+ },
+ {
+  "base": "https://redemptioncardz.com",
+  "name": "Redemption Cardz",
+  "market": "US"
+ },
+ {
+  "base": "https://ninesndimes.net",
+  "name": "NinesnDimes TCG",
+  "market": "US"
+ },
+ {
+  "base": "https://corridorcards.com",
+  "name": "Corridor Cards",
+  "market": "US"
+ },
+ {
+  "base": "https://mytradingcardstore.com",
+  "name": "My Trading Card Store",
+  "market": "US"
+ },
+ {
+  "base": "https://matrixtcg.com",
+  "name": "MatrixTCG",
+  "market": "US"
+ },
+ {
+  "base": "https://riwhobbies.com",
+  "name": "RIW Hobbies & Games",
+  "market": "US"
+ },
+ {
+  "base": "https://ttp.games",
+  "name": "The Trading Post",
+  "market": "US"
+ },
+ {
+  "base": "https://chaosgamesandmore.com",
+  "name": "Chaos, Games and More",
+  "market": "US"
+ },
+ {
+  "base": "https://petriesgames.com",
+  "name": "Petrie's Games",
+  "market": "US"
+ },
+ {
+  "base": "https://pegasusgames.com",
+  "name": "Pegasus Games",
+  "market": "US"
+ },
+ {
+  "base": "https://moxmania.com",
+  "name": "Mox Mania",
+  "market": "US"
+ },
+ {
+  "base": "https://talonsong.net",
+  "name": "TalonSong Gaming",
+  "market": "US"
+ },
+ {
+  "base": "https://cardsintheland.com",
+  "name": "Cards in the Land",
   "market": "US"
  }
 ]
