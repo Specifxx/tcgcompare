@@ -166,12 +166,6 @@ async function main() {
         const usd = cents / (fx[CURRENCY[market]] ?? 1);
         return usd >= ref * 0.4 && usd <= ref * 2.5;
       },
-      inBandWide: (id, cents, market) => {
-        const ref = byId.has(id) ? referenceCents(tcg[id]) : null;
-        if (ref == null || ref <= 0) return false;
-        const usd = cents / (fx[CURRENCY[market]] ?? 1);
-        return usd >= ref * 0.4 && usd <= ref * 2.5;
-      },
     });
     sisterStores = res.stores;
     // Store vetting (lib/import/vet.ts): a blocked, domain-less or too-cheap-to-be-true store shows no row at all.
