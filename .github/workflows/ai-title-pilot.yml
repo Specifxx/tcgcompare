@@ -36,6 +36,16 @@ jobs:
         env:
           AI_TEAM_ANTHROPIC_KEY: ${{ secrets.AI_TEAM_ANTHROPIC_KEY }}
           AI_PILOT_MAX_USD: ${{ inputs.max_usd }}
+          AI_PILOT_MODEL: claude-haiku-5-5
+          AI_PILOT_N_A: "500"
+          AI_PILOT_N_B: "500"
+      - run: npx tsx scripts/ai-title-pilot.ts
+        env:
+          AI_TEAM_ANTHROPIC_KEY: ${{ secrets.AI_TEAM_ANTHROPIC_KEY }}
+          AI_PILOT_MAX_USD: ${{ inputs.max_usd }}
+          AI_PILOT_MODEL: claude-sonnet-5-5
+          AI_PILOT_N_A: "300"
+          AI_PILOT_N_B: "300"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
