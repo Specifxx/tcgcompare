@@ -360,6 +360,30 @@ with a diagonal shine and an inner frame, no symbol on it (the arrow variant was
 `src/app/icon.svg` are the same file (a dark rounded tile, so the tab icon reads on a light browser); `apple-icon.png`,
 `favicon.ico` and the logo tile in both share images were redrawn from it. Never put an arrow or a price symbol on the mark.
 
+## 2026-11-16: The deal agent starts as a deterministic judge on a flag, with its own store-price history (owner: "an AI deal agent for wishlists")
+
+The idea: a visitor lists what they want and is told when a price is genuinely low, with reasons, never a store's own "was"
+price. Prototype only, behind `NEXT_PUBLIC_DEAL_AGENT=1` (off: `/deal-agent` and `/deal-signals.json` are 404s, nothing links
+to them, no spend).
+
+- **The verdict is code, not a model** (`lib/deal-agent.ts`). Every reason it gives is a number we hold. A model may later word
+  the reasons or draft a message; it never decides a verdict, and no model call exists in this change (US$0). Any later call goes
+  through the AI pilot's US$5 ceiling (`AI_PILOT_MAX_USD`) and never raises it without the owner and a logged receipt.
+- **We had no store-price history.** `data/history` is TCGplayer's reference price only, so "is this store's price its lowest?"
+  could not be answered. The import now also records the cheapest in-stock STORE price per product and market
+  (`data/store-lows/<setId>.json`, change-only points, 0 = out of stock; never eBay, Amazon, TCGplayer or a pre-order; never
+  converted). Verdicts need 14 days of it; until then the best verdict is "good" and the page says how few days it has.
+- **The rule was fitted on real history, not guessed.** `scripts/deal-agent-backtest.ts` on 55 days of RiftCompare's sealed
+  history (350 series, 7,717 judged days): a price at its 60-day low and 8%+ under its median was followed by a lower price
+  within 14 days 42% of the time (the same as any day, 42.6%). Split by a feature: a first-day dip 57% against 38% when it had
+  held a day, a shallow dip 56% against 34% at 15%+. So "genuinely low" needs the 60-day low, 15%+ under the median and a
+  second day: 29.6% later lower (16.5% by 10% or more), against 47.1% for the naive "dropped since yesterday" rule, and 33% /
+  27% in the earlier and later half of the run. The rule was tuned on the same run, so the split is a sanity check, not proof;
+  rerun it on this site's own data when it has 29 days (about 14 December).
+- Guards: one store is no verdict; under 40% of the stores' median (3+ stores), under half of TCGplayer, or under 60% of its own
+  usual price is "can't tell", never a deal (a wrong listing is likelier).
+- Not done: a button on product pages, emails, any link to Bargle (its CLAUDE.md says never link it from the Compare sites; the
+  owner decides if that changes).
 ## 2026-11-16: Open price data (/data): a stores-only CSV, the Sealed Price Index and an embeddable widget
 
 Owner go ("make TCG Prices the flagship", 11-16): a free, dated, credited dataset, built to earn links and press. Pieces:
