@@ -432,6 +432,29 @@ every store row and the price-drop alerts through the shared service. Pro adds 3
 no inline ad strips or phone dock (price tables, order and paid rows stay), and a synced list across devices. Never gated:
 the cheapest price, store rows, alerts already free. No Pro button or "coming soon" shows until the token path exists.
 
+## 2026-11-16: AI places id-less store listings (owner: as many listings as possible, light filtering)
+
+The crawl takes a listing only by the TCGplayer id it carries (own-list shops aside), so of ~200,000 listings read a day about
+4,000 were taken. The owner's call for TCG Prices (2026-11-16): reach 10,000 to 20,000 listings per game, "don't be too strict on
+the errors". A pilot measured Sonnet 5.5 against listings whose id is known: 187 right, 1 wrong of 188 answers (99.5%); Haiku was
+silent on most. The shadow pass (`scripts/ai-shadow-match.ts`, `ai-shadow-match.yml`, dispatched by hand) asks Sonnet about each
+in-stock, sealed-looking id-less listing (a shortlist of 25 catalogue products, "null if unsure"), runs deterministic guards on the
+answer (product type, multi-pack, foreign/unfit, print and edition words must agree) and caches the decision by store host + title
+in `cache.json` on the never-deployed `ai-shadow` branch, so later runs pay only for new or changed titles. First pass: 20,531
+id-less listings, 14,582 asked at US$0.0017 each, 4,854 placed, 3,839 of those through the guards.
+
+- **Live, with light checks** (`pickByAi`, `lib/import/crawl.ts`): `refresh-prices.yml` copies the cache next to the crawl and the
+  import runs with `AI_SHADOW_LIVE=1` (repository variable `AI_SHADOW_LIVE`, default 1). A decision is taken when the listing is
+  in stock with no id, passes the existing unfit / foreign / opened / quantity refusals, the product is sealed (not an insert) and
+  of a game the listing was crawled for, the guard passed (or its only complaint is a title naming no product type), and the price
+  sits in a WIDE band of 40-250% of TCGplayer's market price (the by-title rule for own shops keeps 60-160%). A product with no
+  market price is refused. Vetting and the 4x band downstream still apply.
+- **Roll back** by setting the repository variable `AI_SHADOW_LIVE` to 0: the next import takes no AI placement and the rows
+  disappear. `meta.json` `crawl.aiTaken` counts how many were taken. The by-id rule is unchanged for every other path.
+- **Never** an AI answer without a recorded decision, never a call to the model from the import (the import reads a file), never
+  an AI placement into a sister's data or the price-history of a product it has no market price for. The pass runs on free
+  Anthropic credit only (US$100 Max grant to 17 Dec); when it is gone the cache keeps serving and only new titles stop being decided.
+
 ## 2026-11-16: One game per guide, one finding per guide (owner: a continuous programme, insightful, long, thumbnails, product images)
 
 Single-game guides (Star Wars Unlimited Carbonite vs standard, Flesh and Blood price vs stock) each test ONE claim the

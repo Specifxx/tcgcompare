@@ -160,6 +160,12 @@ async function main() {
         const usd = cents / (fx[CURRENCY[market]] ?? 1);
         return usd >= ref * 0.6 && usd <= ref * 1.6;
       },
+      inBandWide: (id, cents, market) => {
+        const ref = byId.has(id) ? referenceCents(tcg[id]) : null;
+        if (ref == null || ref <= 0) return false;
+        const usd = cents / (fx[CURRENCY[market]] ?? 1);
+        return usd >= ref * 0.4 && usd <= ref * 2.5;
+      },
     });
     sisterStores = res.stores;
     // Store vetting (lib/import/vet.ts): a blocked, domain-less or too-cheap-to-be-true store shows no row at all.
@@ -481,6 +487,7 @@ function mergeOwnCrawl(a: {
   now: Date;
   crawlOffers: WeakSet<Offer>;
   inBand: (id: number, cents: number, market: Market) => boolean;
+  inBandWide: (id: number, cents: number, market: Market) => boolean;
 }): CrawlMeta {
   const { res, products, sets, prevMeta, now } = a;
   const entries = readJson<CrawlStore[]>(path.join(process.cwd(), "data", "crawl", "stores.json"), []);
@@ -508,7 +515,16 @@ function mergeOwnCrawl(a: {
   };
   const storesOf = [...new Map([...entries, ...(run?.stores ?? [])].map((s) => [storeIdentity(s.base, s.market), s])).values()];
   const { keyOf, added } = crawlStoreKeys(res.stores, storesOf);
-  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf, inBand: a.inBand }, keyOf) : { offers: new Map<number, Offer[]>(), fresh: new Map<string, Set<number>>(), taken: 0, refused: {}, listings: 0 };
+  // AI placements recorded in shadow mode (scripts/ai-shadow-match.ts), used only when AI_SHADOW_LIVE=1. The cache is one
+  // file the workflow copies from the ai-shadow branch; unset or unreadable means no AI placements, never an error.
+  let ai: Map<string, { id: number; pass: boolean; reasons: string[] }> | undefined;
+  if (process.env.AI_SHADOW_LIVE === "1") {
+    const cache = readJson<Record<string, { id: number | null; guard?: { pass: boolean; reasons: string[] } }>>(path.join(process.cwd(), "data", "crawl", "ai-shadow-cache.json"), {});
+    ai = new Map();
+    for (const [k, d] of Object.entries(cache)) if (d.id !== null && d.guard) ai.set(k, { id: d.id, pass: d.guard.pass, reasons: d.guard.reasons });
+    console.log(`[crawl] AI shadow placements live: ${ai.size} decisions`);
+  }
+  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf, inBand: a.inBand, ai, inBandWide: a.inBandWide }, keyOf) : { offers: new Map<number, Offer[]>(), fresh: new Map<string, Set<number>>(), taken: 0, refused: {}, listings: 0 };
   const readOk = new Set((run?.stores ?? []).filter((s) => s.ok).map((s) => storeIdentity(s.base, s.market)));
   const seen: Record<string, string> = { ...(prevMeta?.crawl?.seen ?? {}) };
   for (const id of readOk) seen[id] = run!.at;
@@ -564,6 +580,7 @@ function mergeOwnCrawl(a: {
     listings: got.listings,
     taken: got.taken,
     titled: got.titled ?? 0,
+    ...(got.aiTaken ? { aiTaken: got.aiTaken } : {}),
     refused: got.refused,
     offers: 0,
     carried: carry.carried,

@@ -61,10 +61,18 @@ jobs:
         continue-on-error: true
         timeout-minutes: 55
         run: npx tsx scripts/crawl-uncovered.ts
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: ai-shadow
+          path: ai-shadow
       - name: Import
         env:
           SISTER_DIR: sisters
-        run: npx tsx scripts/import-all.ts
+          AI_SHADOW_LIVE: ${{ vars.AI_SHADOW_LIVE || '1' }}
+        run: |
+          if [ -f ai-shadow/cache.json ]; then cp ai-shadow/cache.json data/crawl/ai-shadow-cache.json; fi
+          npx tsx scripts/import-all.ts
       - name: Commit data to this branch
         run: |
           set -euo pipefail

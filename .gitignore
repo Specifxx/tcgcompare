@@ -10,3 +10,4 @@ data/.cache
 data/amazon-live/
 sisters/
 data/crawl/listings.json
+data/crawl/ai-shadow-cache.json
