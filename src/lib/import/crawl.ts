@@ -395,6 +395,10 @@ export interface CrawlTake {
   /** Of `taken`, those placed by the AI shadow pass (pickByAi). */
   aiTaken?: number;
   refused: Record<string, number>;
+  /** Refusals by "reason: detail", the 40 commonest. */
+  refusedDetail?: Record<string, number>;
+  /** Listings taken, by game line. */
+  takenByLine?: Record<string, number>;
   listings: number;
 }
 
@@ -403,6 +407,8 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
   const offers = new Map<number, Offer[]>();
   const fresh = new Map<string, Set<number>>();
   const refused: Record<string, number> = {};
+  const detail: Record<string, number> = {};
+  const byLine: Record<string, number> = {};
   let taken = 0;
   let titled = 0;
   let aiTaken = 0;
@@ -432,9 +438,14 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
       }
       if ("refuse" in r) {
         refused[r.refuse] = (refused[r.refuse] ?? 0) + 1;
+        const dk = `${r.refuse}: ${(r.detail ?? "").slice(0, 40)}`;
+        detail[dk] = (detail[dk] ?? 0) + 1;
         continue;
       }
       taken++;
+      const tp = ctx.products.get(r.id);
+      const tl = tp ? ctx.lineOf(tp) : null;
+      if (tl) byLine[tl] = (byLine[tl] ?? 0) + 1;
       const o: Offer = { source: key, market: s.market, currency: CURRENCY[s.market], cents: l.cents, inStock: l.inStock, url: l.url, title: l.title, ...(l.preorder ? { preorder: true } : {}) };
       const cur = best.get(r.id);
       if (!cur || (o.inStock && !cur.inStock) || (o.inStock === cur.inStock && o.cents < cur.cents)) best.set(r.id, o);
@@ -446,7 +457,8 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
       fresh.get(key)!.add(id);
     }
   }
-  return { offers, fresh, taken, refused, listings, titled, aiTaken };
+  const refusedDetail = Object.fromEntries(Object.entries(detail).sort((a, b) => b[1] - a[1]).slice(0, 40));
+  return { offers, fresh, taken, refused, refusedDetail, takenByLine: byLine, listings, titled, aiTaken };
 }
 
 /**
