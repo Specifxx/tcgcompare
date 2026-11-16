@@ -15,7 +15,7 @@ import { escapeHtml } from "./html";
 import { sourceNameServer } from "./sources";
 import type { Product } from "./site-types";
 import { facetStats } from "./hubs";
-import { beatTable, boxTable, fact } from "./game-study";
+import { beatTable, boxTable, fact, productFigure, setBoxTable, variantTable } from "./game-study";
 
 function table(rows: Product[], withSet: boolean): string {
   // A sealed-only catalogue has no cards: the table is left out rather than drawn empty.
@@ -41,7 +41,10 @@ export function renderPost(html: string): string {
     .replace(/\{\{rarity:([^:}]+):(\d+)\}\}/g, (_, r, n) => table(byValue(products().filter((p) => p.kind === "card" && p.rarity === r)).slice(0, Number(n)), true))
     .replace(/\{\{study:boxes\}\}/g, () => boxTable())
     .replace(/\{\{study:beat\}\}/g, () => beatTable())
-    .replace(/\{\{fact:([a-zA-Z]+)\}\}/g, (_, k) => fact(k))
+    .replace(/\{\{study:setboxes:([a-z0-9]+)\}\}/g, (_, g) => setBoxTable(g))
+    .replace(/\{\{study:variant:([a-z0-9]+):([A-Za-z]+)\}\}/g, (_, g, w) => variantTable(g, w))
+    .replace(/\{\{figure:(\d+)\}\}/g, (_, id) => productFigure(Number(id)))
+    .replace(/\{\{fact:([a-zA-Z]+(?::[a-z0-9]+)?)\}\}/g, (_, k) => fact(k))
     .replace(/\{\{attrstats:([a-z0-9-]+)\}\}/g, (_, f) => {
       const rows = facetStats(f)
         .map((r) => `<tr><td><a href="/cards/${f}/${r.hub.slug}">${escapeHtml(r.hub.label)}</a></td><td>${r.count}</td><td>${money(r.median)}</td><td>${r.over10}</td><td>${r.top ? `<a href="/card/${r.top.slug}">${escapeHtml(shortName(r.top.name))}</a> ${money(refCents(r.top.id))}` : "—"}</td></tr>`)
