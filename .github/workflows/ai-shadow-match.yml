@@ -1,0 +1,71 @@
+name: AI shadow match
+
+# Manual (dispatched daily by the AI lead). Reads the stores the crawl already reads, asks Sonnet to place id-less
+# listings on catalogue products, and RECORDS the decisions (with deterministic print/edition guards) in cache.json on
+# the `ai-shadow` branch. Nothing reads that file yet: the site, the import and the by-id rule are untouched. The branch
+# is never deployed (vercel.json). Needs the repo secret AI_TEAM_ANTHROPIC_KEY (none = a no-op). Hard ceiling per run.
+
+on:
+  workflow_dispatch:
+    inputs:
+      crawl_budget:
+        description: "Crawl requests (the daily import uses 12000)"
+        default: "6000"
+      max_usd:
+        description: "Hard model-spend ceiling for this run, US$"
+        default: "25"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ai-shadow-match
+  cancel-in-progress: false
+
+jobs:
+  shadow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { ref: ai-shadow, path: shadow }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsx scripts/crawl-uncovered.ts
+        env:
+          CRAWL_BUDGET: ${{ inputs.crawl_budget }}
+          CRAWL_MAX_MINUTES: "75"
+      - name: Start from yesterday's decisions
+        run: |
+          mkdir -p out
+          if [ -f shadow/cache.json ]; then cp shadow/cache.json out/ai-shadow-cache.json; fi
+      - run: npx tsx scripts/ai-shadow-match.ts
+        env:
+          AI_TEAM_ANTHROPIC_KEY: ${{ secrets.AI_TEAM_ANTHROPIC_KEY }}
+          AI_SHADOW_MAX_USD: ${{ inputs.max_usd }}
+          AI_SHADOW_CACHE: ${{ github.workspace }}/out/ai-shadow-cache.json
+      - name: Publish the cache to the ai-shadow branch
+        run: |
+          set -e
+          [ -f out/ai-shadow-cache.json ] || { echo "no cache written (no key or no crawl): nothing to publish"; exit 0; }
+          rm -rf pub && mkdir pub && cd pub
+          git init -q -b ai-shadow
+          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          cp ../out/ai-shadow-cache.json cache.json
+          cp ../out/ai-shadow-summary.json summary.json
+          git config user.name "ai-shadow"
+          git config user.email "ai-shadow@users.noreply.github.com"
+          git add cache.json summary.json
+          git commit -q -m "AI shadow decisions $(date -u +%F)"
+          git push -q --force origin ai-shadow
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-shadow
+          path: out/ai-shadow-summary.json
+          if-no-files-found: ignore
