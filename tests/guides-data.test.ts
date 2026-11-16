@@ -29,3 +29,8 @@ test("each guide links to another guide and a tool", () => {
     assert.ok(p.title.length <= 70, `${p.slug} title too long`);
   }
 });
+
+test("every guide thumbnail file exists", async () => {
+  const fs = await import("node:fs");
+  for (const p of POSTS) if (p.image) assert.ok(fs.existsSync(`public${p.image.src}`), `${p.slug} image missing`);
+});

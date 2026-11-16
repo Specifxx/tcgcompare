@@ -454,3 +454,12 @@ id-less listings, 14,582 asked at US$0.0017 each, 4,854 placed, 3,839 of those t
 - **Never** an AI answer without a recorded decision, never a call to the model from the import (the import reads a file), never
   an AI placement into a sister's data or the price-history of a product it has no market price for. The pass runs on free
   Anthropic credit only (US$100 Max grant to 17 Dec); when it is gone the cache keeps serving and only new titles stop being decided.
+
+## 2026-11-16: One game per guide, one finding per guide (owner: a continuous programme, insightful, long, thumbnails, product images)
+
+Single-game guides (Star Wars Unlimited Carbonite vs standard, Flesh and Blood price vs stock) each test ONE claim the
+data can settle, never a restated list (`/games/<slug>` owns the list). New tokens: `{{study:setboxes:<game>}}`,
+`{{study:variant:<game>:<Word>}}`, `{{figure:<product id>}}` (the stores' and TCGplayer's own photo, hotlinked, with its
+live price) and game-keyed facts (`{{fact:carbMedian:swu}}`). Thumbnails come from the shared generator
+(`/mnt/project-files/seo/blog-generator/thumb-render.mjs`, real numbers on the chart, dated). Prose names no card text, pack
+count or print run it cannot source; an inference is labelled as one. `tests/guides-data.test.ts` pins that each thumbnail exists.
