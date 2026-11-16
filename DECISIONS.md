@@ -431,3 +431,12 @@ so this site still holds no address and no mail key. Free keeps everything above
 every store row and the price-drop alerts through the shared service. Pro adds 365 days of history, CSV export (formula-safe),
 no inline ad strips or phone dock (price tables, order and paid rows stay), and a synced list across devices. Never gated:
 the cheapest price, store rows, alerts already free. No Pro button or "coming soon" shows until the token path exists.
+
+## 2026-11-16: One game per guide, one finding per guide (owner: a continuous programme, insightful, long, thumbnails, product images)
+
+Single-game guides (Star Wars Unlimited Carbonite vs standard, Flesh and Blood price vs stock) each test ONE claim the
+data can settle, never a restated list (`/games/<slug>` owns the list). New tokens: `{{study:setboxes:<game>}}`,
+`{{study:variant:<game>:<Word>}}`, `{{figure:<product id>}}` (the stores' and TCGplayer's own photo, hotlinked, with its
+live price) and game-keyed facts (`{{fact:carbMedian:swu}}`). Thumbnails come from the shared generator
+(`/mnt/project-files/seo/blog-generator/thumb-render.mjs`, real numbers on the chart, dated). Prose names no card text, pack
+count or print run it cannot source; an inference is labelled as one. `tests/guides-data.test.ts` pins that each thumbnail exists.
