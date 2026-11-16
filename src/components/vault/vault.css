@@ -39,3 +39,16 @@
 .ce-vault-name a:hover { text-decoration: underline; }
 .ce-vault-price { display: grid; justify-items: end; font-weight: 800; }
 :where(.ce-vault-empty) { display: grid; gap: 0.75rem; justify-items: start; margin-top: 1.5rem; padding: 1.25rem; border-radius: 1rem; border: 1px dashed color-mix(in srgb, currentColor 25%, transparent); }
+:where(.ce-vault-hist, .ce-vault-tools) { display: grid; gap: 0.5rem; padding: 1rem 1.25rem; border-radius: 1rem; border: 1px solid color-mix(in srgb, currentColor 14%, transparent); }
+:where(.ce-vault-histhead) { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.ce-vault-chart { width: 100%; height: auto; }
+.ce-vault-ranges button { min-height: 2rem; padding: 0 0.7rem; border: 1px solid color-mix(in srgb, currentColor 22%, transparent); background: transparent; color: inherit; font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.ce-vault-ranges button:first-child { border-radius: 0.5rem 0 0 0.5rem; }
+.ce-vault-ranges button:last-child { border-radius: 0 0.5rem 0.5rem 0; border-left: 0; }
+.ce-vault-ranges button[aria-pressed="true"] { background: var(--cart-accent); border-color: var(--cart-accent); color: var(--cart-on-accent); }
+.ce-vault-input { min-height: 2.5rem; padding: 0 0.75rem; border-radius: 0.6rem; border: 1px solid color-mix(in srgb, currentColor 28%, transparent); background: transparent; color: inherit; font: inherit; }
+.ce-vault-input:focus-visible, .ce-vault-hits button:focus-visible { outline: 2px solid var(--cart-accent); outline-offset: 2px; }
+:where(.ce-vault-hits) { list-style: none; margin: 0; padding: 0; border: 1px solid color-mix(in srgb, currentColor 14%, transparent); border-radius: 0.6rem; overflow: hidden; }
+.ce-vault-hits button { display: block; width: 100%; text-align: left; padding: 0.6rem 0.8rem; border: 0; background: transparent; color: inherit; font: inherit; font-size: 0.875rem; cursor: pointer; }
+.ce-vault-hits button:hover { background: color-mix(in srgb, var(--cart-accent) 10%, transparent); }
+:where(.ce-vault-backup) { display: flex; flex-wrap: wrap; gap: 0.5rem; }

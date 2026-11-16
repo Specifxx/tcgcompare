@@ -26,6 +26,8 @@ import {
   type VaultItem,
 } from "@/lib/vault";
 import { VAULT_SITE } from "./vault-config";
+import { VaultHistory } from "./VaultHistory";
+import { VaultBackup, VaultSearch } from "./VaultTools";
 
 function Change({ from, to, currency, label }: { from: number; to: number; currency: string; label: string }) {
   const pct = pctChange(from, to);
@@ -79,9 +81,11 @@ export function VaultView() {
           today&apos;s store prices, and how much it has moved since you added it.
         </p>
         <p className="ce-vault-muted">It stays in this browser: no account, no sign-up, nothing sent to us.</p>
+        <VaultSearch file={file} />
         <a className="ce-vault-btn" href="/">
-          Find a product
+          Browse products
         </a>
+        <VaultBackup />
       </div>
     );
 
@@ -132,6 +136,8 @@ export function VaultView() {
             </section>
           );
         })}
+      {file && <VaultHistory items={valued} />}
+      <VaultSearch file={file} />
       <ul className="ce-vault-list">
         {valued.map((i) => {
           const key = itemKey(i);
@@ -166,6 +172,7 @@ export function VaultView() {
         Values are the cheapest in-stock store price in each item&apos;s region today, the price you would pay to buy it again. They are not what a
         buyer would pay you. Prices are never converted between currencies.
       </p>
+      <VaultBackup />
     </div>
   );
 }

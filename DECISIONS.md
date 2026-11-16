@@ -377,3 +377,21 @@ deploy (no function, no new cache); licence CC BY 4.0 with a visible credit link
   product does not move it. Fewer than 8 common products keeps the level. A failed day is a gap. A game's own line shows only with
   10+ products. The 7-day change and chart appear as days accrue; nothing is estimated.
 - Outreach and press: point at `/data` and the widget. Never claim a figure the file does not hold.
+
+## 2026-11-16: Collection tracker v2 (history, add by search, backup) and the Pro design (owner: TCG Prices is the flagship)
+
+My collection (`/collection`, `lib/vault.ts`) already valued a browser-kept list from `/prices.json`. v2 adds what Collectr
+leads with, with no account and no new service: a value-history chart backfilled from the committed price history
+(`/api/history/<productId>`, CDN-held 24 hours, `lib/vault-history.ts`: TCGplayer market price in US$, what today's items
+would have been worth each day, starting on the first day every item has a price so the total never jumps), add-by-search
+on the page itself, and a save/load backup file for moving the list between devices (items and quantities only). The chart
+is labelled as TCGplayer US$ because it is a different number from the headline total (cheapest in-stock store price in
+the visitor's market); never present them as one. The chart reads the 60 most valuable items. Nothing is stored about
+anyone and no page reads a cookie.
+
+**Pro is designed, not built, and payments stay off (owner's call on price and billing).** It follows the Dex Premium
+pattern (`strategy/premium-rework-2026-11-16.html`): sign-in by emailed link and the Rift-signed token, plans in Rift's Stripe,
+so this site still holds no address and no mail key. Free keeps everything above, 60 days of history, the cheapest price,
+every store row and the price-drop alerts through the shared service. Pro adds 365 days of history, CSV export (formula-safe),
+no inline ad strips or phone dock (price tables, order and paid rows stay), and a synced list across devices. Never gated:
+the cheapest price, store rows, alerts already free. No Pro button or "coming soon" shows until the token path exists.
