@@ -352,3 +352,10 @@ to it). Titles, descriptions and keywords hold no token (only the body and FAQ a
 Search evidence: tcgprices.app had no Search Console impressions on 15 Nov, so the topics come from the sister sites' real
 queries ("how many packs in a booster box", "cheapest booster box", "where to buy sealed"); a topic is not written
 without one. `tests/guides-data.test.ts` pins that no token reaches a reader.
+
+## 2026-11-16: The logo is a fanned stack of three cards
+
+Owner chose it from six drawn options (the isometric box it replaces looked like every other price site's cube): the card stack
+with a diagonal shine and an inner frame, no symbol on it (the arrow variant was rejected). `public/icon.svg` and
+`src/app/icon.svg` are the same file (a dark rounded tile, so the tab icon reads on a light browser); `apple-icon.png`,
+`favicon.ico` and the logo tile in both share images were redrawn from it. Never put an arrow or a price symbol on the mark.
