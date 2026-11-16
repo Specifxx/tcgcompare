@@ -70,6 +70,7 @@ jobs:
         env:
           SISTER_DIR: sisters
           AI_SHADOW_LIVE: ${{ vars.AI_SHADOW_LIVE || '1' }}
+          FOCUS_SIZING: "1"
         run: |
           if [ -f ai-shadow/cache.json ]; then cp ai-shadow/cache.json data/crawl/ai-shadow-cache.json; fi
           npx tsx scripts/import-all.ts

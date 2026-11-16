@@ -17,7 +17,7 @@ import { CURRENCY } from "@/lib/site-types";
 import { loadTcgcsv, referenceCents } from "@/lib/import/tcgcsv";
 import { fetchStore, storeCurrency } from "@/lib/import/shopify";
 import { readDemandSlugs } from "@/lib/import/demand";
-import { focusCatalog } from "@/lib/import/focus";
+import { focusCatalog, marketCents } from "@/lib/import/focus";
 import { loadSisterOffers, MAX_AGE_H as SISTER_MAX_AGE_H } from "@/lib/import/sisters";
 import { carryDownSisters, groupsToKeep, heldForDownSisters, updateCulled, type CulledMap, type SisterMemo } from "@/lib/import/continuity";
 import { OFFER_FLOOR, vetStores, type Refusal } from "@/lib/import/vet";
@@ -279,6 +279,24 @@ async function main() {
           const mine = new Set(st.stores ?? []);
           (st as SisterMemo).held = held.filter((p) => (prevPrices.byId[p.id]?.offers ?? []).some((o) => mine.has(o.source))).length;
         }
+    }
+    // Sizing only (FOCUS_SIZING=1, trial import): what loosening the focus would add, per game. Changes nothing.
+    if (process.env.FOCUS_SIZING === "1") {
+      const lineOfSet = new Map(sets.map((x) => [x.id, x.line ?? "-"]));
+      const min = SITE.catalogFocus.minCents;
+      const rows: Record<string, { culled: number; overFloorOld: number; underFloor: number; noPrice: number; withStoreOffer: number; storeOffers: number }> = {};
+      for (const p of products) {
+        if (keptIds.has(p.id) || p.kind !== "sealed" || p.sealedType === "Insert" || p.rarity) continue;
+        const line = lineOfSet.get(p.setId) ?? "-";
+        const r = (rows[line] ??= { culled: 0, overFloorOld: 0, underFloor: 0, noPrice: 0, withStoreOffer: 0, storeOffers: 0 });
+        const m = marketCents(tcg[p.id]);
+        r.culled++;
+        if (m == null) r.noPrice++; else if (m < min) r.underFloor++; else r.overFloorOld++;
+        const o = storeOffers.get(p.id)?.length ?? 0;
+        if (o) { r.withStoreOffer++; r.storeOffers += o; }
+      }
+      console.log(`[sizing] kept ${kept.length}; culled sealed non-insert by game: ${JSON.stringify(rows)}`);
+      writeJson(path.join(process.cwd(), "data", "crawl", "focus-sizing.json"), { at: now.toISOString(), kept: kept.length, byGame: rows });
     }
     for (const p of products) if (!keptIds.has(p.id)) byId.delete(p.id);
     for (const id of [...storeOffers.keys()]) if (!keptIds.has(id)) storeOffers.delete(id);
