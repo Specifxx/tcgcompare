@@ -170,8 +170,8 @@ export const SITE: SiteConfig = {
   supportEmail: "compareempire@gmail.com",
   ownerEmail: "compareempire@gmail.com",
 
-  // Not yet registered with RiftCompare's shared alert service: the form stays off until it is.
-  priceAlerts: false,
+  // Registered with RiftCompare's shared alert service (TCGEmpire sites.ts, key tcgprices), 2026-11-16.
+  priceAlerts: true,
   // Defaults only: every game has its own category, slug and eBay words (lines).
   tcgcsvCategoryId: 3,
   tcgplayerSlug: "all",
