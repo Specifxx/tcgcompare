@@ -105,3 +105,40 @@ test("the collection's button and link carry their class's weight: a :where() ru
   assert.deepEqual(button && [button.decls.get("padding"), button.decls.get("font-size"), button.decls.get("font-weight"), button.decls.get("min-height")], ["0 0.9rem", "0.875rem", "700", "2.5rem"]);
   assert.equal(sheet.find((r) => r.selector === ".ce-vault-link")?.decls.get("color"), "var(--cart-accent)");
 });
+
+// Value history and backup (2026-11-16).
+import { collectionSeries, idsToFetch, HISTORY_MAX_ITEMS } from "../src/lib/vault-history";
+import { backupText, mergeItems, parseBackup } from "../src/lib/vault";
+
+test("collection history carries each price forward and starts where every item has data", () => {
+  const holdings = [{ id: "a", qty: 2, weight: 100 }, { id: "b", qty: 1, weight: 50 }, { id: "c", qty: 1, weight: 10 }];
+  const series = { a: [[100, 1000], [103, 1200]] as [number, number][], b: [[101, 500]] as [number, number][], c: undefined };
+  const r = collectionSeries(holdings, series, 105, 60);
+  assert.equal(r.used, 2);
+  assert.equal(r.left, 1, "c has no history");
+  assert.deepEqual(r.points, [[101, 2500], [103, 2900]], "starts on day 101, when b first has a price, so the total never jumps up");
+});
+
+test("history fetches the most valuable items first and never more than the cap", () => {
+  const many = Array.from({ length: HISTORY_MAX_ITEMS + 5 }, (_, i) => ({ id: String(i), qty: 1, weight: i }));
+  const ids = idsToFetch(many);
+  assert.equal(ids.length, HISTORY_MAX_ITEMS);
+  assert.equal(ids[0], String(HISTORY_MAX_ITEMS + 4));
+});
+
+test("a backup file round-trips, rejects other files and merges without doubling", () => {
+  const items = addItem(addItem([], { ...base, qty: 3 }), { ...base, id: "p2" });
+  const back = parseBackup(backupText(items));
+  assert.equal(back?.length, 2);
+  assert.equal(parseBackup('{"app":"other","items":[]}'), null);
+  assert.equal(parseBackup("not json"), null);
+  const merged = mergeItems(addItem([], { ...base, qty: 1 }), back!);
+  assert.equal(merged.length, 2);
+  assert.equal(merged.find((i) => i.id === "p1")?.qty, 3, "the larger quantity wins; a backup never doubles it");
+});
+
+test("the history route and the collection page read no cookie and nothing private", () => {
+  const route = fs.readFileSync(path.join(process.cwd(), "src/app/api/history/[id]/route.ts"), "utf8");
+  assert.doesNotMatch(route, /cookies\(|headers\(|searchParams/);
+  assert.match(route, /s-maxage=86400/);
+});

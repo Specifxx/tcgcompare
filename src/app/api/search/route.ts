@@ -61,7 +61,7 @@ export function GET(req: Request) {
   scored.sort((a, b) => b.s - a.s);
   const hits = scored.slice(0, limit).map(({ i }) => {
     const p = all[i];
-    return { slug: p.slug, href: `/card/${p.slug}`, name: shortName(p.name), set: setById(p.setId)?.name ?? "", image: p.image, price: money(refCents(p.id)), kind: p.kind, number: p.number, rarity: p.rarity };
+    return { id: p.id, slug: p.slug, href: `/card/${p.slug}`, name: shortName(p.name), set: setById(p.setId)?.name ?? "", image: p.image, price: money(refCents(p.id)), kind: p.kind, number: p.number, rarity: p.rarity };
   });
   // Kits fill what the cards leave: "hg aerial" finds the kit, "aerial" the card first.
   const all2 = [...hits, ...kitHits(want, Math.max(0, limit - hits.length))];
