@@ -25,7 +25,7 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: "*", allow: ["/", ...QUERY_ALLOWS], disallow: ["/api/", "/go", "/*?"] },
       { userAgent: BLOCKED_BOTS, disallow: "/" },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/sitemap-index.xml`],
     host: SITE_URL,
   };
 }

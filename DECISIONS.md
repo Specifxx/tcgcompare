@@ -493,3 +493,9 @@ the same squad; each repo's own `season.ts` stays its own copy, kept equal by ha
 ## 2026-11-16: Store prices on cheap products get a high band too (Data Quality)
 
 The store price band (under `OFFER_FLOOR` of TCGplayer's market, over four times it) only ran from a market of US$3 up, so a Japanese Ninja Spinner pack at a US$2.19 market kept bescards' US$109.99 (a box's price), humbletcg's US$33 and gdgames' US$49.95. `storePriceTrusted` (lib/import/sanity.ts) now also drops, under US$3, a price over five times the market and over US$15; the low side stays off there (a cent-level low is normal). Both the sister pass and the own-store pass use it. 25 offers on the 16 Nov data. Not done: the wrong-set handle check (spankyscardshop ST09 pointing at a starter-deck-08 handle), a matcher change that needs its own title tests.
+
+## 2026-11-16: Index audit, and the sitemap cut by kind of page
+
+Search Console (bill.jyang101) on the first audit, two days after launch: the one sitemap (`/sitemap.xml`, 5,034 URLs) was read on 16 Nov with no errors; Google had crawled four URLs (the home page and three game hubs, 14 to 15 Nov), judged all four "Crawled - currently not indexed", and indexed none. No technical cause was found: robots.txt allows everything but `/api/`, `/go` and query strings; pages are server-rendered with full link lists. It is a domain two days old with no inbound links, so the levers are links, internal links and patience, not a fix to the markup.
+
+What changed: `/sitemap-index.xml` lists `/sitemaps/<kind>.xml` (products, sets, games, guides, sealed-hubs, pages), the same URLs as the main sitemap cut by kind (`lib/sitemap-split.ts`, `tests/sitemap-split.test.ts`), so Search Console reports indexing per kind. `/sitemap.xml` stays the full list; robots.txt names both. Nothing is added to the sitemap, no URL changes, six-hour CDN cache like every page. Priority pages are requested one at a time, at most five a day, never in bulk.
