@@ -23,3 +23,24 @@ test("boot script agrees with seasonAt", () => {
     assert.equal(attrs["data-season"] ?? null, seasonAt(d));
   }
 });
+
+test("Black Friday week is an event layer on top of the season (data-event), 20 to 30 November in 2026", async () => {
+  const { eventAt, blackFridayWindow } = await import("@/lib/season");
+  assert.deepEqual(blackFridayWindow(2026), [20261120, 20261130]);
+  assert.equal(eventAt(new Date(2026, 10, 19)), null);
+  assert.equal(eventAt(new Date(2026, 10, 20)), "blackfriday");
+  assert.equal(eventAt(new Date(2026, 10, 30)), "blackfriday");
+  assert.equal(eventAt(new Date(2026, 11, 1)), null);
+  assert.equal(seasonAt(new Date(2026, 10, 27)), "christmas", "the season is untouched");
+  for (const [d, want] of [[new Date(2026, 10, 27), "blackfriday"], [new Date(2026, 10, 10), undefined]] as const) {
+    const attrs: Record<string, string> = {};
+    const RealDate = Date;
+    const ctx = {
+      location: { search: "" },
+      document: { documentElement: { setAttribute: (k: string, v: string) => (attrs[k] = v) } },
+      Date: class extends RealDate { constructor() { super(d.getTime()); } },
+    };
+    vm.runInNewContext(SEASON_BOOT_SCRIPT, ctx);
+    assert.equal(attrs["data-event"], want);
+  }
+});
