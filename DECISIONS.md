@@ -432,6 +432,23 @@ every store row and the price-drop alerts through the shared service. Pro adds 3
 no inline ad strips or phone dock (price tables, order and paid rows stay), and a synced list across devices. Never gated:
 the cheapest price, store rows, alerts already free. No Pro button or "coming soon" shows until the token path exists.
 
+## 2026-11-16: As many stores and listings as possible: title matching for every crawled shop, wider band, no domain rule (owner)
+
+Owner: "as many stores as possible, we don't need to be that strict, at least 10,000 to 20,000 listings for each TCG, don't be too
+strict on recognizing which stores are legit". Measured first (2026-11-16 data, store offers without TCGplayer): Pokémon 41,675,
+MTG 39,120, Lorcana 8,862, Pokémon Japan 5,772, One Piece 5,042, Yu-Gi-Oh! 4,261, Riftbound 2,543, every other game under 2,000
+(Flesh and Blood 548 on 93 products); 1,319 stores. The last crawl refused 127,224 listings as `no-id` and 55,235 as `unconfirmed`.
+So 10-20k a game is out of reach for the small games whatever the filter: it is products × stores, and Flesh and Blood has 93
+sealed products. The lever is the `no-id` pile.
+
+Changed: (1) `pickByTitle` now runs for EVERY crawled shop, not only `own-stores.json` (all its other guards stay: in stock,
+one product across games, its own product type, quantity one, jumbo agrees, handle agrees). (2) Its price band is 40-250% of
+TCGplayer's market, was 60-160%; the single-offer floor (50%) and the 4× band downstream still apply. (3) The `no-domain` vetting
+rule is retired: a shop on `*.myshopify.com` is no longer refused; the blocklist (chromavaults.myshopify.com stays) and
+`too-cheap` still are. (4) New hard floor: a placeholder price (99999, 999900, 999999 cents and the like) is refused
+(`refused.placeholder`). Kept: blocklist, HBT Collectibles ban, never an eBay price, no wrong-product guess beyond the above.
+Re-measure listings per game after the next import; if wrong matches show up, tighten the band first, not the guards.
+
 ## 2026-11-16: AI places id-less store listings (owner: as many listings as possible, light filtering)
 
 The crawl takes a listing only by the TCGplayer id it carries (own-list shops aside), so of ~200,000 listings read a day about
@@ -463,3 +480,22 @@ data can settle, never a restated list (`/games/<slug>` owns the list). New toke
 live price) and game-keyed facts (`{{fact:carbMedian:swu}}`). Thumbnails come from the shared generator
 (`/mnt/project-files/seo/blog-generator/thumb-render.mjs`, real numbers on the chart, dated). Prose names no card text, pack
 count or print run it cannot source; an inference is labelled as one. `tests/guides-data.test.ts` pins that each thumbnail exists.
+
+## 2026-11-16: Seasons get an event layer (data-event), Black Friday week first (UI/UX squad, owner: a better shared seasonal theme system)
+
+The season (`data-season`, Christmas 1 Nov to 26 Dec) stays the base; a short EVENT stacks on it as `data-event` on `<html>`, so
+the Christmas gift guide stays through Black Friday. First event: `blackfriday`, the day after US Thanksgiving minus 7 days to
+plus 3 (20 to 30 November 2026; `blackFridayWindow` in `lib/season.ts`, embedded for 2026 to 2032 as YYYYMMDD so the boot script
+does no date maths). Its only visual effect is the 3px top hairline turning ONE amber (`--event-amber`) instead of cranberry and
+pine: calm three-colour rule, no new colour, no motion, no markup, no layout shift. `?event=blackfriday` previews, `?event=off`
+hides. The next events (Boxing Day sales, Lunar New Year) are one more entry in the same list. Ported to the sibling repos by
+the same squad; each repo's own `season.ts` stays its own copy, kept equal by hand.
+## 2026-11-16: Store prices on cheap products get a high band too (Data Quality)
+
+The store price band (under `OFFER_FLOOR` of TCGplayer's market, over four times it) only ran from a market of US$3 up, so a Japanese Ninja Spinner pack at a US$2.19 market kept bescards' US$109.99 (a box's price), humbletcg's US$33 and gdgames' US$49.95. `storePriceTrusted` (lib/import/sanity.ts) now also drops, under US$3, a price over five times the market and over US$15; the low side stays off there (a cent-level low is normal). Both the sister pass and the own-store pass use it. 25 offers on the 16 Nov data. Not done: the wrong-set handle check (spankyscardshop ST09 pointing at a starter-deck-08 handle), a matcher change that needs its own title tests.
+
+## 2026-11-16: Index audit, and the sitemap cut by kind of page
+
+Search Console (bill.jyang101) on the first audit, two days after launch: the one sitemap (`/sitemap.xml`, 5,034 URLs) was read on 16 Nov with no errors; Google had crawled four URLs (the home page and three game hubs, 14 to 15 Nov), judged all four "Crawled - currently not indexed", and indexed none. No technical cause was found: robots.txt allows everything but `/api/`, `/go` and query strings; pages are server-rendered with full link lists. It is a domain two days old with no inbound links, so the levers are links, internal links and patience, not a fix to the markup.
+
+What changed: `/sitemap-index.xml` lists `/sitemaps/<kind>.xml` (products, sets, games, guides, sealed-hubs, pages), the same URLs as the main sitemap cut by kind (`lib/sitemap-split.ts`, `tests/sitemap-split.test.ts`), so Search Console reports indexing per kind. `/sitemap.xml` stays the full list; robots.txt names both. Nothing is added to the sitemap, no URL changes, six-hour CDN cache like every page. Priority pages are requested one at a time, at most five a day, never in bulk.

@@ -84,6 +84,12 @@
   "market": "AU"
  },
  {
+  "key": "tcgandchill",
+  "name": "TCGandChill",
+  "base": "https://tcgandchill.com.au",
+  "market": "AU"
+ },
+ {
   "key": "topdeckgames",
   "name": "Top Deck Games",
   "base": "https://topdeckgames.com.au",
@@ -954,6 +960,12 @@
   "market": "US"
  },
  {
+  "key": "jaytolmestcg",
+  "name": "Jaytolmes TCG",
+  "base": "https://jaytolmes-tcg.com",
+  "market": "US"
+ },
+ {
   "key": "kngaming",
   "name": "K&N Gaming",
   "base": "https://kngamingllc.com",
@@ -1029,6 +1041,12 @@
   "key": "pokeunlimited",
   "name": "PokeUnlimited",
   "base": "https://pokeunlimited.com",
+  "market": "US"
+ },
+ {
+  "key": "primepulltcg",
+  "name": "Primepull TCG",
+  "base": "https://primepulltcg.com",
   "market": "US"
  },
  {

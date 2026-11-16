@@ -535,7 +535,7 @@ test("the probe keeps at most MAX_HANDLES_PER_STORE collections a store, games t
 
 test("pickByTitle: one product, its own type, in stock, in the price band; anything doubtful is no match", async () => {
   const { pickByTitle } = await import("../src/lib/import/crawl");
-  const band = (id: number, cents: number) => id === 612345 && cents >= 7800 && cents <= 20800;
+  const band = (id: number, cents: number) => id === 612345 && cents >= 5200 && cents <= 32500;
   const c: PickContext = { ...ctx, inBand: band };
   const l = (over: Partial<ShopifyListing> = {}) => crawled(listing(over));
   assert.deepEqual(pickByTitle(l(), c, "US"), { id: 612345 });
@@ -550,12 +550,47 @@ test("pickByTitle: one product, its own type, in stock, in the price band; anyth
   assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Pack", handle: "star-wars-unlimited-legends-of-the-force-booster-box-sealed-copy" }), c, "US"), true);
   // never without the band callback
   assert.equal("refuse" in pickByTitle(l(), ctx, "US"), true);
-  // takeCrawl uses it only for an own store
+  // takeCrawl uses it for every crawled store (owner, 2026-11-16: as many listings as possible)
   const run = (own: boolean) => ({ at: "", budget: 0, requests: 0, stores: [{ ...(own ? { own: true } : {}), host: "cards.test", key: "cards", name: "Cards", base: "https://cards.test", market: "US" as const, ok: true, requests: 1, listings: [l()] }] });
   const keyOf = new Map([["cards.test|US", "cards"]]);
   assert.equal(takeCrawl(run(true), c, keyOf).taken, 1);
   assert.equal(takeCrawl(run(true), c, keyOf).titled, 1);
-  assert.equal(takeCrawl(run(false), c, keyOf).taken, 0);
+  assert.equal(takeCrawl(run(false), c, keyOf).taken, 1);
+});
+
+// ── AI placements (owner, 2026-11-16: as many listings as possible, light filtering) ─────────────────────────────────
+
+const aiCtx = (over: Partial<PickContext> = {}, d = { id: 612345, pass: true, reasons: [] as string[] }): PickContext => ({
+  ...ctx,
+  ai: new Map([["cards.test|Legends of the Force Display", d]]),
+  inBandWide: () => true,
+  ...over,
+});
+const aiListing = (over: Partial<CrawlListing> = {}): CrawlListing => ({
+  ...crawled(listing({ title: "Legends of the Force Display", handle: "lotf-display" })),
+  ...over,
+});
+
+test("an AI placement is taken when the guard passed and the price is plausible", () => {
+  assert.deepEqual(pickByAi(aiListing(), "cards.test", aiCtx(), "US"), { id: 612345 });
+});
+
+test("an AI placement is refused without a recorded decision, out of stock, or with an id on the listing", () => {
+  assert.deepEqual(pickByAi(aiListing({ title: "Something else" }), "cards.test", aiCtx(), "US"), { refuse: "no-id" });
+  assert.deepEqual(pickByAi(aiListing({ inStock: false }), "cards.test", aiCtx(), "US"), { refuse: "no-id" });
+});
+
+test("an AI placement whose guard failed on edition or type is refused, but a title naming no type is allowed", () => {
+  const bad = aiCtx({}, { id: 612345, pass: false, reasons: ["edition:1st"] });
+  assert.ok("refuse" in pickByAi(aiListing(), "cards.test", bad, "US"));
+  const noType = aiCtx({}, { id: 612345, pass: false, reasons: ["no-type"] });
+  assert.deepEqual(pickByAi(aiListing(), "cards.test", noType, "US"), { id: 612345 });
+});
+
+test("an AI placement outside the wide price band, on another game's product or on an opened box is refused", () => {
+  assert.ok("refuse" in pickByAi(aiListing(), "cards.test", aiCtx({ inBandWide: () => false }), "US"));
+  assert.ok("refuse" in pickByAi(aiListing(), "cards.test", aiCtx({}, { id: 523456, pass: true, reasons: [] }), "US"));
+  assert.ok("refuse" in pickByAi(aiListing({ title: "Legends of the Force Display" , lines: ["swu"], refuse: undefined }), "cards.test", aiCtx({ products: new Map() }), "US"));
 });
 
 // ── AI placements (owner, 2026-11-16: as many listings as possible, light filtering) ─────────────────────────────────

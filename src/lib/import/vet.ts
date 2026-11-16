@@ -4,8 +4,9 @@
 // every store again from the day's own data, and a store that fails any rule shows no row anywhere on the site:
 //
 // 1. BLOCKED: its host is in data/store-blocklist.json (the owner's and visitors' reports; a line per shop, with why).
-// 2. NO DOMAIN OF ITS OWN: it trades from a platform's free address (shop.myshopify.com and the like). A shop that
-//    will not pay for a domain cannot be told from one opened last week to take money.
+// 2. (Retired 2026-11-16, owner: "as many stores and listings as possible, don't be too strict on which stores are
+//    legit".) A shop on a platform's free address (shop.myshopify.com) used to be refused as having no domain of its
+//    own. Many small real shops trade there; a scam one still falls to the blocklist or rule 3.
 // 3. TOO CHEAP TO BE TRUE: across at least MIN_PRICED in-stock products worth US$20 or more, its median price is
 //    under CHEAP_MEDIAN of TCGplayer's market price. Sealed product has thin margins: the median real shop in every
 //    market sits ABOVE market (1.13 to 1.42 on the 2026-11-14 data, 1,063 stores), and no real shop sells its whole
@@ -21,9 +22,6 @@ export const CHEAP_MEDIAN = 0.7;
 export const MIN_PRICED = 5;
 export const MIN_REF_CENTS = 2000;
 export const OFFER_FLOOR = 0.5;
-
-/** Free platform addresses: a shop here has no domain of its own. */
-const PLATFORM_HOSTS = /\.(myshopify\.com|square\.site|bigcartel\.com|ecwid\.com|wixsite\.com|company\.site|storenvy\.com|etsy\.com)$/;
 
 export interface Refusal { key: string; name: string; host: string; rule: "blocked" | "no-domain" | "too-cheap"; why: string }
 
@@ -68,7 +66,6 @@ export function vetStores(args: {
     const refuse = (rule: Refusal["rule"], why: string) => out.push({ key: s.key, name: s.name, host, rule, why });
     if (!host) refuse("blocked", "no readable address");
     else if (blocklist[host] != null) refuse("blocked", blocklist[host] || "reported");
-    else if (PLATFORM_HOSTS.test(host)) refuse("no-domain", "trades from a platform's free address, not its own domain");
     else {
       const r = ratios.get(s.key) ?? [];
       if (r.length >= MIN_PRICED && median(r) < CHEAP_MEDIAN)
