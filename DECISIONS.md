@@ -431,3 +431,20 @@ so this site still holds no address and no mail key. Free keeps everything above
 every store row and the price-drop alerts through the shared service. Pro adds 365 days of history, CSV export (formula-safe),
 no inline ad strips or phone dock (price tables, order and paid rows stay), and a synced list across devices. Never gated:
 the cheapest price, store rows, alerts already free. No Pro button or "coming soon" shows until the token path exists.
+
+## 2026-11-16: As many stores and listings as possible: title matching for every crawled shop, wider band, no domain rule (owner)
+
+Owner: "as many stores as possible, we don't need to be that strict, at least 10,000 to 20,000 listings for each TCG, don't be too
+strict on recognizing which stores are legit". Measured first (2026-11-16 data, store offers without TCGplayer): Pokémon 41,675,
+MTG 39,120, Lorcana 8,862, Pokémon Japan 5,772, One Piece 5,042, Yu-Gi-Oh! 4,261, Riftbound 2,543, every other game under 2,000
+(Flesh and Blood 548 on 93 products); 1,319 stores. The last crawl refused 127,224 listings as `no-id` and 55,235 as `unconfirmed`.
+So 10-20k a game is out of reach for the small games whatever the filter: it is products × stores, and Flesh and Blood has 93
+sealed products. The lever is the `no-id` pile.
+
+Changed: (1) `pickByTitle` now runs for EVERY crawled shop, not only `own-stores.json` (all its other guards stay: in stock,
+one product across games, its own product type, quantity one, jumbo agrees, handle agrees). (2) Its price band is 40-250% of
+TCGplayer's market, was 60-160%; the single-offer floor (50%) and the 4× band downstream still apply. (3) The `no-domain` vetting
+rule is retired: a shop on `*.myshopify.com` is no longer refused; the blocklist (chromavaults.myshopify.com stays) and
+`too-cheap` still are. (4) New hard floor: a placeholder price (99999, 999900, 999999 cents and the like) is refused
+(`refused.placeholder`). Kept: blocklist, HBT Collectibles ban, never an eBay price, no wrong-product guess beyond the above.
+Re-measure listings per game after the next import; if wrong matches show up, tighten the band first, not the guards.

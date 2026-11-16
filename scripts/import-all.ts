@@ -153,12 +153,12 @@ async function main() {
     // through the same vetting and price band as a sister's row below.
     crawlMeta = mergeOwnCrawl({
       res, products, sets, prevMeta, prevById: prevPrices.byId, now, crawlOffers,
-      // An own-list shop's listing taken by title must sit at 60-160% of TCGplayer's market price (lib/import/crawl.ts pickByTitle).
+      // A crawled listing taken by title must sit at 40-250% (owner, 2026-11-16: widened from 60-160%) of TCGplayer's market price (lib/import/crawl.ts pickByTitle).
       inBand: (id, cents, market) => {
         const ref = byId.has(id) ? referenceCents(tcg[id]) : null;
         if (ref == null || ref <= 0) return false;
         const usd = cents / (fx[CURRENCY[market]] ?? 1);
-        return usd >= ref * 0.6 && usd <= ref * 1.6;
+        return usd >= ref * 0.4 && usd <= ref * 2.5;
       },
     });
     sisterStores = res.stores;

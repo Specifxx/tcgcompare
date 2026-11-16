@@ -315,7 +315,7 @@ export function pickByTitle(l: CrawlListing, ctx: PickContext, market: Market): 
   if (isMulti(l.title) !== isMulti(p.name)) return { refuse: "multiple" };
   if (said !== sealedTypeOf(p.name)) return { refuse: "type-differs", detail: `${said} / ${sealedTypeOf(p.name)}` };
   if (l.variantKind && l.variantKind !== sealedTypeOf(p.name)) return { refuse: "type-differs", detail: l.variantKind };
-  if (!ctx.inBand(p.id, l.cents, market)) return { refuse: "unconfirmed", detail: "price outside 60-160% of market" };
+  if (!ctx.inBand(p.id, l.cents, market)) return { refuse: "unconfirmed", detail: "price outside 40-250% of market" };
   return { id: p.id };
 }
 
@@ -367,6 +367,9 @@ export interface CrawlTake {
 }
 
 /** Every listing of the run through pickId: one offer per store and product (in stock first, then the cheaper). */
+/** 99999, 999900, 999999 and the like: a store's "not for sale" number. */
+const PLACEHOLDER_CENTS = /^9{4,}(00)?$/;
+
 export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<string, string>): CrawlTake {
   const offers = new Map<number, Offer[]>();
   const fresh = new Map<string, Set<number>>();
@@ -383,7 +386,7 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
     for (const l of s.listings) {
       listings++;
       let r = pickId(l, ctx);
-      if ("refuse" in r && r.refuse === "no-id" && s.own) {
+      if ("refuse" in r && r.refuse === "no-id") {
         const byTitle = pickByTitle(l, ctx, s.market);
         if ("id" in byTitle) {
           r = byTitle;
@@ -392,6 +395,11 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
       }
       if ("refuse" in r) {
         refused[r.refuse] = (refused[r.refuse] ?? 0) + 1;
+        continue;
+      }
+      // A placeholder price ($999.99, $9,999) is no price: never shown, whoever sells it.
+      if (PLACEHOLDER_CENTS.test(String(l.cents))) {
+        refused.placeholder = (refused.placeholder ?? 0) + 1;
         continue;
       }
       taken++;
