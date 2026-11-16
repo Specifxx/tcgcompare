@@ -17,7 +17,7 @@ export const revalidate = 86400;
 // lib/card-redirects.ts).
 export default function sitemap(): MetadataRoute.Sitemap {
   const at = meta()?.updatedAt ? new Date(meta()!.updatedAt) : new Date();
-  const fixed = ["", "/sealed", "/sets", "/preorders", "/tools/deal-finder", "/tools/is-this-a-good-price", "/price-report", "/black-friday", "/cyber-monday", "/boxing-day", "/january-sales", "/lunar-new-year", "/daily", ...(posts().length ? ["/blog"] : []), "/stores", "/about", "/methodology", "/list-your-store", ...(creatorsOn() ? ["/creators"] : [])];
+  const fixed = ["", "/sealed", "/sets", "/preorders", "/tools/deal-finder", "/tools/is-this-a-good-price", "/price-report", "/black-friday", "/cyber-monday", "/boxing-day", "/january-sales", "/lunar-new-year", "/daily", ...(posts().length ? ["/blog"] : []), "/stores", "/about", "/methodology", "/data", "/list-your-store", ...(creatorsOn() ? ["/creators"] : [])];
   return [
     ...fixed.map((p) => ({ url: `${SITE_URL}${p}`, lastModified: at, changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.8 })),
     // Every game with a product today, and each of its product types with enough products to be a page worth finding.
