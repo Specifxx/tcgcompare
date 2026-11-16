@@ -372,3 +372,38 @@ no deadline or urgency copy (the day counts are the event's own date, not a sale
 down N% in 30 days", appears only when the product's own 30-day change from our price history is -5% or worse.
 URLs, titles, descriptions, h1 and the FAQ are unchanged. Port to the sister sites by hand (same pure helpers `groupBy`,
 `daysUntil`, `daysLabel` in `lib/black-friday.ts`, tested).
+## 2026-11-16: Open price data (/data): a stores-only CSV, the Sealed Price Index and an embeddable widget
+
+Owner go ("make TCG Prices the flagship", 11-16): a free, dated, credited dataset, built to earn links and press. Pieces:
+`/data` (the page, with `Dataset` JSON-LD), `/data/sealed-prices.csv`, `/data/price-index.json` and `/embed/price-index/<game|all>`
+(`lib/open-data.ts`, `lib/open-embed.ts`, `scripts/open-index.ts`, `tests/open-data.test.ts`). All static files built with the
+deploy (no function, no new cache); licence CC BY 4.0 with a visible credit link.
+- **Stores only.** One row per sealed product and market: the cheapest in-stock, non-pre-order STORE price, in the store's own
+  currency, plus how many stores have it. No TCGplayer, eBay or Amazon price or photo (their terms are theirs; the older
+  `/prices.json` does count TCGplayer and now says so), no store name or link (the file must not become a map of the stores),
+  no Fetch TCG feed content. TCGplayer's product id is the join key. The page's one TCGplayer figure is the existing derived
+  "stores undercut market" stat (`storesVsTcgplayer`).
+- **The index is chained, never back-filled.** `refresh-prices.yml` runs `scripts/open-index.ts` before the data commit
+  (continue-on-error): it writes the day's US basket to `data/open/baskets/` (last 8 kept) and chains `data/open/index.json`:
+  level = yesterday's level × the median ratio over products priced on both days, 100 on 2026-11-16, equal weight, so a new
+  product does not move it. Fewer than 8 common products keeps the level. A failed day is a gap. A game's own line shows only with
+  10+ products. The 7-day change and chart appear as days accrue; nothing is estimated.
+- Outreach and press: point at `/data` and the widget. Never claim a figure the file does not hold.
+
+## 2026-11-16: Collection tracker v2 (history, add by search, backup) and the Pro design (owner: TCG Prices is the flagship)
+
+My collection (`/collection`, `lib/vault.ts`) already valued a browser-kept list from `/prices.json`. v2 adds what Collectr
+leads with, with no account and no new service: a value-history chart backfilled from the committed price history
+(`/api/history/<productId>`, CDN-held 24 hours, `lib/vault-history.ts`: TCGplayer market price in US$, what today's items
+would have been worth each day, starting on the first day every item has a price so the total never jumps), add-by-search
+on the page itself, and a save/load backup file for moving the list between devices (items and quantities only). The chart
+is labelled as TCGplayer US$ because it is a different number from the headline total (cheapest in-stock store price in
+the visitor's market); never present them as one. The chart reads the 60 most valuable items. Nothing is stored about
+anyone and no page reads a cookie.
+
+**Pro is designed, not built, and payments stay off (owner's call on price and billing).** It follows the Dex Premium
+pattern (`strategy/premium-rework-2026-11-16.html`): sign-in by emailed link and the Rift-signed token, plans in Rift's Stripe,
+so this site still holds no address and no mail key. Free keeps everything above, 60 days of history, the cheapest price,
+every store row and the price-drop alerts through the shared service. Pro adds 365 days of history, CSV export (formula-safe),
+no inline ad strips or phone dock (price tables, order and paid rows stay), and a synced list across devices. Never gated:
+the cheapest price, store rows, alerts already free. No Pro button or "coming soon" shows until the token path exists.

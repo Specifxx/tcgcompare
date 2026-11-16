@@ -160,6 +160,33 @@ export function parseDays(raw: string | null): DayTotal[] {
   }
 }
 
+/** The backup file: the list as the visitor owns it, nothing else (no days, no identifiers). */
+export function backupText(items: VaultItem[], now = new Date()): string {
+  return JSON.stringify({ app: "collection", v: 1, savedAt: now.toISOString(), items }, null, 1);
+}
+
+/** A backup file read back, validated like any stored list; null when it isn't one of ours. */
+export function parseBackup(text: string): VaultItem[] | null {
+  try {
+    const v = JSON.parse(text);
+    if (!v || v.app !== "collection" || !Array.isArray(v.items)) return null;
+    return parseVault(JSON.stringify(v.items));
+  } catch {
+    return null;
+  }
+}
+
+/** Items from a backup merged into the list: the same product and market keeps the larger quantity, never doubles it. */
+export function mergeItems(current: VaultItem[], incoming: VaultItem[]): VaultItem[] {
+  const out = [...current];
+  for (const n of incoming) {
+    const at = out.findIndex((i) => itemKey(i) === itemKey(n));
+    if (at < 0) out.push(n);
+    else if (n.qty > out[at].qty) out[at] = { ...out[at], qty: n.qty };
+  }
+  return out.slice(0, VAULT_MAX_ITEMS);
+}
+
 export function formatMoney(cents: number, currency: string): string {
   try {
     return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: cents >= 100000 ? 0 : 2 }).format(cents / 100);
