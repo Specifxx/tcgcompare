@@ -464,6 +464,15 @@ live price) and game-keyed facts (`{{fact:carbMedian:swu}}`). Thumbnails come fr
 (`/mnt/project-files/seo/blog-generator/thumb-render.mjs`, real numbers on the chart, dated). Prose names no card text, pack
 count or print run it cannot source; an inference is labelled as one. `tests/guides-data.test.ts` pins that each thumbnail exists.
 
+## 2026-11-16: Seasons get an event layer (data-event), Black Friday week first (UI/UX squad, owner: a better shared seasonal theme system)
+
+The season (`data-season`, Christmas 1 Nov to 26 Dec) stays the base; a short EVENT stacks on it as `data-event` on `<html>`, so
+the Christmas gift guide stays through Black Friday. First event: `blackfriday`, the day after US Thanksgiving minus 7 days to
+plus 3 (20 to 30 November 2026; `blackFridayWindow` in `lib/season.ts`, embedded for 2026 to 2032 as YYYYMMDD so the boot script
+does no date maths). Its only visual effect is the 3px top hairline turning ONE amber (`--event-amber`) instead of cranberry and
+pine: calm three-colour rule, no new colour, no motion, no markup, no layout shift. `?event=blackfriday` previews, `?event=off`
+hides. The next events (Boxing Day sales, Lunar New Year) are one more entry in the same list. Ported to the sibling repos by
+the same squad; each repo's own `season.ts` stays its own copy, kept equal by hand.
 ## 2026-11-16: Store prices on cheap products get a high band too (Data Quality)
 
 The store price band (under `OFFER_FLOOR` of TCGplayer's market, over four times it) only ran from a market of US$3 up, so a Japanese Ninja Spinner pack at a US$2.19 market kept bescards' US$109.99 (a box's price), humbletcg's US$33 and gdgames' US$49.95. `storePriceTrusted` (lib/import/sanity.ts) now also drops, under US$3, a price over five times the market and over US$15; the low side stays off there (a cent-level low is normal). Both the sister pass and the own-store pass use it. 25 offers on the 16 Nov data. Not done: the wrong-set handle check (spankyscardshop ST09 pointing at a starter-deck-08 handle), a matcher change that needs its own title tests.
