@@ -36,6 +36,7 @@ import {
 } from "@/lib/import/ebay";
 import { tcgplayerOfferCents } from "@/lib/import/sanity";
 import { appendPoint, dayNumber, pctChange, readSetHistory, writeSetHistory } from "@/lib/import/history";
+import { readSetLows, recordLows, storeLowsByMarket, writeSetLows } from "@/lib/import/store-lows";
 import { fetchJson } from "@/lib/import/http";
 import { readAllPrices, writePrices } from "@/lib/price-store";
 
@@ -363,6 +364,7 @@ async function main() {
   // 4. Prices + history
   const prices: Prices = { generatedAt: now.toISOString(), byId: {} };
   const histories = new Map<number, ReturnType<typeof readSetHistory>>();
+  const lowsBySet = new Map<number, ReturnType<typeof readSetLows>>(); // store-price history for the deal agent (import/store-lows.ts)
   let offerCount = 0;
   for (const p of products) {
     const t = tcg[p.id] ?? {};
@@ -388,6 +390,10 @@ async function main() {
 
     if (!histories.has(p.setId)) histories.set(p.setId, readSetHistory(p.setId));
     const h = histories.get(p.setId)!;
+    if (!lowsBySet.has(p.setId)) lowsBySet.set(p.setId, readSetLows(p.setId));
+    const sl = lowsBySet.get(p.setId)!;
+    const todayLows = storeLowsByMarket(offers);
+    if (Object.keys(todayLows).length || sl[p.id]) sl[p.id] = recordLows(sl[p.id], today, todayLows);
     if (ref != null) h[p.id] = appendPoint(h[p.id] ?? [], today, ref);
     const entry: PriceEntry = {
       tcg: t,
@@ -398,6 +404,7 @@ async function main() {
     prices.byId[p.id] = entry;
   }
   for (const [setId, h] of histories) writeSetHistory(setId, h);
+  for (const [setId, l] of lowsBySet) writeSetLows(setId, l);
 
   // 5. eBay Picks (the homepage banner): the most valuable cards (sealed products on a sealed-only site) with a fresh
   // US listing, newest sets first. No extra calls: reuses step 3's results.
