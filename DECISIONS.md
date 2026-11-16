@@ -360,6 +360,18 @@ with a diagonal shine and an inner frame, no symbol on it (the arrow variant was
 `src/app/icon.svg` are the same file (a dark rounded tile, so the tab icon reads on a light browser); `apple-icon.png`,
 `favicon.ico` and the logo tile in both share images were redrawn from it. Never put an arrow or a price symbol on the mark.
 
+## 2026-11-16: Black Friday and Cyber Monday pages as deal cards, grouped by game
+
+The two pages were one long table per section. They are now a hero (both real dates with "in N days", counted in the browser
+so a CDN-held page is never a day out; four real figures: US deals today, biggest saving, games with deals, stores), a
+jump-chip row, "Biggest savings under TCGplayer" (the top six by saving), one section per game ordered by that game's best
+deal value, then each other market's store deals. Every deal is a card (`DealCards.tsx`): photo, game, name, the store's price
+large, TCGplayer's market (or the middle of the market's stores) beside it, the saving badge, "View deal" and a labelled
+"Add to cart" (full words even on phones: the card has room). Rules kept: stores only (never eBay or Amazon), no "was" price,
+no deadline or urgency copy (the day counts are the event's own date, not a sale end), no pop-up. The one new claim, "market
+down N% in 30 days", appears only when the product's own 30-day change from our price history is -5% or worse.
+URLs, titles, descriptions, h1 and the FAQ are unchanged. Port to the sister sites by hand (same pure helpers `groupBy`,
+`daysUntil`, `daysLabel` in `lib/black-friday.ts`, tested).
 ## 2026-11-16: The deal agent starts as a deterministic judge on a flag, with its own store-price history (owner: "an AI deal agent for wishlists")
 
 The idea: a visitor lists what they want and is told when a price is genuinely low, with reasons, never a store's own "was"
