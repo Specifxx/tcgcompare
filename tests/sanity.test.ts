@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ebayReferenceUsd, ebayTrusted, tcgplayerOfferCents } from "@/lib/import/sanity";
+import { storePriceTrusted, ebayReferenceUsd, ebayTrusted, tcgplayerOfferCents } from "@/lib/import/sanity";
 
 test("a TCGplayer low under half the market shows the market price", () => {
   // Hyperia City booster box, 2026-10-27: low $1.00, market $150.67.
@@ -21,4 +21,15 @@ test("eBay rows need a reference and must sit within 0.25x-4x of it", () => {
   assert.equal(ebayTrusted(700, ref), true);
   assert.equal(ebayTrusted(700, null), false);
   assert.equal(ebayReferenceUsd(15067, [100]), 15067);
+});
+
+test("a cheap product's store price far above it is another product (a pack at the box's price)", () => {
+  assert.equal(storePriceTrusted(10999, 219, 0.5), false); // bescards pack at US$109.99 vs a US$2.19 pack
+  assert.equal(storePriceTrusted(499, 219, 0.5), true); // a normal single-pack ask
+  assert.equal(storePriceTrusted(1500, 219, 0.5), true);
+  assert.equal(storePriceTrusted(50, 219, 0.5), true); // a cent-level low on a cheap product stays
+  assert.equal(storePriceTrusted(10999, 3000, 0.5), true); // from US$3 the old band: 3.7x
+  assert.equal(storePriceTrusted(13000, 3000, 0.5), false);
+  assert.equal(storePriceTrusted(1000, 3000, 0.5), false);
+  assert.equal(storePriceTrusted(99999, null, 0.5), true);
 });

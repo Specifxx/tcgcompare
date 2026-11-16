@@ -47,7 +47,8 @@ For the games no sister prices (the `crawl` words in `site.config.ts`; never a g
   ("(6 Boxes)", "Display of 6", "Half"), the title's and a lone variant's product type the same as the id's, and
   `matchSealed` on that game alone agreeing or saying nothing; an id from the handle or a SKU alone (no TCGplayer
   photo of it) also needs the matcher to land on it or the title to name its set. The matcher only refuses; never
-  take a crawl listing by its title, EXCEPT for the shops of `data/crawl/own-stores.json` (owner's yes, 2026-11-15, DECISIONS.md):
+  take a crawl listing by its title, EXCEPT an AI placement from the shadow-pass cache (`pickByAi`, owner's yes 2026-11-16,
+  light checks and a 40-250% price band; roll back with the repository variable `AI_SHADOW_LIVE=0`) and the shops of `data/crawl/own-stores.json` (owner's yes, 2026-11-15, DECISIONS.md):
   there a listing with no id at all is taken by `pickByTitle` (strict: in stock, one product across the games, its own
   type, quantity one, price 60-160% of TCGplayer's market). A listing whose variants are different products is refused whole.
 - The offers then go through the same vetting, offer floor and 4x band as a sister's. A store not read this run

@@ -141,10 +141,21 @@ jobs:
           CRAWL_BUDGET: "12000"
           CRAWL_MAX_MINUTES: "90"
         run: npx tsx scripts/crawl-uncovered.ts
+      # AI placements of id-less listings (scripts/ai-shadow-match.ts, DECISIONS.md 2026-11-16): the decisions live in
+      # cache.json on the never-deployed ai-shadow branch. The import takes them with light sanity checks only (lib/import/
+      # crawl.ts pickByAi). Roll back with the repository variable AI_SHADOW_LIVE=0; no branch or cache means none are used.
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: ai-shadow
+          path: ai-shadow
       - name: Import
         env:
           SISTER_DIR: sisters
-        run: npx tsx scripts/import-all.ts
+          AI_SHADOW_LIVE: ${{ vars.AI_SHADOW_LIVE || '1' }}
+        run: |
+          if [ -f ai-shadow/cache.json ]; then cp ai-shadow/cache.json data/crawl/ai-shadow-cache.json; fi
+          npx tsx scripts/import-all.ts
       # Amazon ASINs for the sealed pages' Amazon row (Creators API searchItems, matched by the store matcher; ASINs only,
       # prices are fetched by each Vercel build and never committed: DECISIONS.md 2026-11-05). A no-op until the secrets exist.
       - name: Amazon ASINs (Creators API)

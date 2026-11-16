@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-16T02:29:58.766Z",
+ "generatedAt": "2026-11-16T20:58:02.887Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -13,29 +13,15 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "Sword & Shield Ultra-Premium Collection: Charizard",
-   "url": "https://tcgprices.app/card/sword-and-shield-ultra-premium-collection-charizard",
-   "cents": 38000,
-   "currency": "USD",
-   "store": "Vegas Singles",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/282401_200w.jpg",
-   "refCents": 57592,
-   "refLabel": "TCGplayer market price",
-   "savingPct": 34
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
    "title": "Marvel: Darkhold Destiny - Collector Booster Display",
    "url": "https://tcgprices.app/card/marvel-darkhold-destiny-collector-booster-display",
    "cents": 45588,
    "currency": "USD",
    "store": "Minted TCG",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/723266_200w.jpg",
-   "refCents": 67491,
+   "refCents": 66324,
    "refLabel": "TCGplayer market price",
-   "savingPct": 32
+   "savingPct": 31
   },
   {
    "kind": "deal",
@@ -94,14 +80,29 @@
    "savingPct": 16
   },
   {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Dominance of God Booster Box Case",
+   "url": "https://tcgprices.app/card/the-dominance-of-god-booster-box-case",
+   "cents": 239988,
+   "currency": "USD",
+   "store": "Wulf Gaming",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712902_200w.jpg",
+   "refCents": 259840,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 8
+  },
+  {
    "kind": "preorder",
    "cluster": "cards",
    "region": "US",
    "title": "Diva Fever Booster Box",
    "url": "https://tcgprices.app/preorders/diva-fever",
-   "cents": 4099,
+   "cents": 4299,
    "currency": "USD",
-   "store": "cardboardfiat",
+   "store": "Double Infinity Gaming",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/709423_200w.jpg",
    "releaseDate": "2026-11-20"
   },
   {
@@ -110,9 +111,9 @@
    "region": "US",
    "title": "The Dominance of God Booster Box",
    "url": "https://tcgprices.app/preorders/the-dominance-of-god",
-   "cents": 22000,
+   "cents": 20999,
    "currency": "USD",
-   "store": "Triad Cards and Gaming",
+   "store": "Wulf Gaming",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/712901_200w.jpg",
    "releaseDate": "2026-11-20"
   },
@@ -127,6 +128,18 @@
    "store": "Skybox Collectibles",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/713238_200w.jpg",
    "releaseDate": "2026-12-04"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": ".asphodel/cantabile Booster Box",
+   "url": "https://tcgprices.app/preorders/asphodel-cantabile",
+   "cents": 8699,
+   "currency": "USD",
+   "store": "The Arcanum Sanctorum",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723027_200w.jpg",
+   "releaseDate": "2026-12-11"
   },
   {
    "kind": "preorder",
@@ -149,18 +162,6 @@
    "currency": "USD",
    "store": "The Collection Realm",
    "releaseDate": "2026-12-11"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Starter Deck 13: The Saiyan Raised on Earth Starter Deck",
-   "url": "https://tcgprices.app/preorders/starter-deck-13-the-saiyan-raised-on-earth",
-   "cents": 1599,
-   "currency": "USD",
-   "store": "Gamers Guild AZ",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/721534_200w.jpg",
-   "releaseDate": "2027-01-22"
   }
  ]
 }

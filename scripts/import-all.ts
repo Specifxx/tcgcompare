@@ -34,7 +34,7 @@ import {
   useSetEditions,
   type EbayState,
 } from "@/lib/import/ebay";
-import { tcgplayerOfferCents } from "@/lib/import/sanity";
+import { storePriceTrusted, tcgplayerOfferCents } from "@/lib/import/sanity";
 import { appendPoint, dayNumber, pctChange, readSetHistory, writeSetHistory } from "@/lib/import/history";
 import { readSetLows, recordLows, storeLowsByMarket, writeSetLows } from "@/lib/import/store-lows";
 import { fetchJson } from "@/lib/import/http";
@@ -160,10 +160,21 @@ async function main() {
         const usd = cents / (fx[CURRENCY[market]] ?? 1);
         return usd >= ref * 0.4 && usd <= ref * 2.5;
       },
+      inBandWide: (id, cents, market) => {
+        const ref = byId.has(id) ? referenceCents(tcg[id]) : null;
+        if (ref == null || ref <= 0) return false;
+        const usd = cents / (fx[CURRENCY[market]] ?? 1);
+        return usd >= ref * 0.4 && usd <= ref * 2.5;
+      },
     });
     sisterStores = res.stores;
     // Store vetting (lib/import/vet.ts): a blocked, domain-less or too-cheap-to-be-true store shows no row at all.
     const blocklist = JSON.parse(fs.readFileSync(path.join(process.cwd(), "data", "store-blocklist.json"), "utf8")) as Record<string, string>;
+    // Shared scam denylist (TCGEmpire scam-sweep: banned + auto-hidden, owner 2026-11-16). Best-effort: a failed fetch keeps the local list.
+    try {
+      const r = await fetch("https://raw.githubusercontent.com/Specifxx/TCGEmpire/main/data/store-vetting/denylist.json", { signal: AbortSignal.timeout(15_000) });
+      if (r.ok) for (const d of ((await r.json()) as { domains?: { domain: string; why?: string }[] }).domains ?? []) blocklist[d.domain.replace(/^www\./, "")] ??= `shared denylist: ${d.why ?? "scam"}`;
+    } catch {}
     refused = vetStores({ stores: res.stores, offers: res.offers, refCents: (id) => (byId.has(id) ? referenceCents(tcg[id]) : null), fx, blocklist });
     const out = new Set(refused.map((r) => r.key));
     for (const r of refused) console.log(`[vet] ${r.key} (${r.host}) refused: ${r.why}`);
@@ -176,7 +187,7 @@ async function main() {
         // The same sanity band as a store pass: under half or over four times TCGplayer's market price is
         // likelier another product than a deal.
         const usd = o.cents / (fx[o.currency] ?? 1);
-        if (ref != null && ref >= 300 && (usd < ref * OFFER_FLOOR || usd > ref * 4)) { dropped++; continue; }
+        if (!storePriceTrusted(usd, ref, OFFER_FLOOR)) { dropped++; continue; }
         addOffer(id, o);
         if (crawlMeta && crawlOffers.has(o)) crawlMeta.offers++;
         const st = (storeStatus[o.source] ??= { ok: true, products: 0, matched: 0, at: now.toISOString() });
@@ -211,7 +222,7 @@ async function main() {
           // graded copy) than a real deal. Leave it out.
           const ref = referenceCents(tcg[m.product.id]);
           const usd = it.cents / (fx[CURRENCY[store.market]] ?? 1);
-          if (ref != null && ref >= 300 && (usd < ref * OFFER_FLOOR || usd > ref * 4)) continue;
+          if (!storePriceTrusted(usd, ref, OFFER_FLOOR)) continue;
           const offer: Offer = {
             source: store.key,
             market: store.market,
@@ -481,6 +492,7 @@ function mergeOwnCrawl(a: {
   now: Date;
   crawlOffers: WeakSet<Offer>;
   inBand: (id: number, cents: number, market: Market) => boolean;
+  inBandWide: (id: number, cents: number, market: Market) => boolean;
 }): CrawlMeta {
   const { res, products, sets, prevMeta, now } = a;
   const entries = readJson<CrawlStore[]>(path.join(process.cwd(), "data", "crawl", "stores.json"), []);
@@ -508,7 +520,16 @@ function mergeOwnCrawl(a: {
   };
   const storesOf = [...new Map([...entries, ...(run?.stores ?? [])].map((s) => [storeIdentity(s.base, s.market), s])).values()];
   const { keyOf, added } = crawlStoreKeys(res.stores, storesOf);
-  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf, inBand: a.inBand }, keyOf) : { offers: new Map<number, Offer[]>(), fresh: new Map<string, Set<number>>(), taken: 0, refused: {}, listings: 0 };
+  // AI placements recorded in shadow mode (scripts/ai-shadow-match.ts), used only when AI_SHADOW_LIVE=1. The cache is one
+  // file the workflow copies from the ai-shadow branch; unset or unreadable means no AI placements, never an error.
+  let ai: Map<string, { id: number; pass: boolean; reasons: string[] }> | undefined;
+  if (process.env.AI_SHADOW_LIVE === "1") {
+    const cache = readJson<Record<string, { id: number | null; guard?: { pass: boolean; reasons: string[] } }>>(path.join(process.cwd(), "data", "crawl", "ai-shadow-cache.json"), {});
+    ai = new Map();
+    for (const [k, d] of Object.entries(cache)) if (d.id !== null && d.guard) ai.set(k, { id: d.id, pass: d.guard.pass, reasons: d.guard.reasons });
+    console.log(`[crawl] AI shadow placements live: ${ai.size} decisions`);
+  }
+  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf, inBand: a.inBand, ai, inBandWide: a.inBandWide }, keyOf) : { offers: new Map<number, Offer[]>(), fresh: new Map<string, Set<number>>(), taken: 0, refused: {}, listings: 0 };
   const readOk = new Set((run?.stores ?? []).filter((s) => s.ok).map((s) => storeIdentity(s.base, s.market)));
   const seen: Record<string, string> = { ...(prevMeta?.crawl?.seen ?? {}) };
   for (const id of readOk) seen[id] = run!.at;
@@ -564,6 +585,7 @@ function mergeOwnCrawl(a: {
     listings: got.listings,
     taken: got.taken,
     titled: got.titled ?? 0,
+    ...(got.aiTaken ? { aiTaken: got.aiTaken } : {}),
     refused: got.refused,
     offers: 0,
     carried: carry.carried,
