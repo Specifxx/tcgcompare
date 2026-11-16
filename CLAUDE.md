@@ -49,8 +49,9 @@ For the games no sister prices (the `crawl` words in `site.config.ts`; never a g
   photo of it) also needs the matcher to land on it or the title to name its set. The matcher only refuses; never
   take a crawl listing by its title, EXCEPT an AI placement from the shadow-pass cache (`pickByAi`, owner's yes 2026-11-16,
   light checks and a 40-250% price band; roll back with the repository variable `AI_SHADOW_LIVE=0`) and the shops of `data/crawl/own-stores.json` (owner's yes, 2026-11-15, DECISIONS.md):
-  there a listing with no id at all is taken by `pickByTitle` (strict: in stock, one product across the games, its own
-  type, quantity one, price 60-160% of TCGplayer's market). A listing whose variants are different products is refused whole.
+  there a listing with no id at all is taken by `pickByTitle`, for EVERY crawled shop since 2026-11-16 (owner: as many
+  listings as possible; in stock, one product across the games, its own type, quantity one, price 40-250% of TCGplayer's
+  market, never a placeholder price like 99999 or 999900 cents). A listing whose variants are different products is refused whole.
 - The offers then go through the same vetting, offer floor and 4x band as a sister's. A store not read this run
   keeps its crawled rows for 72 hours after its last good read (`meta.json` `crawl.seen`), never longer. A collection
   page that fails (5xx, timeout, bad JSON) makes the store not read; a store stopped part way (a failed collection,
@@ -70,7 +71,7 @@ For the games no sister prices (the `crawl` words in `site.config.ts`; never a g
 ## Store vetting (owner, 2026-11-14: remove scam and suspicious shops)
 
 `lib/import/vet.ts` judges every store on every import: blocked (`data/store-blocklist.json`, one host per line with
-why), no domain of its own (a platform's free address), or too cheap to be true (median under 70% of TCGplayer's
+why; a shop on a platform's free address is NOT refused since 2026-11-16, owner: loose vetting), or too cheap to be true (median under 70% of TCGplayer's
 market across five or more in-stock products). A single in-stock price under half of market is left out. Rules may
 only refuse; never loosen one to keep a store. A refused store is simply absent: never call a named store a scam on a
 page. `data/public/store-vetting.json` lists who was refused and why. `tests/vet.test.ts`.
