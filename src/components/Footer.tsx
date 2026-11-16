@@ -24,6 +24,7 @@ export function footerColumns(history: boolean): { title: string; links: FooterL
         { href: "/january-sales", label: "January sales" },
         { href: "/lunar-new-year", label: "Lunar New Year deals" },
         { href: "/embed", label: "Free price widgets" },
+        { href: "/data", label: "Free price data" },
         { href: "/tools/deal-finder", label: "Deal Finder" },
         { href: "/preorders", label: "Pre-orders" },
       ],
