@@ -27,3 +27,16 @@ export function ebayReferenceUsd(ref: number | null | undefined, storeUsd: numbe
 export function ebayTrusted(usd: number, reference: number | null): boolean {
   return reference != null && usd >= reference * 0.25 && usd <= reference * 4;
 }
+
+/** A cheap product (TCGplayer market under US$3) has no low or high band worth judging by ratio, but a store price far above
+ *  it is still a different product: a pack priced at the box (US$109.99 against a US$2.19 pack, 2026-11-16 audit). Over
+ *  five times the market and over this many cents is not a pack's price. */
+export const CHEAP_HIGH_CENTS = 1500;
+
+/** Is a store price (USD cents) a believable price for the product with this TCGplayer market (USD cents)? From US$3 up the band is
+ *  the store rule (under OFFER_FLOOR of market or over four times it is another product); under US$3 only the high side applies. */
+export function storePriceTrusted(usd: number, ref: number | null | undefined, floorShare: number): boolean {
+  if (ref == null) return true;
+  if (ref >= 300) return usd >= ref * floorShare && usd <= ref * 4;
+  return usd <= Math.max(ref * 5, CHEAP_HIGH_CENTS);
+}

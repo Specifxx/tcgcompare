@@ -34,7 +34,7 @@ import {
   useSetEditions,
   type EbayState,
 } from "@/lib/import/ebay";
-import { tcgplayerOfferCents } from "@/lib/import/sanity";
+import { storePriceTrusted, tcgplayerOfferCents } from "@/lib/import/sanity";
 import { appendPoint, dayNumber, pctChange, readSetHistory, writeSetHistory } from "@/lib/import/history";
 import { readSetLows, recordLows, storeLowsByMarket, writeSetLows } from "@/lib/import/store-lows";
 import { fetchJson } from "@/lib/import/http";
@@ -187,7 +187,7 @@ async function main() {
         // The same sanity band as a store pass: under half or over four times TCGplayer's market price is
         // likelier another product than a deal.
         const usd = o.cents / (fx[o.currency] ?? 1);
-        if (ref != null && ref >= 300 && (usd < ref * OFFER_FLOOR || usd > ref * 4)) { dropped++; continue; }
+        if (!storePriceTrusted(usd, ref, OFFER_FLOOR)) { dropped++; continue; }
         addOffer(id, o);
         if (crawlMeta && crawlOffers.has(o)) crawlMeta.offers++;
         const st = (storeStatus[o.source] ??= { ok: true, products: 0, matched: 0, at: now.toISOString() });
@@ -222,7 +222,7 @@ async function main() {
           // graded copy) than a real deal. Leave it out.
           const ref = referenceCents(tcg[m.product.id]);
           const usd = it.cents / (fx[CURRENCY[store.market]] ?? 1);
-          if (ref != null && ref >= 300 && (usd < ref * OFFER_FLOOR || usd > ref * 4)) continue;
+          if (!storePriceTrusted(usd, ref, OFFER_FLOOR)) continue;
           const offer: Offer = {
             source: store.key,
             market: store.market,
