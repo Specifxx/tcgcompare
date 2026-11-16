@@ -170,6 +170,11 @@ async function main() {
     sisterStores = res.stores;
     // Store vetting (lib/import/vet.ts): a blocked, domain-less or too-cheap-to-be-true store shows no row at all.
     const blocklist = JSON.parse(fs.readFileSync(path.join(process.cwd(), "data", "store-blocklist.json"), "utf8")) as Record<string, string>;
+    // Shared scam denylist (TCGEmpire scam-sweep: banned + auto-hidden, owner 2026-11-16). Best-effort: a failed fetch keeps the local list.
+    try {
+      const r = await fetch("https://raw.githubusercontent.com/Specifxx/TCGEmpire/main/data/store-vetting/denylist.json", { signal: AbortSignal.timeout(15_000) });
+      if (r.ok) for (const d of ((await r.json()) as { domains?: { domain: string; why?: string }[] }).domains ?? []) blocklist[d.domain.replace(/^www\./, "")] ??= `shared denylist: ${d.why ?? "scam"}`;
+    } catch {}
     refused = vetStores({ stores: res.stores, offers: res.offers, refCents: (id) => (byId.has(id) ? referenceCents(tcg[id]) : null), fx, blocklist });
     const out = new Set(refused.map((r) => r.key));
     for (const r of refused) console.log(`[vet] ${r.key} (${r.host}) refused: ${r.why}`);
