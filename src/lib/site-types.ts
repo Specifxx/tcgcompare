@@ -436,6 +436,8 @@ export interface CrawlMeta {
   listings: number;
   /** Of `taken`, listings taken by title (own-list shops only, lib/import/crawl.ts pickByTitle). */
   titled?: number;
+  /** Of `taken`, listings placed by the AI shadow pass (AI_SHADOW_LIVE=1, lib/import/crawl.ts pickByAi). */
+  aiTaken?: number;
   taken: number;
   /** Listings refused, by pickId's reason. */
   refused: Record<string, number>;

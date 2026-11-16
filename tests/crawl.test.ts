@@ -15,6 +15,7 @@ import {
   idsInListing,
   lineOfCollection,
   MAX_HANDLES_PER_STORE,
+  pickByAi,
   pickId,
   pickOffer,
   takeCrawl,
@@ -555,4 +556,39 @@ test("pickByTitle: one product, its own type, in stock, in the price band; anyth
   assert.equal(takeCrawl(run(true), c, keyOf).taken, 1);
   assert.equal(takeCrawl(run(true), c, keyOf).titled, 1);
   assert.equal(takeCrawl(run(false), c, keyOf).taken, 0);
+});
+
+// ── AI placements (owner, 2026-11-16: as many listings as possible, light filtering) ─────────────────────────────────
+
+const aiCtx = (over: Partial<PickContext> = {}, d = { id: 612345, pass: true, reasons: [] as string[] }): PickContext => ({
+  ...ctx,
+  ai: new Map([["cards.test|Legends of the Force Display", d]]),
+  inBandWide: () => true,
+  ...over,
+});
+const aiListing = (over: Partial<CrawlListing> = {}): CrawlListing => ({
+  ...crawled(listing({ title: "Legends of the Force Display", handle: "lotf-display" })),
+  ...over,
+});
+
+test("an AI placement is taken when the guard passed and the price is plausible", () => {
+  assert.deepEqual(pickByAi(aiListing(), "cards.test", aiCtx(), "US"), { id: 612345 });
+});
+
+test("an AI placement is refused without a recorded decision, out of stock, or with an id on the listing", () => {
+  assert.deepEqual(pickByAi(aiListing({ title: "Something else" }), "cards.test", aiCtx(), "US"), { refuse: "no-id" });
+  assert.deepEqual(pickByAi(aiListing({ inStock: false }), "cards.test", aiCtx(), "US"), { refuse: "no-id" });
+});
+
+test("an AI placement whose guard failed on edition or type is refused, but a title naming no type is allowed", () => {
+  const bad = aiCtx({}, { id: 612345, pass: false, reasons: ["edition:1st"] });
+  assert.ok("refuse" in pickByAi(aiListing(), "cards.test", bad, "US"));
+  const noType = aiCtx({}, { id: 612345, pass: false, reasons: ["no-type"] });
+  assert.deepEqual(pickByAi(aiListing(), "cards.test", noType, "US"), { id: 612345 });
+});
+
+test("an AI placement outside the wide price band, on another game's product or on an opened box is refused", () => {
+  assert.ok("refuse" in pickByAi(aiListing(), "cards.test", aiCtx({ inBandWide: () => false }), "US"));
+  assert.ok("refuse" in pickByAi(aiListing(), "cards.test", aiCtx({}, { id: 523456, pass: true, reasons: [] }), "US"));
+  assert.ok("refuse" in pickByAi(aiListing({ title: "Legends of the Force Display" , lines: ["swu"], refuse: undefined }), "cards.test", aiCtx({ products: new Map() }), "US"));
 });

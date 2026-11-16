@@ -216,6 +216,13 @@ export interface PickContext {
   indexOf: (line: string) => MatchIndex;
   /** Whether a price (cents in `market`'s currency) is 60-160% of the product's TCGplayer market price; false when it has none. */
   inBand?: (id: number, cents: number, market: Market) => boolean;
+  /**
+   * AI placements recorded in shadow mode (scripts/ai-shadow-match.ts, store host + "|" + title), only when the import
+   * runs with AI_SHADOW_LIVE=1 (owner, 2026-11-16: TCG Prices wants as many listings as possible, light filtering).
+   */
+  ai?: ReadonlyMap<string, { id: number; pass: boolean; reasons: string[] }>;
+  /** A wide price sanity band for an AI placement: 40-250% of TCGplayer's market price; false when it has none. */
+  inBandWide?: (id: number, cents: number, market: Market) => boolean;
 }
 
 export type Refused =
@@ -319,6 +326,29 @@ export function pickByTitle(l: CrawlListing, ctx: PickContext, market: Market): 
   return { id: p.id };
 }
 
+/**
+ * A listing with no id, placed on a product by the AI shadow pass. Light sanity only (owner, 2026-11-16): in stock, not
+ * unfit / foreign / opened / another quantity, the product is sealed (not an insert) and of a game the listing was
+ * crawled for, the shadow guard passed (or its only complaint is that the title names no product type), and the price
+ * sits in the wide 40-250% band of TCGplayer's market price. Anything else is no match.
+ */
+export function pickByAi(l: CrawlListing, host: string, ctx: PickContext, market: Market): IdPick {
+  const d = ctx.ai?.get(`${host}|${l.title}`);
+  if (!d) return { refuse: "no-id" };
+  if (l.refuse) return { refuse: "listing", detail: l.refuse };
+  if (l.ids.length || !l.inStock) return { refuse: "no-id" };
+  if (isUnfitListing(l.title) || NOT_SEALED_AS_SOLD.test(l.title)) return { refuse: "unfit" };
+  if (isForeign(l.title) || isForeign(handleOf(l.url))) return { refuse: "foreign" };
+  if (OTHER_QUANTITY.test(l.title)) return { refuse: "multiple", detail: "quantity" };
+  if (!d.pass && !d.reasons.every((r) => r === "no-type")) return { refuse: "unconfirmed", detail: `ai guard: ${d.reasons.join(",")}` };
+  const p = ctx.products.get(d.id);
+  if (!p || p.kind !== "sealed" || p.sealedType === "Insert") return { refuse: "not-sealed" };
+  const line = ctx.lineOf(p);
+  if (!line || !l.lines.includes(line)) return { refuse: "other-game" };
+  if (!ctx.inBandWide?.(p.id, l.cents, market)) return { refuse: "unconfirmed", detail: "ai: price outside 40-250% of market" };
+  return { id: p.id };
+}
+
 // ── Into the import ─────────────────────────────────────────────────────────
 
 const hostOf = (url: string): string => {
@@ -362,6 +392,8 @@ export interface CrawlTake {
   taken: number;
   /** Of `taken`, those taken by title (own-list shops, pickByTitle). */
   titled?: number;
+  /** Of `taken`, those placed by the AI shadow pass (pickByAi). */
+  aiTaken?: number;
   refused: Record<string, number>;
   listings: number;
 }
@@ -373,6 +405,7 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
   const refused: Record<string, number> = {};
   let taken = 0;
   let titled = 0;
+  let aiTaken = 0;
   let listings = 0;
   for (const s of run.stores) {
     // A partial read still yields the collections it read to the end.
@@ -390,6 +423,13 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
           titled++;
         } else if (byTitle.refuse !== "no-id") r = { refuse: byTitle.refuse, detail: byTitle.detail };
       }
+      if ("refuse" in r && r.refuse === "no-id" && ctx.ai) {
+        const byAi = pickByAi(l, s.host, ctx, s.market);
+        if ("id" in byAi) {
+          r = byAi;
+          aiTaken++;
+        } else if (byAi.refuse !== "no-id") r = { refuse: byAi.refuse, detail: byAi.detail };
+      }
       if ("refuse" in r) {
         refused[r.refuse] = (refused[r.refuse] ?? 0) + 1;
         continue;
@@ -406,7 +446,7 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
       fresh.get(key)!.add(id);
     }
   }
-  return { offers, fresh, taken, refused, listings, titled };
+  return { offers, fresh, taken, refused, listings, titled, aiTaken };
 }
 
 /**
