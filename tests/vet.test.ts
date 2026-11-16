@@ -9,9 +9,9 @@ const offer = (source: string, cents: number, inStock = true): Offer => ({ sourc
 const run = (stores: StoreConfig[], offers: Map<number, Offer[]>, blocklist: Record<string, string> = {}) =>
   vetStores({ stores, offers, refCents: () => 10_000, fx: { USD: 1 }, blocklist });
 
-test("a blocked host and a shop with no domain of its own are refused", () => {
+test("a blocked host is refused; a shop on a platform address is not (2026-11-16)", () => {
   const r = run([store("good", "https://www.goodcards.com"), store("chroma", "https://chromavaults.myshopify.com"), store("bad", "https://badcards.com")], new Map(), { "badcards.com": "reported" });
-  assert.deepEqual(r.map((x) => [x.key, x.rule]), [["bad", "blocked"], ["chroma", "no-domain"]]);
+  assert.deepEqual(r.map((x) => [x.key, x.rule]), [["bad", "blocked"]]);
 });
 
 test("a shelf priced far under market is refused; one bargain, or a sold-out price, is not", () => {
