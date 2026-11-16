@@ -26,7 +26,7 @@ const PRICE: Record<string, { in: number; out: number }> = {
 const N_A = Number(process.env.AI_PILOT_N_A ?? 300);
 const N_B = Number(process.env.AI_PILOT_N_B ?? 300);
 const MAX_USD = Number(process.env.AI_PILOT_MAX_USD ?? 5);
-const SHORTLIST = 12;
+const SHORTLIST = Number(process.env.AI_PILOT_SHORTLIST ?? 25);
 
 interface Prod { id: number; name: string; line: string; sealedType?: string }
 
@@ -116,12 +116,12 @@ async function main() {
   const noId = all.filter(({ l }) => !l.refuse && !l.ids.length && l.inStock && /box|pack|bundle|deck|tin|case|collection|display|trove/i.test(l.title));
 
   const A = sample(withId, N_A);
-  let right = 0, wrong = 0, none = 0, err = 0;
+  let right = 0, wrong = 0, none = 0, err = 0, retrievalMiss = 0;
   const wrongs: unknown[] = [];
   await pool(A, 8, async ({ l, store }) => {
     const truth = [...new Set(l.ids.map((x) => x.id).filter((id) => known.has(id)))][0];
     const cands = shortlist(l, prods);
-    if (!cands.some((c) => c.id === truth)) { none++; return; } // retrieval miss counts as "no answer", reported apart
+    if (!cands.some((c) => c.id === truth)) { retrievalMiss++; return; } // the shortlist missed the right product: reported apart
     const r = await ask(l, cands);
     if (r === "budget" || r === "error") { err++; return; }
     if (r.id === null) none++;
@@ -145,14 +145,21 @@ async function main() {
   const report = {
     at: new Date().toISOString(), model: MODEL, calls, spentUsd: Number(spent.toFixed(4)),
     crawl: { listings: all.length, withOneKnownId: withId.length, noIdSealedLooking: noId.length },
-    setA: { n: A.length, right, wrong, noAnswer: none, errors: err, precisionWhenAnswering: right + wrong ? Number((right / (right + wrong)).toFixed(4)) : null, wrongs },
+    shortlist: SHORTLIST,
+    setA: { n: A.length, right, wrong, modelUnsure: none, shortlistMissedTruth: retrievalMiss, errors: err, precisionWhenAnswering: right + wrong ? Number((right / (right + wrong)).toFixed(4)) : null, wrongs },
     setB: { n: B.length, answered, noAnswer: bNone, errors: bErr, answerRate: B.length ? Number((answered / B.length).toFixed(4)) : null, projectedAnswersOverPool: Math.round((answered / Math.max(B.length, 1)) * noId.length), examples },
   };
   fs.mkdirSync(path.join(ROOT, "out"), { recursive: true });
-  fs.writeFileSync(path.join(ROOT, "out/ai-title-pilot.json"), JSON.stringify(report, null, 2));
+  const tag = MODEL.replace(/[^a-z0-9]+/gi, "-");
+  fs.writeFileSync(path.join(ROOT, `out/ai-title-pilot-${tag}.json`), JSON.stringify(report, null, 2));
   const md = `# AI title-matching pilot ${report.at}\n\nModel ${MODEL}, ${calls} calls, US$${report.spentUsd} spent.\n\n- Crawl: ${all.length} listings, ${withId.length} carry one known id, ${noId.length} in-stock sealed-looking listings have no id.\n- Set A (truth known, n=${A.length}): right ${right}, wrong ${wrong}, no answer ${none}, errors ${err}. Precision when it answers: ${report.setA.precisionWhenAnswering ?? "n/a"}.\n- Set B (no id, n=${B.length}): answered ${answered}, no answer ${bNone}, errors ${bErr}. Answer rate ${report.setB.answerRate}; scaled to the pool about ${report.setB.projectedAnswersOverPool} listings.\n\nThese are measurements only. No rule changed. Taking a title match needs the owner's yes (CLAUDE.md: crawl listings are taken by id, own-stores aside) and a precision the owner accepts.\n`;
-  fs.writeFileSync(path.join(ROOT, "out/ai-title-pilot.md"), md);
-  console.log(md);
+  const lines = [
+    `- Set A split: right ${right}, wrong ${wrong}, model unsure ${none}, shortlist (${SHORTLIST}) missed the right product ${retrievalMiss}.`,
+    ...wrongs.map((w) => `- WRONG: ${JSON.stringify(w)}`),
+    ...examples.slice(0, 40).map((e) => { const x = e as { store: string; title: string; cents: number; product?: string }; return `- ${x.store} | ${x.title} | ${(x.cents / 100).toFixed(2)} -> ${x.product}`; }),
+  ];
+  fs.writeFileSync(path.join(ROOT, `out/ai-title-pilot-${tag}.md`), md + lines.join("\n") + "\n");
+  console.log(md + lines.join("\n"));
 }
 
 main().catch((e) => {
