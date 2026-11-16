@@ -473,3 +473,6 @@ does no date maths). Its only visual effect is the 3px top hairline turning ONE 
 pine: calm three-colour rule, no new colour, no motion, no markup, no layout shift. `?event=blackfriday` previews, `?event=off`
 hides. The next events (Boxing Day sales, Lunar New Year) are one more entry in the same list. Ported to the sibling repos by
 the same squad; each repo's own `season.ts` stays its own copy, kept equal by hand.
+## 2026-11-16: Store prices on cheap products get a high band too (Data Quality)
+
+The store price band (under `OFFER_FLOOR` of TCGplayer's market, over four times it) only ran from a market of US$3 up, so a Japanese Ninja Spinner pack at a US$2.19 market kept bescards' US$109.99 (a box's price), humbletcg's US$33 and gdgames' US$49.95. `storePriceTrusted` (lib/import/sanity.ts) now also drops, under US$3, a price over five times the market and over US$15; the low side stays off there (a cent-level low is normal). Both the sister pass and the own-store pass use it. 25 offers on the 16 Nov data. Not done: the wrong-set handle check (spankyscardshop ST09 pointing at a starter-deck-08 handle), a matcher change that needs its own title tests.
