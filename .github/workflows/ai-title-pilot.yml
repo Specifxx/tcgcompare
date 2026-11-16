@@ -1,0 +1,44 @@
+name: AI title-matching pilot
+
+# Manual only. Reads the stores the crawl already reads (same polite rules), asks a cheap model to place id-less
+# listings on catalogue products, and scores it against listings whose TCGplayer id is known. Measurement only: commits
+# nothing, changes no data, never deploys. Needs the repo secret AI_TEAM_ANTHROPIC_KEY (no key = a no-op run).
+
+on:
+  workflow_dispatch:
+    inputs:
+      crawl_budget:
+        description: "Crawl requests (the daily import uses 12000)"
+        default: "3000"
+      max_usd:
+        description: "Hard model-spend ceiling in US$"
+        default: "5"
+
+permissions:
+  contents: read
+
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsx scripts/crawl-uncovered.ts
+        env:
+          CRAWL_BUDGET: ${{ inputs.crawl_budget }}
+          CRAWL_MAX_MINUTES: "40"
+      - run: npx tsx scripts/ai-title-pilot.ts
+        env:
+          AI_TEAM_ANTHROPIC_KEY: ${{ secrets.AI_TEAM_ANTHROPIC_KEY }}
+          AI_PILOT_MAX_USD: ${{ inputs.max_usd }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-title-pilot
+          path: out/
+          if-no-files-found: ignore
