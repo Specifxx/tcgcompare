@@ -23,6 +23,7 @@ export function GET() {
     `- [Pre-orders](${SITE_URL}/preorders)`,
     `- [Stores compared](${SITE_URL}/stores)`,
     `- [How prices work](${SITE_URL}/methodology)`,
+    `- [Free price data](${SITE_URL}/data): CSV of the cheapest in-stock store price per sealed product and market, plus the Sealed Price Index (CC BY 4.0, credit required)`,
     "",
     "## Sets",
     ...sealedSets().slice(0, 40).map((s) => `- [${s.name} booster box and sealed prices](${SITE_URL}/sets/${s.slug})`),

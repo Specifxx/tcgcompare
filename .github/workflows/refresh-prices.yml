@@ -162,6 +162,10 @@ jobs:
       - name: Family feed
         continue-on-error: true
         run: npx tsx scripts/family-sync.ts
+      # The open price data (scripts/open-index.ts): today's US basket and the chained Sealed Price Index. Never fatal.
+      - name: Open price index
+        continue-on-error: true
+        run: npx tsx scripts/open-index.ts
       - name: Commit data (this commit is the daily release)
         run: |
           set -euo pipefail

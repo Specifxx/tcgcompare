@@ -360,6 +360,24 @@ with a diagonal shine and an inner frame, no symbol on it (the arrow variant was
 `src/app/icon.svg` are the same file (a dark rounded tile, so the tab icon reads on a light browser); `apple-icon.png`,
 `favicon.ico` and the logo tile in both share images were redrawn from it. Never put an arrow or a price symbol on the mark.
 
+## 2026-11-16: Open price data (/data): a stores-only CSV, the Sealed Price Index and an embeddable widget
+
+Owner go ("make TCG Prices the flagship", 11-16): a free, dated, credited dataset, built to earn links and press. Pieces:
+`/data` (the page, with `Dataset` JSON-LD), `/data/sealed-prices.csv`, `/data/price-index.json` and `/embed/price-index/<game|all>`
+(`lib/open-data.ts`, `lib/open-embed.ts`, `scripts/open-index.ts`, `tests/open-data.test.ts`). All static files built with the
+deploy (no function, no new cache); licence CC BY 4.0 with a visible credit link.
+- **Stores only.** One row per sealed product and market: the cheapest in-stock, non-pre-order STORE price, in the store's own
+  currency, plus how many stores have it. No TCGplayer, eBay or Amazon price or photo (their terms are theirs; the older
+  `/prices.json` does count TCGplayer and now says so), no store name or link (the file must not become a map of the stores),
+  no Fetch TCG feed content. TCGplayer's product id is the join key. The page's one TCGplayer figure is the existing derived
+  "stores undercut market" stat (`storesVsTcgplayer`).
+- **The index is chained, never back-filled.** `refresh-prices.yml` runs `scripts/open-index.ts` before the data commit
+  (continue-on-error): it writes the day's US basket to `data/open/baskets/` (last 8 kept) and chains `data/open/index.json`:
+  level = yesterday's level × the median ratio over products priced on both days, 100 on 2026-11-16, equal weight, so a new
+  product does not move it. Fewer than 8 common products keeps the level. A failed day is a gap. A game's own line shows only with
+  10+ products. The 7-day change and chart appear as days accrue; nothing is estimated.
+- Outreach and press: point at `/data` and the widget. Never claim a figure the file does not hold.
+
 ## 2026-11-16: Collection tracker v2 (history, add by search, backup) and the Pro design (owner: TCG Prices is the flagship)
 
 My collection (`/collection`, `lib/vault.ts`) already valued a browser-kept list from `/prices.json`. v2 adds what Collectr

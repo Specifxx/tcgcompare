@@ -74,7 +74,7 @@ export default function EmbedPage() {
         <h2 className="text-lg font-bold">Free price data</h2>
         <p className="text-sm text-muted">
           Building a Discord bot, a deck or collection tool, a spreadsheet or a blog? Every product&apos;s cheapest in-stock price in each market is in one
-          JSON file: <a className="link" href={PRICE_API_PATH}>{SITE_URL}{PRICE_API_PATH}</a>. Free, no key, no signup, open to every origin, and
+          JSON file: <a className="link" href={PRICE_API_PATH}>{SITE_URL}{PRICE_API_PATH}</a>. A stores-only CSV and the daily Sealed Price Index, with its own embed, are on <a className="link" href="/data">the open data page</a>. Free, no key, no signup, open to every origin, and
           refreshed with each daily release.
         </p>
         <ul className="list-disc pl-5 text-sm text-muted">
