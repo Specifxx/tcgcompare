@@ -528,3 +528,10 @@ read the sitemap with no errors but indexed almost nothing, has no reason to tru
 (`lib/sitemap-lastmod.ts`) now gives a product page the day of its newest TCGplayer reference-price point in `data/history`,
 capped at the import time; a product with no history has no lastmod. Pages other than products keep the import time
 (their lists do change daily). Same fix FigureCompare shipped on 2026-11-14.
+
+## 2026-11-17: TCGplayer Cyber Weekend note on the deal pages
+
+TCGplayer's Impact email (17 Nov) announced Cyber Weekend 2026: 9AM New York time 28 Nov to 11PM 1 Dec, 10% store credit on all
+products (subscribers 13%+). The deal pages carry one text line under the hero from 20 Nov, "on now" from the start, gone after
+the end (`lib/cyber-weekend.ts`, read in the browser so a CDN-held page switches off on time). Text only: no banner, no link of its
+own, no pop-up, never in a price row or a ranking. Update the two instants next year.
