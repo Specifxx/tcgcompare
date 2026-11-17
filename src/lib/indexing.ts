@@ -1,18 +1,41 @@
 // Which card pages ask to be indexed, and how long a price in JSON-LD is good for.
 //
-// Zero-data rule (Gemini SEO research, 2026-11-04; Google's scaled-content and
-// soft-404 guidance): a programmatic page with nothing of its own, no TCGplayer
-// reference price and no store or eBay listing, is a template with a name in it.
-// It stays reachable (noindex, follow: crawlers still walk its links) but out of
-// the index, so the thin long tail does not drag the rest of the domain down.
-// Cards in an upcoming set are kept: they have no price yet because the set is
-// not out, and reveal-week searches are exactly when people look for them.
-// Nothing is deleted and no URL changes (owner, 2026-11-03: narrow, never delete).
-export function cardIndexable(p: { kind: "card" | "sealed"; sealedType: string | null }, refCents: number | null, offerCount: number, set: { upcoming: boolean } | null | undefined): boolean {
+// The index gate (Grok growth report, owner, 2026-11-17; Google's scaled-content and soft-404 guidance). A sealed
+// product page asks to be indexed, and goes in the sitemap, only when it has something of its own to say TODAY:
+//   - two or more IN-STOCK, PRICED STORE offers (never eBay, Amazon or the TCGplayer reference row), or
+//   - one such offer plus four or more price-history points in the last 30 days (a page with a track record), and
+//   - the data behind it is under 14 days old (the import's own time, and each offer's store read time).
+// Everything else stays reachable (noindex, follow: crawlers still walk its links and nothing 404s), and a page whose
+// data went stale is noindex until the next good read. A product in an upcoming set is kept while it has any priced
+// listing or reference (reveal-week searches), still subject to the freshness rule. Pack inserts never.
+// Query-string variants never reach the index: robots.txt blocks `/*?` and every page names its clean canonical.
+export const INDEX_MIN_OFFERS = 2;
+export const INDEX_MIN_HISTORY = 4;
+export const INDEX_HISTORY_DAYS = 30;
+export const INDEX_MAX_AGE_DAYS = 14;
+
+export interface IndexSignals {
+  /** In-stock, priced store offers whose store was read within INDEX_MAX_AGE_DAYS. */
+  storeOffers: number;
+  /** Distinct history days in the last INDEX_HISTORY_DAYS. */
+  historyPoints: number;
+  /** Any priced listing or reference at all (for an upcoming set). */
+  anyPrice: boolean;
+  /** The catalogue's own import time is under INDEX_MAX_AGE_DAYS old. */
+  fresh: boolean;
+}
+
+export function cardIndexable(p: { kind: "card" | "sealed"; sealedType: string | null }, s: IndexSignals, set: { upcoming: boolean } | null | undefined): boolean {
   if (p.sealedType === "Insert") return false; // pack inserts, as before (DECISIONS.md, 2026-10-28)
-  if (set?.upcoming) return true;
-  // One store and no TCGplayer reference is a thin page (owner, 2026-11-17): it exists for the visitor who lands on it, not for search.
-  return refCents != null || offerCount >= 2;
+  if (!s.fresh) return false;
+  if (set?.upcoming) return s.anyPrice;
+  return s.storeOffers >= INDEX_MIN_OFFERS || (s.storeOffers >= 1 && s.historyPoints >= INDEX_MIN_HISTORY);
+}
+
+/** Whether an ISO time is under INDEX_MAX_AGE_DAYS old at `now`. A missing time is not fresh. */
+export function isFresh(at: string | null | undefined, now = Date.now()): boolean {
+  const t = at ? Date.parse(at) : NaN;
+  return Number.isFinite(t) && now - t < INDEX_MAX_AGE_DAYS * 86_400_000;
 }
 
 /** Store prices refresh on the daily import, so a price in JSON-LD is good until tomorrow (schema.org priceValidUntil, YYYY-MM-DD). */

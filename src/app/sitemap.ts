@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { historyOf, meta, products, refCents, setById, summaryOf } from "@/lib/data";
+import { historyOf, indexSignals, meta, products, setById } from "@/lib/data";
 import { productLastmod } from "@/lib/sitemap-lastmod";
 import { posts } from "@/lib/posts";
 import { preorderSetList, sealedHubs, sealedSets } from "@/lib/hubs";
@@ -29,7 +29,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...sealedSets().map((s) => ({ url: `${SITE_URL}/sets/${s.slug}`, lastModified: at, priority: 0.7 })),
     ...posts().map((p) => ({ url: `${SITE_URL}/blog/${p.slug}`, lastModified: new Date(p.updated ?? p.date), priority: 0.6 })),
     ...products()
-      .filter((p) => p.kind === "sealed" && cardIndexable(p, refCents(p.id), summaryOf(p.id).listedSources, setById(p.setId)))
+      .filter((p) => p.kind === "sealed" && cardIndexable(p, indexSignals(p), setById(p.setId)))
       .map((p) => {
         // The day this product's reference price last moved, never "today" for every URL (lib/sitemap-lastmod.ts); no history, no lastmod.
         const lm = productLastmod(historyOf(p), at);

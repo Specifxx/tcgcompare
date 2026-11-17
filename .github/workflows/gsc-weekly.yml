@@ -1,0 +1,37 @@
+# Weekly Search Console index-diet tracking (scripts/gsc-weekly.ts; DECISIONS.md, 2026-11-17). Mondays 06:30 UTC.
+# A no-op until Bill adds the GSC_SERVICE_ACCOUNT_JSON secret and the GSC_PROPERTY variable. Its commit carries no deploy marker.
+name: Search Console weekly
+on:
+  schedule:
+    - cron: "30 6 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: gsc-weekly
+jobs:
+  gsc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Record the week
+        env:
+          GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+          GSC_PROPERTY: ${{ vars.GSC_PROPERTY }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
+        run: npx tsx scripts/gsc-weekly.ts
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/gsc
+          if git diff --cached --quiet; then echo "Nothing recorded."; exit 0; fi
+          git commit -m "data: Search Console week $(date -u +%F)"
+          for i in 1 2 3 4; do git push origin HEAD:main && exit 0; sleep $((2 ** i)); git pull --rebase origin main; done
+          exit 1

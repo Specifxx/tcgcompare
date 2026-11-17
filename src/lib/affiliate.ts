@@ -171,12 +171,21 @@ function safeHost(url: string): string {
 }
 
 /** The /go link a buy button renders: logs the click, then redirects. */
-export function goHref(o: { url: string; source: string; market: string; inStock?: boolean }, productId?: number, page?: string): string {
+/** What the click log learns about a row (DECISIONS.md, 2026-11-17): its 1-based position in the table and its item-price gap to the cheapest in-stock store, whole percent. */
+export interface ClickCtx { pos?: number; gapPct?: number | null }
+
+/** Sources that pay us when clicked. Everything else is a store row. */
+export const PAID_SOURCES = ["ebay", "tcgplayer", "amazon"];
+export const isPaidSource = (source: string): boolean => PAID_SOURCES.includes(source);
+
+export function goHref(o: { url: string; source: string; market: string; inStock?: boolean }, productId?: number, page?: string, ctx?: ClickCtx): string {
   const q = new URLSearchParams({ u: o.url, s: o.source, m: o.market });
   // An in-stock store row whose URL names its Shopify variant: /go opens the store's checkout.
   if (o.inStock && !/^(ebay|tcgplayer|amazon)/.test(o.source) && shopifyCartUrl(o.url)) q.set("c", "1");
   if (productId) q.set("p", String(productId));
   if (page) q.set("from", page);
+  if (ctx?.pos) q.set("r", String(ctx.pos));
+  if (ctx?.gapPct != null && Number.isFinite(ctx.gapPct)) q.set("g", String(Math.round(ctx.gapPct)));
   return `/go?${q}`;
 }
 

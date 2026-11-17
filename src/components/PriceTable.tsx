@@ -12,7 +12,7 @@ import { SITE } from "@/site.config";
 import { CURRENCY, MARKETS, MARKET_LABEL, type Market, type Offer } from "@/lib/site-types";
 import { money } from "@/lib/format";
 import { Flag } from "./Flag";
-import { ebaySearchUrl, goHref, subId, tagged } from "@/lib/affiliate";
+import { ebaySearchUrl, goHref, isPaidSource, subId, tagged } from "@/lib/affiliate";
 import { CartAddButton } from "./cart/CartAddButton";
 import { priceRows } from "@/lib/price-rows";
 import { useMarket } from "./ClientPrefs";
@@ -98,7 +98,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
       <td className="hidden px-3 py-2.5 text-xs text-muted sm:table-cell">New and sealed listings, cheapest first</td>
       <td className="px-3 py-2.5 text-right text-xs text-muted">See prices</td>
       <td className="px-3 py-2.5 text-right">
-        <a href={goHref({ url: ebaySearchUrl(ebayQuery, ebayMarket), source: "ebay", market }, productId, `${page}_pinned_search`)} rel="sponsored nofollow noopener" target="_blank" className="btn-primary min-h-10 whitespace-nowrap px-3 py-1.5">
+        <a href={goHref({ url: ebaySearchUrl(ebayQuery, ebayMarket), source: "ebay", market }, productId, `${page}_pinned_search`, { pos: 1 })} rel="sponsored nofollow noopener" target="_blank" className="btn-primary min-h-10 whitespace-nowrap px-3 py-1.5">
           Check eBay <span aria-hidden="true">↗</span>
         </a>
       </td>
@@ -114,7 +114,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
       <td className="hidden px-3 py-2.5 text-xs text-muted sm:table-cell">Sealed listings on TCGplayer</td>
       <td className="px-3 py-2.5 text-right text-xs text-muted">See prices</td>
       <td className="px-3 py-2.5 text-right">
-        <a href={goHref({ url: tcgUrl, source: "tcgplayer", market }, productId, `${page}_pinned_search`)} rel="sponsored nofollow noopener" target="_blank" className="btn-tcg min-h-10 whitespace-nowrap px-3 py-1.5">
+        <a href={goHref({ url: tcgUrl, source: "tcgplayer", market }, productId, `${page}_pinned_search`, { pos: ebaySearchRow ? 2 : 1 })} rel="sponsored nofollow noopener" target="_blank" className="btn-tcg min-h-10 whitespace-nowrap px-3 py-1.5">
           Check TCGplayer <span aria-hidden="true">↗</span>
         </a>
       </td>
@@ -160,6 +160,13 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
     </tr>
   ) : null;
   // Amazon is the second row, right under eBay (first when there is no eBay row).
+  // Click log context (DECISIONS.md, 2026-11-17): a row's position in the table, and its item-price gap to the cheapest in-stock store in its own currency.
+  const rowsAbove = [ebaySearchRow, pinned.some((o) => o.source === "ebay") ? null : tcgSearchRow, amazonRow && shown.findIndex((o) => o.source === "ebay" && pinned.includes(o)) < 0 ? amazonRow : null].filter(Boolean).length;
+  const storeCents = (cur2: string) => shown.filter((x) => x.inStock && x.currency === cur2 && !isPaidSource(x.source) && x.cents > 0).map((x) => x.cents);
+  const gapOf = (o: Offer): number | null => {
+    const c = storeCents(o.currency);
+    return o.inStock && o.cents > 0 && c.length ? ((o.cents - Math.min(...c)) / Math.min(...c)) * 100 : null;
+  };
   const amazonAfter = shown.findIndex((o) => o.source === "ebay" && pinned.includes(o));
   return (
     <div id={tableId ?? undefined} className="card overflow-hidden">
@@ -209,7 +216,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
                     {o.inStock && o.source !== "tcgplayer" && (
                       <CartAddButton href={tagged(o.url, subId(o.market, `${page}_cart`, productId), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={product ?? cartTitle ?? o.title} detail={o.printing && o.printing !== "Normal" ? o.printing : null} priceCents={o.cents} currency={o.currency} image={image} className="hidden text-muted sm:inline-flex" />
                     )}
-                    <a href={goHref(o, productId, pinned.includes(o) ? `${page}_pinned` : page)} rel="sponsored nofollow noopener" target="_blank" className={`min-h-10 whitespace-nowrap ${o.source === "tcgplayer" && o.inStock ? "btn-tcg px-3 py-1.5" : pinned.includes(o) && o.inStock ? "btn-primary px-3 py-1.5" : o.inStock ? "btn-soft px-3 py-1.5" : "btn-ghost px-3 py-1.5 opacity-80"}`}>
+                    <a href={goHref(o, productId, pinned.includes(o) ? `${page}_pinned` : page, { pos: i + 1 + rowsAbove + (amazonAfter >= 0 && i > amazonAfter && amazonRow ? 1 : 0), gapPct: gapOf(o) })} rel="sponsored nofollow noopener" target="_blank" className={`min-h-10 whitespace-nowrap ${o.source === "tcgplayer" && o.inStock ? "btn-tcg px-3 py-1.5" : pinned.includes(o) && o.inStock ? "btn-primary px-3 py-1.5" : o.inStock ? "btn-soft px-3 py-1.5" : "btn-ghost px-3 py-1.5 opacity-80"}`}>
                       {o.inStock ? "View deal" : "View"} <span aria-hidden="true">↗</span>
                     </a>
                     </span>
