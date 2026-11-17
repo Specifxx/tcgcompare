@@ -226,7 +226,7 @@ export const SITE: SiteConfig = {
   stores: STORES,
   // The dedicated sites go deeper on one game each (single cards, alerts, history); this one is every game's sealed.
   sisterSites: [
-    { name: "DexCompare", url: "https://dexcompare.app", game: "Pokémon", anchor: "Pokémon sealed prices", search: "https://dexcompare.app/us/sealed?q={q}" },
+    { name: "DexCompare", url: "https://dexcompare.io", game: "Pokémon", anchor: "Pokémon sealed prices", search: "https://dexcompare.io/us/sealed?q={q}" },
     { name: "MTG Compare", url: "https://mtgcompare.app", game: "Magic", anchor: "Magic: The Gathering sealed prices", search: "https://mtgcompare.app/us/sealed?q={q}" },
     { name: "OP Compare", url: "https://opcompare.app", game: "One Piece", anchor: "One Piece card prices", search: "https://opcompare.app/browse?q={q}" },
     { name: "YGO Compare", url: "https://ygocompare.com", game: "Yu-Gi-Oh!", anchor: "Yu-Gi-Oh! sealed prices", search: "https://ygocompare.com/sealed?q={q}" },
@@ -236,8 +236,6 @@ export const SITE: SiteConfig = {
     { name: "BandaiCompare", url: "https://bandaicompare.com", game: "Union Arena, Fusion World & Digimon", anchor: "Union Arena, Fusion World and Digimon prices" },
     { name: "Cyberpunk Compare", url: "https://cyberpunkcompare.com", game: "Cyberpunk TCG", anchor: "Cyberpunk TCG prices", search: "https://cyberpunkcompare.com/cards?q={q}" },
     { name: "WargameCompare", url: "https://wargamecompare.com", game: "Wargames", anchor: "Miniature wargame prices" },
-    { name: "FigureCompare", url: "https://figurecompare.com", game: "Anime figures", anchor: "Anime figure prices" },
-    { name: "SportsCardCompare", url: "https://sportscardcompare.com", game: "Sports cards", anchor: "Sealed sports card box prices" },
   ],
   family: { id: "sealed" },
   social: {},

@@ -539,3 +539,17 @@ own, no pop-up, never in a price row or a ranking. Update the two instants next 
 ## 2026-11-17: New-release price guides, one per newest set of a game
 
 Bill asked for insightful posts on the newer releases of every game. TCG Prices holds sealed product only, so each new-release guide is a price guide for the whole set's sealed range, built from tokens so the numbers stay today's: `{{price:<id>}}` for a product, `{{ratio:<a>:<b>}}` (new, `lib/post-render.ts`) for one product's price as a multiple of another's, and the existing `{{sealed:<setId>}}` table of every product in the set with the cheapest in-stock store. First three: Pokémon Delta Reign, Magic Star Trek, Lorcana Hyperia City. Rules kept: no pack count or card text is stated (only what the listings carry), no estimate of what a box returns, no eBay or Amazon price. Single-card chase and signature guides belong to the sites that hold singles (Rift for Riftbound), not here.
+
+## 2026-11-17: URL freeze, and two sides of the network, one footer link
+
+Owner, from the Grok growth report (items 5 and 9): stop the sitewide cross-links between the sites, and freeze URLs.
+The network now has two sides (`TCG_SIDE`, `sameSide`, `isTcgSide` in `src/lib/family-network.ts`, the same file in every repo): the
+card-game and wargame sites on one, perfume, K-beauty, car parts, cameras, figures, sports cards and tech on the other. `clusterSisters`
+and `footerSisters` return same-side sites only, so deal and pre-order tiles, the data jobs' copied feeds and the `/our-sites` (or
+`/network`) list never cross. The footer keeps its single link to `/our-sites`; the "Every Compare Empire site" link to
+compareempire.com is gone from the card sites. SportsCardCompare is on the other side from the card sites (its search results no
+longer offer their searches). Where this repo had a repeated block of sister links (a blog "Also from us" aside, "Compare other TCGs"
+on every card page, non-card sisters in `SITE.sisterSites`) it is removed. A contextual link from a guide to another game stays.
+DexCompare's links read dexcompare.io (the old host is still accepted in a feed until Dex republishes). Not changed: price alerts,
+`alert-feed.json`, the family feeds and the sister data reads: they are data, not links. Also a "URL freeze" rule in CLAUDE.md:
+no mass path change without a redirect map, agents never flip hosts, no pop-unders or surprise navigation (this repo had none).
