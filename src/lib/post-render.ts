@@ -43,6 +43,10 @@ export function renderPost(html: string): string {
     .replace(/\{\{study:beat\}\}/g, () => beatTable())
     .replace(/\{\{study:setboxes:([a-z0-9]+)\}\}/g, (_, g) => setBoxTable(g))
     .replace(/\{\{study:variant:([a-z0-9]+):([A-Za-z]+)\}\}/g, (_, g, w) => variantTable(g, w))
+    .replace(/\{\{ratio:(\d+):(\d+)\}\}/g, (_, a, b) => {
+      const x = refCents(Number(a)), y = refCents(Number(b));
+      return x && y ? `${(x / y).toFixed(1)}×` : "";
+    })
     .replace(/\{\{figure:(\d+)\}\}/g, (_, id) => productFigure(Number(id)))
     .replace(/\{\{fact:([a-zA-Z]+(?::[a-z0-9]+)?)\}\}/g, (_, k) => fact(k))
     .replace(/\{\{attrstats:([a-z0-9-]+)\}\}/g, (_, f) => {
