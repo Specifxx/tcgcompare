@@ -535,3 +535,7 @@ TCGplayer's Impact email (17 Nov) announced Cyber Weekend 2026: 9AM New York tim
 products (subscribers 13%+). The deal pages carry one text line under the hero from 20 Nov, "on now" from the start, gone after
 the end (`lib/cyber-weekend.ts`, read in the browser so a CDN-held page switches off on time). Text only: no banner, no link of its
 own, no pop-up, never in a price row or a ranking. Update the two instants next year.
+
+## 2026-11-17: New-release price guides, one per newest set of a game
+
+Bill asked for insightful posts on the newer releases of every game. TCG Prices holds sealed product only, so each new-release guide is a price guide for the whole set's sealed range, built from tokens so the numbers stay today's: `{{price:<id>}}` for a product, `{{ratio:<a>:<b>}}` (new, `lib/post-render.ts`) for one product's price as a multiple of another's, and the existing `{{sealed:<setId>}}` table of every product in the set with the cheapest in-stock store. First three: Pokémon Delta Reign, Magic Star Trek, Lorcana Hyperia City. Rules kept: no pack count or card text is stated (only what the listings carry), no estimate of what a box returns, no eBay or Amazon price. Single-card chase and signature guides belong to the sites that hold singles (Rift for Riftbound), not here.
