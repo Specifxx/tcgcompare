@@ -182,6 +182,13 @@ jobs:
       - name: Restocks
         continue-on-error: true
         run: npx tsx scripts/restocks.ts
+      # The same restocks to a Discord channel: a no-op until the DISCORD_RESTOCKS_WEBHOOK secret exists. Never fatal.
+      - name: Restocks to Discord
+        continue-on-error: true
+        env:
+          DISCORD_RESTOCKS_WEBHOOK: ${{ secrets.DISCORD_RESTOCKS_WEBHOOK }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
+        run: npx tsx scripts/restocks-discord.ts
       - name: Commit data (this commit is the daily release)
         run: |
           set -euo pipefail

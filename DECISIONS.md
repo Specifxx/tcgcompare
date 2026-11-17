@@ -600,3 +600,9 @@ way). Display only: never a sort, deal, alert or price claim, TCGplayer/eBay/Ama
 (the page says so). The first file was seeded once from that same comparison (`RESTOCKS_BASE`/`RESTOCKS_AT`, backfill only). Ops check "Restock
 tracker" (amber when missing or over 30 h old). Next: look at `/restocks` visits and return visits after a week before putting it in the
 sitemap, adding an RSS feed or a Discord post; sealed price trend ("Sealed Intel") is the second test.
+
+**Addendum, same day:** `/restocks.xml` (RSS of the newest 50, revalidate 86400) and `scripts/restocks-discord.ts` (a workflow step, a no-op until
+the `DISCORD_RESTOCKS_WEBHOOK` secret exists; at most 10 lines a run, no mentions) carry the same events. The sealed price trend idea ("Sealed
+Intel") is parked on this site: `data/history` holds the TCGplayer market series, only since 15 Nov, so a trend is honest from about 1 Dec
+(14 days). Rift's sealed history is the cheapest in-stock store price per group and moves with stock (Origins box US$60 to US$218 in 30 days),
+so it is not used for a trend.

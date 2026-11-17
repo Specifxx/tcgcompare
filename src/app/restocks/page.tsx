@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   title: "Back in stock: sealed trading card product at independent stores",
   description: "Booster boxes, bundles and decks that were sold out at an independent store and are in stock again, from our twice-daily store checks. Compare every store before you buy.",
   ...canon("/restocks"),
+  alternates: { canonical: "/restocks", types: { "application/rss+xml": "/restocks.xml" } },
 };
 
 const DAY = 86_400_000;
