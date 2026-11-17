@@ -14,3 +14,4 @@ owners' trademarks and are shown only to identify the game. Fetched by scripts/c
 | fw.webp, dbs.webp | https://commons.wikimedia.org/wiki/File:Dragon_Ball_Super.png |
 | nar.webp | https://commons.wikimedia.org/wiki/File:Naruto_logo.svg |
 | ff.webp | https://commons.wikimedia.org/wiki/File:Final_Fantasy_I_Original_Artbox_logo.png |
+| rb.webp | Our own plain wordmark (Inter Black, letter-spaced), drawn 2026-11-17: Riot publishes no public-domain Riftbound logo on Commons, so this names the game without using its artwork. Replace it if Riot's press kit grants a licence. |

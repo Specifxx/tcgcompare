@@ -29,10 +29,10 @@ const g = (
 // "Japanese" (and the store matcher refuses every foreign title, so it is never searched), Magic's FINAL FANTASY and
 // Godzilla products are Magic's, Fusion World is not the older Dragon Ball Super game, the Shadowverse Vanguard
 // collab is Shadowverse's, and Weiß Schwarz's hololive sets are Weiß Schwarz's.
-// Games with a wordmark in public/games/<id>.webp: each from a Wikimedia Commons file marked public domain (too simple
+// Games with a wordmark in public/games/<id>.webp: each from a Wikimedia Commons file marked public domain (Riftbound's is our own plain text wordmark, no public-domain logo exists) (too simple
 // for copyright; still its owner's trademark, shown only to name the game). The rest keep the plain icon. Sources in
 // public/games/SOURCES.md.
-const LOGOS = new Set(["mtg", "pkm", "pkj", "op", "ygo", "holo", "fw", "dbs", "nar", "ff"]);
+const LOGOS = new Set(["mtg", "pkm", "pkj", "op", "ygo", "holo", "fw", "dbs", "nar", "ff", "rb"]);
 
 const AMAZON: Record<string, GameLine["amazon"]> = {
   mtg: { any: ["magic the gathering", "mtg"] },
