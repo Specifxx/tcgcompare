@@ -53,6 +53,7 @@ export function navGroups(o: NavOptions = {}): NavGroup[] {
     { href: "/preorders", label: "Pre-orders" },
     { href: "/tools/deal-finder", label: "Today's deals" },
     { href: "/movers", label: "Price movers" },
+    { href: "/restocks", label: "Back in stock" },
     { href: "/stores", label: "Stores we track" },
   ];
   const tools: NavLink[] = TOOLS.filter((t) => t.href !== "/tools/deal-finder").map((t) => ({ href: t.href, label: t.name }));

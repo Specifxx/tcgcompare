@@ -1,0 +1,53 @@
+import type { Metadata } from "next";
+import Link from "@/components/Link";
+import { SITE } from "@/site.config";
+import { canon } from "@/lib/site";
+import { productById } from "@/lib/data";
+import { readRestocks } from "@/lib/restocks";
+import { CURRENCY } from "@/lib/site-types";
+import { money } from "@/lib/format";
+import { shortName } from "@/lib/names";
+
+export const revalidate = 86400;
+export const metadata: Metadata = {
+  title: "Back in stock: sealed trading card product at independent stores",
+  description: "Booster boxes, bundles and decks that were sold out at an independent store and are in stock again, from our twice-daily store checks. Compare every store before you buy.",
+  ...canon("/restocks"),
+  alternates: { canonical: "/restocks", types: { "application/rss+xml": "/restocks.xml" } },
+};
+
+const DAY = 86_400_000;
+export default function Restocks() {
+  const file = readRestocks();
+  const stores = new Map(SITE.stores.map((s) => [s.key, s]));
+  const rows = (file?.events ?? [])
+    .map((e) => ({ e, p: productById(e.p), s: stores.get(e.s) }))
+    .filter((r): r is { e: typeof r.e; p: NonNullable<typeof r.p>; s: NonNullable<typeof r.s> } => !!r.p && !!r.s);
+  const cut = (file ? Date.parse(file.updatedAt) : 0) - DAY * 2;
+  const recent = rows.filter((r) => Date.parse(r.e.t) >= cut);
+  const earlier = rows.filter((r) => Date.parse(r.e.t) < cut);
+  const list = (items: typeof rows) => (
+    <ol className="card-surface divide-y divide-ink-800">
+      {items.slice(0, 60).map((r) => (
+        <li key={`${r.e.p}|${r.e.s}|${r.e.r}|${r.e.t}`} className="flex items-center justify-between gap-3 p-3 text-sm">
+          <Link className="min-w-0 flex-1 truncate hover:underline" href={`/card/${r.p.slug}`}>{shortName(r.p.name)}</Link>
+          <span className="shrink-0 text-muted">{r.s.name}</span>
+          <span className="shrink-0 tabular-nums">{money(r.e.c, CURRENCY[r.s.market])}</span>
+        </li>
+      ))}
+    </ol>
+  );
+  return (
+    <div className="flex flex-col gap-6">
+      <header>
+        <p className="text-xs uppercase tracking-wide text-brand-400">Restock tracker · checked twice a day</p>
+        <h1 className="font-display text-3xl font-black">Back in stock</h1>
+        <p className="mt-2 max-w-3xl text-muted">Sealed product an independent store had sold out and now lists in stock again. A row is a store, not a ranking: open the product to compare every store and the TCGplayer price. Stock can sell out between checks.</p>
+      </header>
+      {rows.length === 0 && <p className="card-surface p-4 text-sm text-muted">No restocks recorded yet. They appear after the next price check.</p>}
+      {recent.length > 0 && <section><h2 className="mb-2 text-xl font-bold">Last 2 days</h2>{list(recent)}</section>}
+      {earlier.length > 0 && <section><h2 className="mb-2 text-xl font-bold">Earlier this week</h2>{list(earlier)}</section>}
+      {file && <p className="text-xs text-muted">Updated {new Date(file.updatedAt).toUTCString()}. Prices are each store&apos;s own, in its own currency.</p>}
+    </div>
+  );
+}
