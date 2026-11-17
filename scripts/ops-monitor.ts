@@ -57,6 +57,14 @@ async function main() {
     check("Daily price import", async () =>
       ageH < 30 ? { status: "ok", detail: `${ageH.toFixed(1)}h old` } : { status: ageH < 54 ? "warn" : "fail", detail: `data is ${ageH.toFixed(0)}h old — check the Refresh prices workflow` },
     ),
+    // Back in stock (scripts/restocks.ts, after every import): amber if the file is missing or stale, never red (display only).
+    check("Restock tracker", async () => {
+      const { readRestocks } = await import("@/lib/restocks");
+      const f = readRestocks();
+      if (!f) return { status: "warn", detail: "data/public/restocks.json missing: check the Restocks step of the Refresh prices workflow" };
+      const h = (Date.now() - new Date(f.updatedAt).getTime()) / 3_600_000;
+      return h < 30 ? { status: "ok", detail: `${f.events.length} restocks kept, ${h.toFixed(1)}h old` } : { status: "warn", detail: `restocks.json is ${h.toFixed(0)}h old: check the Restocks step of the Refresh prices workflow` };
+    }),
     check("Store imports", async () => {
       const bad = Object.entries(meta.stores).filter(([, s]) => !s.ok || s.matched === 0);
       return bad.length ? { status: bad.length > SITE.stores.length / 3 ? "fail" : "warn", detail: bad.map(([k, s]) => `${k}: ${s.error ?? "0 matched"}`).join("; ") } : { status: "ok", detail: `${SITE.stores.length} stores` };

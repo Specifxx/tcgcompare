@@ -588,3 +588,15 @@ Owner adopted the report's recommendations that fit the standing rules. What cha
 ## 2026-11-17: TCGplayer data notice in the footer
 
 Grok growth report (2026-11-17), item 8 ("plain not-affiliated footer lines"), and the image-licence report (`/mnt/project-files/seo/grok-2026-11-17/image-licence-report.md`, item 11): TCGplayer's API terms ask for the notice "This product uses TCGplayer data but is not endorsed or certified by TCGplayer.", and no footer carried it. It is now one plain line in the footer, beside the existing not-affiliated lines (which are unchanged). Nothing else changed: no price, link, order or cache rule.
+
+## 2026-11-17: Back in stock page (restock tracker, first test)
+
+Bill picked a restock feed from the new-opportunities list. `scripts/restocks.ts` (a step of `refresh-prices.yml`, after the import, never
+fatal) compares each price shard with the last commit and records every independent store's offer that was sold out (flag 0) and is in stock
+(flag exactly 1, never a pre-order) now, in `data/public/restocks.json` (7 days, 800 events, one per product + store + variant per day).
+`/restocks` lists them (revalidate 86400, not in the sitemap yet, linked from the nav's "Deals & stock"). Real check before building: the
+committed files of 16 Nov 02:29 UTC and 17 Nov 05:17 UTC show 292 restocks on 203 products among 123,649 store offers (304 went the other
+way). Display only: never a sort, deal, alert or price claim, TCGplayer/eBay/Amazon rows never count, and the stock can change between checks
+(the page says so). The first file was seeded once from that same comparison (`RESTOCKS_BASE`/`RESTOCKS_AT`, backfill only). Ops check "Restock
+tracker" (amber when missing or over 30 h old). Next: look at `/restocks` visits and return visits after a week before putting it in the
+sitemap, adding an RSS feed or a Discord post; sealed price trend ("Sealed Intel") is the second test.
