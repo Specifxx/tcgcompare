@@ -520,3 +520,11 @@ sealed focus would add about 4,100 products, but only about 660 have any store o
 from 2 to 1 (a store has it IN STOCK, any age) and products with no store stay out. A product with no TCGplayer price and
 fewer than two offers is noindex and out of the sitemap (`cardIndexable`), so one-store pages are not thin search pages.
 Never widen the age or price floors for a product with no store.
+
+## 2026-11-17: sitemap lastmod is the day a product's price moved, not the import time (site loop)
+
+Every `/card/` URL carried the import's own timestamp as lastmod, so all ~3,800 changed every day and Google, which had
+read the sitemap with no errors but indexed almost nothing, has no reason to trust the field. `productLastmod`
+(`lib/sitemap-lastmod.ts`) now gives a product page the day of its newest TCGplayer reference-price point in `data/history`,
+capped at the import time; a product with no history has no lastmod. Pages other than products keep the import time
+(their lists do change daily). Same fix FigureCompare shipped on 2026-11-14.
