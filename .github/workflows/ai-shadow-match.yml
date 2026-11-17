@@ -14,6 +14,9 @@ on:
       max_usd:
         description: "Hard model-spend ceiling for this run, US$"
         default: "25"
+      wide:
+        description: "1 = also ask about titles with no product type word (not single cards)"
+        default: "0"
 
 permissions:
   contents: write
@@ -48,6 +51,7 @@ jobs:
         env:
           AI_TEAM_ANTHROPIC_KEY: ${{ secrets.AI_TEAM_ANTHROPIC_KEY }}
           AI_SHADOW_MAX_USD: ${{ inputs.max_usd }}
+          AI_POOL_WIDE: ${{ inputs.wide }}
           AI_SHADOW_CACHE: ${{ github.workspace }}/out/ai-shadow-cache.json
       - name: Publish the cache to the ai-shadow branch
         run: |
