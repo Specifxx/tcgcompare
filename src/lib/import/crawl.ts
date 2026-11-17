@@ -430,14 +430,16 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
         if ("id" in byTitle) {
           r = byTitle;
           titled++;
-        } else if (byTitle.refuse !== "no-id") r = { refuse: byTitle.refuse, detail: byTitle.detail };
-      }
-      if ("refuse" in r && r.refuse === "no-id" && ctx.ai) {
-        const byAi = pickByAi(l, s.host, ctx, s.market);
-        if ("id" in byAi) {
-          r = byAi;
-          aiTaken++;
-        } else if (byAi.refuse !== "no-id") r = { refuse: byAi.refuse, detail: byAi.detail };
+        } else {
+          // The AI placement gets its turn whatever the title rule said: a title the strict matcher cannot place
+          // ("no match", "no product type") is exactly what the shadow pass was built for.
+          const byAi = ctx.ai ? pickByAi(l, s.host, ctx, s.market) : null;
+          if (byAi && "id" in byAi) {
+            r = byAi;
+            aiTaken++;
+          } else if (byTitle.refuse !== "no-id") r = { refuse: byTitle.refuse, detail: byTitle.detail };
+          else if (byAi && byAi.refuse !== "no-id") r = { refuse: byAi.refuse, detail: byAi.detail };
+        }
       }
       if ("refuse" in r) {
         refused[r.refuse] = (refused[r.refuse] ?? 0) + 1;

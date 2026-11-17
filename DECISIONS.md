@@ -499,3 +499,12 @@ The store price band (under `OFFER_FLOOR` of TCGplayer's market, over four times
 Search Console (bill.jyang101) on the first audit, two days after launch: the one sitemap (`/sitemap.xml`, 5,034 URLs) was read on 16 Nov with no errors; Google had crawled four URLs (the home page and three game hubs, 14 to 15 Nov), judged all four "Crawled - currently not indexed", and indexed none. No technical cause was found: robots.txt allows everything but `/api/`, `/go` and query strings; pages are server-rendered with full link lists. It is a domain two days old with no inbound links, so the levers are links, internal links and patience, not a fix to the markup.
 
 What changed: `/sitemap-index.xml` lists `/sitemaps/<kind>.xml` (products, sets, games, guides, sealed-hubs, pages), the same URLs as the main sitemap cut by kind (`lib/sitemap-split.ts`, `tests/sitemap-split.test.ts`), so Search Console reports indexing per kind. `/sitemap.xml` stays the full list; robots.txt names both. Nothing is added to the sitemap, no URL changes, six-hour CDN cache like every page. Priority pages are requested one at a time, at most five a day, never in bulk.
+
+## 2026-11-17: the AI placement runs after the title rule refuses, not only when it says nothing
+
+Loosening `pickByTitle` to every crawled shop (2026-11-16) made it answer "unconfirmed" for most id-less listings, and
+`takeCrawl` only offered the AI placement to a listing the title rule left as "no-id", so the AI took 0 where it had taken
+3,133 the day before. `takeCrawl` now asks `pickByAi` whenever the title rule did not take the listing; the title rule's
+refusal is still what is reported if the AI refuses too. Roll-back is unchanged (`AI_SHADOW_LIVE=0`). Also logged:
+`meta.json` `crawl.refusedDetail` and `crawl.takenByLine` (diagnostic), and a sizing of the sealed focus in the trial
+import (`FOCUS_SIZING=1`, `data/crawl/focus-sizing.json`; nothing changes).
