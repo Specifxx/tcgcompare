@@ -441,6 +441,10 @@ export interface CrawlMeta {
   taken: number;
   /** Listings refused, by pickId's reason. */
   refused: Record<string, number>;
+  /** Refusals by "reason: detail", the 40 commonest (diagnostic). */
+  refusedDetail?: Record<string, number>;
+  /** Listings taken, by game line (diagnostic). */
+  takenByLine?: Record<string, number>;
   /** Offers kept after vetting and the price band, and rows carried for stores not read this run. */
   offers: number;
   carried: number;

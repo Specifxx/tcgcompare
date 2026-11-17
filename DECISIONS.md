@@ -500,6 +500,15 @@ Search Console (bill.jyang101) on the first audit, two days after launch: the on
 
 What changed: `/sitemap-index.xml` lists `/sitemaps/<kind>.xml` (products, sets, games, guides, sealed-hubs, pages), the same URLs as the main sitemap cut by kind (`lib/sitemap-split.ts`, `tests/sitemap-split.test.ts`), so Search Console reports indexing per kind. `/sitemap.xml` stays the full list; robots.txt names both. Nothing is added to the sitemap, no URL changes, six-hour CDN cache like every page. Priority pages are requested one at a time, at most five a day, never in bulk.
 
+## 2026-11-17: the AI placement runs after the title rule refuses, not only when it says nothing
+
+Loosening `pickByTitle` to every crawled shop (2026-11-16) made it answer "unconfirmed" for most id-less listings, and
+`takeCrawl` only offered the AI placement to a listing the title rule left as "no-id", so the AI took 0 where it had taken
+3,133 the day before. `takeCrawl` now asks `pickByAi` whenever the title rule did not take the listing; the title rule's
+refusal is still what is reported if the AI refuses too. Roll-back is unchanged (`AI_SHADOW_LIVE=0`). Also logged:
+`meta.json` `crawl.refusedDetail` and `crawl.takenByLine` (diagnostic), and a sizing of the sealed focus in the trial
+import (`FOCUS_SIZING=1`, `data/crawl/focus-sizing.json`; nothing changes).
+
 ## 2026-11-17 — Urgent release for the header-menu click fix
 
 The dropdown items could not be clicked in Safari and Firefox on macOS (the menu closed on mousedown, before the click) and the owner asked for an urgent deploy. The fix was merged earlier on 2026-11-16 without a marker and the manual release was skipped by the 12-hour gap, so this entry lands with `[deploy] [urgent]` in its merge subject (owner: "deploy urgently"). One build.

@@ -395,6 +395,10 @@ export interface CrawlTake {
   /** Of `taken`, those placed by the AI shadow pass (pickByAi). */
   aiTaken?: number;
   refused: Record<string, number>;
+  /** Refusals by "reason: detail", the 40 commonest. */
+  refusedDetail?: Record<string, number>;
+  /** Listings taken, by game line. */
+  takenByLine?: Record<string, number>;
   listings: number;
 }
 
@@ -406,6 +410,8 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
   const offers = new Map<number, Offer[]>();
   const fresh = new Map<string, Set<number>>();
   const refused: Record<string, number> = {};
+  const detail: Record<string, number> = {};
+  const byLine: Record<string, number> = {};
   let taken = 0;
   let titled = 0;
   let aiTaken = 0;
@@ -424,17 +430,21 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
         if ("id" in byTitle) {
           r = byTitle;
           titled++;
-        } else if (byTitle.refuse !== "no-id") r = { refuse: byTitle.refuse, detail: byTitle.detail };
-      }
-      if ("refuse" in r && r.refuse === "no-id" && ctx.ai) {
-        const byAi = pickByAi(l, s.host, ctx, s.market);
-        if ("id" in byAi) {
-          r = byAi;
-          aiTaken++;
-        } else if (byAi.refuse !== "no-id") r = { refuse: byAi.refuse, detail: byAi.detail };
+        } else {
+          // The AI placement gets its turn whatever the title rule said: a title the strict matcher cannot place
+          // ("no match", "no product type") is exactly what the shadow pass was built for.
+          const byAi = ctx.ai ? pickByAi(l, s.host, ctx, s.market) : null;
+          if (byAi && "id" in byAi) {
+            r = byAi;
+            aiTaken++;
+          } else if (byTitle.refuse !== "no-id") r = { refuse: byTitle.refuse, detail: byTitle.detail };
+          else if (byAi && byAi.refuse !== "no-id") r = { refuse: byAi.refuse, detail: byAi.detail };
+        }
       }
       if ("refuse" in r) {
         refused[r.refuse] = (refused[r.refuse] ?? 0) + 1;
+        const dk = `${r.refuse}: ${(r.detail ?? "").slice(0, 40)}`;
+        detail[dk] = (detail[dk] ?? 0) + 1;
         continue;
       }
       // A placeholder price ($999.99, $9,999) is no price: never shown, whoever sells it.
@@ -443,6 +453,9 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
         continue;
       }
       taken++;
+      const tp = ctx.products.get(r.id);
+      const tl = tp ? ctx.lineOf(tp) : null;
+      if (tl) byLine[tl] = (byLine[tl] ?? 0) + 1;
       const o: Offer = { source: key, market: s.market, currency: CURRENCY[s.market], cents: l.cents, inStock: l.inStock, url: l.url, title: l.title, ...(l.preorder ? { preorder: true } : {}) };
       const cur = best.get(r.id);
       if (!cur || (o.inStock && !cur.inStock) || (o.inStock === cur.inStock && o.cents < cur.cents)) best.set(r.id, o);
@@ -454,7 +467,8 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
       fresh.get(key)!.add(id);
     }
   }
-  return { offers, fresh, taken, refused, listings, titled, aiTaken };
+  const refusedDetail = Object.fromEntries(Object.entries(detail).sort((a, b) => b[1] - a[1]).slice(0, 40));
+  return { offers, fresh, taken, refused, refusedDetail, takenByLine: byLine, listings, titled, aiTaken };
 }
 
 /**
