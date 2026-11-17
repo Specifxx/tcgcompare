@@ -23,6 +23,7 @@ import { PrefsProvider } from "@/components/ClientPrefs";
 import { QuickView } from "@/components/QuickView";
 import { RateCard } from "@/components/site-reviews/RateCard";
 import { BuyClickTracker } from "@/components/BuyClickTracker";
+import { AiReferralTracker } from "@/components/AiReferralTracker";
 import { ShareArrival } from "@/components/ShareArrival";
 import { DockAds } from "@/components/DockAds";
 import { cardAds } from "@/lib/card-ads";
@@ -100,6 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </PrefsProvider>
         <Analytics />
         <BuyClickTracker />
+        <AiReferralTracker />
         <ShareArrival />
       </body>
     </html>
