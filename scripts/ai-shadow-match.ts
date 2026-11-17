@@ -22,6 +22,8 @@ const PRICE: Record<string, { in: number; out: number }> = { "claude-sonnet-5-5"
 const MAX_USD = Number(process.env.AI_SHADOW_MAX_USD ?? 25);
 const CACHE = process.env.AI_SHADOW_CACHE ?? path.join(ROOT, "out/ai-shadow-cache.json");
 const SHORTLIST = 25;
+const WIDE = process.env.AI_POOL_WIDE === "1";
+const SINGLE_MARK = /\b\d{1,3}\s*\/\s*\d{1,3}\b|\b(foil|holo|reverse|psa|bgs|cgc|graded|nm|lp|mp|rare|common|uncommon|promo|alt(ernate)? art|secret|ultra|super|full art|token|playset)\b|#\d+/i;
 const RETRY_NULL_MS = 7 * 86_400_000;
 
 interface Prod { id: number; name: string; line: string }
@@ -47,6 +49,19 @@ function shortlist(l: CrawlListing, prods: Prod[]): Prod[] {
     .sort((a, b) => b.score - a.score)
     .slice(0, SHORTLIST)
     .map((x) => x.p);
+}
+
+function shortlistScore(l: CrawlListing, prods: Prod[]): number {
+  const t = new Set(tok(l.title));
+  let best = 0;
+  for (const p of prods) {
+    if (!l.lines.includes(p.line)) continue;
+    const pt = tok(p.name);
+    if (!pt.length) continue;
+    const r = pt.filter((x) => t.has(x)).length / pt.length;
+    if (r > best) best = r;
+  }
+  return best;
 }
 
 // Words that make two printings of the same set different products. Both sides must carry exactly the same ones.
@@ -131,7 +146,11 @@ async function main() {
   for (const s of run.stores) {
     for (const l of s.listings) {
       if (l.refuse || l.ids.length || !l.inStock) continue;
-      if (!/box|pack|bundle|deck|tin|case|collection|display|trove/i.test(l.title)) continue;
+      const sealedWord = /box|pack|bundle|deck|tin|case|collection|display|trove/i.test(l.title);
+      // Wide pool (AI_POOL_WIDE=1, owner's go 2026-11-17): titles with no product type word, the commonest id-less refusal.
+      // Skip what reads as a single card (collector number, rarity or finish word, grading) and anything whose best
+      // catalogue candidate shares under half its words; the guard still refuses a wrong type or edition afterwards.
+      if (!sealedWord && !(WIDE && !SINGLE_MARK.test(l.title) && (shortlistScore(l, prods) >= 0.5))) continue;
       const key = `${s.host}|${l.title}`;
       if (seen.has(key)) continue;
       seen.add(key);
