@@ -606,3 +606,6 @@ the `DISCORD_RESTOCKS_WEBHOOK` secret exists; at most 10 lines a run, no mention
 Intel") is parked on this site: `data/history` holds the TCGplayer market series, only since 15 Nov, so a trend is honest from about 1 Dec
 (14 days). Rift's sealed history is the cheapest in-stock store price per group and moves with stock (Origins box US$60 to US$218 in 30 days),
 so it is not used for a trend.
+## 2026-11-17: Quick view: price history at the very bottom, at most 10 rows (owner)
+
+Owner, 2026-11-17: the price-history chart at the top of the quick view is "not even that valuable". It now sits at the very bottom of the panel, below the rows and the ad pair, and the quick view lists at most 10 rows (`maxRows`): the pinned eBay and TCGplayer rows first, then the cheapest others, with "N more listings on the full page" (the page and "See price history and details" still show everything). The Cheapest price box and the Add to cart buttons are unchanged. Paid rows, their order and wording are untouched in every A/B arm (Dex and MTG tests, 20 Nov to 3 Dec).
