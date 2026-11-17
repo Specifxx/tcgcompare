@@ -589,6 +589,12 @@ Owner adopted the report's recommendations that fit the standing rules. What cha
 
 Grok growth report (2026-11-17), item 8 ("plain not-affiliated footer lines"), and the image-licence report (`/mnt/project-files/seo/grok-2026-11-17/image-licence-report.md`, item 11): TCGplayer's API terms ask for the notice "This product uses TCGplayer data but is not endorsed or certified by TCGplayer.", and no footer carried it. It is now one plain line in the footer, beside the existing not-affiliated lines (which are unchanged). Nothing else changed: no price, link, order or cache rule.
 
+## 2026-11-17: /go treats a request that did not come from our own page as a bot
+
+Impact showed 700 to 800 TCGplayer clicks a day across the TCG sites; Vercel's browser-side buy clicks showed about 165 a day. `lib/bot-click.ts` already sent a crawler on untagged
+by User-Agent, Accept-Language and Sec-Fetch-Mode; DexCompare found on 15 November that a crawler with a whole browser's headers passes those (2,835 go_clicks on a day with 632
+visitors). The same rule is now here: a Sec-Fetch-Site other than same-origin or same-site (a /go URL opened directly is "none", one followed from elsewhere "cross-site") is a bot;
+an absent header is left alone. A bot is still sent on, untagged, and nothing is logged. A bot clicking in a real browser on our page still passes; that needs a Vercel Firewall rate limit.
 ## 2026-11-17: Back in stock page (restock tracker, first test)
 
 Bill picked a restock feed from the new-opportunities list. `scripts/restocks.ts` (a step of `refresh-prices.yml`, after the import, never
