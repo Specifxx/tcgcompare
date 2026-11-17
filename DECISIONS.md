@@ -508,3 +508,7 @@ Loosening `pickByTitle` to every crawled shop (2026-11-16) made it answer "uncon
 refusal is still what is reported if the AI refuses too. Roll-back is unchanged (`AI_SHADOW_LIVE=0`). Also logged:
 `meta.json` `crawl.refusedDetail` and `crawl.takenByLine` (diagnostic), and a sizing of the sealed focus in the trial
 import (`FOCUS_SIZING=1`, `data/crawl/focus-sizing.json`; nothing changes).
+
+## 2026-11-17 — Urgent release for the header-menu click fix
+
+The dropdown items could not be clicked in Safari and Firefox on macOS (the menu closed on mousedown, before the click) and the owner asked for an urgent deploy. The fix was merged earlier on 2026-11-16 without a marker and the manual release was skipped by the 12-hour gap, so this entry lands with `[deploy] [urgent]` in its merge subject (owner: "deploy urgently"). One build.
