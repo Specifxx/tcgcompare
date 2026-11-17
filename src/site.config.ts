@@ -172,6 +172,8 @@ export const SITE: SiteConfig = {
 
   // Registered with RiftCompare's shared alert service (TCGEmpire sites.ts, key tcgprices), 2026-11-16.
   priceAlerts: true,
+  // Impact (account 7385758) ownership token for tcgprices.app's own property, 2026-11-17.
+  impactSiteVerification: "e1a72ccd-92e2-422a-826a-2ddbaafad054",
   // Defaults only: every game has its own category, slug and eBay words (lines).
   tcgcsvCategoryId: 3,
   tcgplayerSlug: "all",
