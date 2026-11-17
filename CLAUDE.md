@@ -9,7 +9,9 @@ Game facts live in `src/site.config.ts`; engine code never names a game.
 
 - Sealed only, and only products with demand today (`lib/import/focus.ts`, `SITE.catalogFocus`): TCGplayer has a
   market price of US$5 or more AND the set is recent (36 months for boxes, cases, trainer boxes, bundles, tins,
-  collections and decks; 18 months for packs and the rest), OR two stores in one market have it in stock. Inserts and
+  collections and decks; 18 months for packs and the rest), OR one store has it in stock (owner's tap, 2026-11-17: as
+  many listings as possible; `minStores` 1; a product with no TCGplayer price and fewer than two offers is noindex and out
+  of the sitemap, `cardIndexable`). Inserts and
   accessories never; Search Console demand always. Never widen it to "everything TCGplayer lists": a dead set's packs
   are thin pages.
 - A game needs a market of roughly US$1M a year or more (owner). Add one as a line in `SITE.lines` with its TCGplayer
