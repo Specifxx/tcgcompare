@@ -42,3 +42,26 @@ export function isFresh(at: string | null | undefined, now = Date.now()): boolea
 export function priceValidUntil(now = Date.now()): string {
   return new Date(now + 86400e3).toISOString().slice(0, 10);
 }
+
+// SITEMAP CAP (Gemini SEO report, owner's yes 2026-11-17: cutting further is fine). Indexable stays the gate for the
+// robots meta; the sitemap lists only the strongest of those, so a new domain's crawl budget goes to pages with the most
+// stores and a price track record. The rest stay indexable and reachable by links, and Google finds them there.
+// Grows by SITEMAP_STEP a week from SITEMAP_START_DAY up to SITEMAP_MAX (the weekly step stands in for "expand only when
+// the last batch is indexed"; the weekly GSC script's index diet still trims what Google refuses).
+export const SITEMAP_START = 1200;
+export const SITEMAP_STEP = 300;
+export const SITEMAP_MAX = 2900;
+export const SITEMAP_START_DAY = Math.floor(Date.UTC(2026, 10, 17) / 86_400_000);
+
+export function sitemapProductCap(now = Date.now()): number {
+  const weeks = Math.max(0, Math.floor((Math.floor(now / 86_400_000) - SITEMAP_START_DAY) / 7));
+  return Math.min(SITEMAP_MAX, SITEMAP_START + weeks * SITEMAP_STEP);
+}
+
+/** Highest first: most fresh in-stock stores, then longest 30-day history; stable on the slug. */
+export function rankForSitemap<T extends { slug: string }>(rows: { p: T; s: IndexSignals }[], cap: number): T[] {
+  return [...rows]
+    .sort((a, b) => b.s.storeOffers - a.s.storeOffers || b.s.historyPoints - a.s.historyPoints || (a.p.slug < b.p.slug ? -1 : 1))
+    .slice(0, cap)
+    .map((r) => r.p);
+}

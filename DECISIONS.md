@@ -588,3 +588,37 @@ Owner adopted the report's recommendations that fit the standing rules. What cha
 ## 2026-11-17: TCGplayer data notice in the footer
 
 Grok growth report (2026-11-17), item 8 ("plain not-affiliated footer lines"), and the image-licence report (`/mnt/project-files/seo/grok-2026-11-17/image-licence-report.md`, item 11): TCGplayer's API terms ask for the notice "This product uses TCGplayer data but is not endorsed or certified by TCGplayer.", and no footer carried it. It is now one plain line in the footer, beside the existing not-affiliated lines (which are unchanged). Nothing else changed: no price, link, order or cache rule.
+
+## 2026-11-17: /go treats a request that did not come from our own page as a bot
+
+Impact showed 700 to 800 TCGplayer clicks a day across the TCG sites; Vercel's browser-side buy clicks showed about 165 a day. `lib/bot-click.ts` already sent a crawler on untagged
+by User-Agent, Accept-Language and Sec-Fetch-Mode; DexCompare found on 15 November that a crawler with a whole browser's headers passes those (2,835 go_clicks on a day with 632
+visitors). The same rule is now here: a Sec-Fetch-Site other than same-origin or same-site (a /go URL opened directly is "none", one followed from elsewhere "cross-site") is a bot;
+an absent header is left alone. A bot is still sent on, untagged, and nothing is logged. A bot clicking in a real browser on our page still passes; that needs a Vercel Firewall rate limit.
+## 2026-11-17: Back in stock page (restock tracker, first test)
+
+Bill picked a restock feed from the new-opportunities list. `scripts/restocks.ts` (a step of `refresh-prices.yml`, after the import, never
+fatal) compares each price shard with the last commit and records every independent store's offer that was sold out (flag 0) and is in stock
+(flag exactly 1, never a pre-order) now, in `data/public/restocks.json` (7 days, 800 events, one per product + store + variant per day).
+`/restocks` lists them (revalidate 86400, not in the sitemap yet, linked from the nav's "Deals & stock"). Real check before building: the
+committed files of 16 Nov 02:29 UTC and 17 Nov 05:17 UTC show 292 restocks on 203 products among 123,649 store offers (304 went the other
+way). Display only: never a sort, deal, alert or price claim, TCGplayer/eBay/Amazon rows never count, and the stock can change between checks
+(the page says so). The first file was seeded once from that same comparison (`RESTOCKS_BASE`/`RESTOCKS_AT`, backfill only). Ops check "Restock
+tracker" (amber when missing or over 30 h old). Next: look at `/restocks` visits and return visits after a week before putting it in the
+sitemap, adding an RSS feed or a Discord post; sealed price trend ("Sealed Intel") is the second test.
+
+**Addendum, same day:** `/restocks.xml` (RSS of the newest 50, revalidate 86400) and `scripts/restocks-discord.ts` (a workflow step, a no-op until
+the `DISCORD_RESTOCKS_WEBHOOK` secret exists; at most 10 lines a run, no mentions) carry the same events. The sealed price trend idea ("Sealed
+Intel") is parked on this site: `data/history` holds the TCGplayer market series, only since 15 Nov, so a trend is honest from about 1 Dec
+(14 days). Rift's sealed history is the cheapest in-stock store price per group and moves with stock (Origins box US$60 to US$218 in 30 days),
+so it is not used for a trend.
+## 2026-11-17: Quick view: price history at the very bottom, at most 10 rows (owner)
+
+Owner, 2026-11-17: the price-history chart at the top of the quick view is "not even that valuable". It now sits at the very bottom of the panel, below the rows and the ad pair, and the quick view lists at most 10 rows (`maxRows`): the pinned eBay and TCGplayer rows first, then the cheapest others, with "N more listings on the full page" (the page and "See price history and details" still show everything). The Cheapest price box and the Add to cart buttons are unchanged. Paid rows, their order and wording are untouched in every A/B arm (Dex and MTG tests, 20 Nov to 3 Dec).
+
+## 2026-11-17: The sitemap lists the strongest 1,200 products, growing 300 a week (Gemini SEO report; owner's yes)
+
+A Gemini report suggested a 150–250 URL sitemap for the new domain, widened as Google indexes it. The owner said cutting further is fine. `app/sitemap.ts` now lists every indexable
+sealed product ranked by fresh in-stock store count, then 30-day history points (`rankForSitemap`, `lib/indexing.ts`), capped at `sitemapProductCap()`: 1,200 from 17 Nov, +300 a week, at most 2,900 (the
+previous size). Pages outside the cap stay indexable (the gate is unchanged) and are found by links; IndexNow and the weekly GSC index diet are unchanged. A weekly step stands in for "expand once
+80% of the last batch is indexed"; if Search Console shows under half of the first 1,200 indexed by 1 Dec, hold the cap. `tests/sitemap-cap.test.ts`.

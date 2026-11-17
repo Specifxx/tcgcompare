@@ -6,7 +6,7 @@ import { preorderSetList, sealedHubs, sealedSets } from "@/lib/hubs";
 import { preorderPath } from "@/lib/preorders";
 import { SITE_URL } from "@/lib/site";
 import { creatorsOn } from "@/lib/creators";
-import { cardIndexable } from "@/lib/indexing";
+import { cardIndexable, rankForSitemap, sitemapProductCap } from "@/lib/indexing";
 import { GAME_TYPE_MIN, gameTypeHubs, gameViews } from "@/lib/game-hubs";
 
 export const revalidate = 86400;
@@ -28,12 +28,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...preorderSetList().map((s) => ({ url: `${SITE_URL}${preorderPath(s)}`, lastModified: at, changeFrequency: "daily" as const, priority: 0.8 })),
     ...sealedSets().map((s) => ({ url: `${SITE_URL}/sets/${s.slug}`, lastModified: at, priority: 0.7 })),
     ...posts().map((p) => ({ url: `${SITE_URL}/blog/${p.slug}`, lastModified: new Date(p.updated ?? p.date), priority: 0.6 })),
-    ...products()
-      .filter((p) => p.kind === "sealed" && cardIndexable(p, indexSignals(p), setById(p.setId)))
-      .map((p) => {
-        // The day this product's reference price last moved, never "today" for every URL (lib/sitemap-lastmod.ts); no history, no lastmod.
-        const lm = productLastmod(historyOf(p), at);
-        return { url: `${SITE_URL}/card/${p.slug}`, ...(lm ? { lastModified: lm } : {}), priority: 0.6 };
-      }),
+    ...rankForSitemap(
+      products()
+        .filter((p) => p.kind === "sealed")
+        .map((p) => ({ p, s: indexSignals(p) }))
+        .filter(({ p, s }) => cardIndexable(p, s, setById(p.setId))),
+      sitemapProductCap(),
+    ).map((p) => {
+      // The day this product's reference price last moved, never "today" for every URL (lib/sitemap-lastmod.ts); no history, no lastmod.
+      const lm = productLastmod(historyOf(p), at);
+      return { url: `${SITE_URL}/card/${p.slug}`, ...(lm ? { lastModified: lm } : {}), priority: 0.6 };
+    }),
   ];
 }
