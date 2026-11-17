@@ -152,6 +152,166 @@
      "level": 100
     }
    }
+  },
+  {
+   "d": "2026-11-17",
+   "all": {
+    "n": 3156,
+    "median": 4997,
+    "level": 100
+   },
+   "games": {
+    "alpha-clash": {
+     "n": 20,
+     "median": 4999,
+     "level": 100
+    },
+    "battle-spirits-saga": {
+     "n": 7,
+     "median": 399,
+     "level": 100
+    },
+    "cardfight-vanguard": {
+     "n": 70,
+     "median": 4499,
+     "level": 100
+    },
+    "cookierun-braverse": {
+     "n": 20,
+     "median": 1247,
+     "level": 100
+    },
+    "cyberpunk-tcg": {
+     "n": 10,
+     "median": 2749,
+     "level": 100
+    },
+    "digimon-card-game": {
+     "n": 63,
+     "median": 2499,
+     "level": 100
+    },
+    "disney-lorcana": {
+     "n": 108,
+     "median": 2450,
+     "level": 100
+    },
+    "dragon-ball-super-fusion-world": {
+     "n": 28,
+     "median": 3989,
+     "level": 100
+    },
+    "dragon-ball-super-masters": {
+     "n": 14,
+     "median": 2749,
+     "level": 100
+    },
+    "elestrals": {
+     "n": 31,
+     "median": 1999,
+     "level": 100
+    },
+    "final-fantasy-tcg": {
+     "n": 31,
+     "median": 3999,
+     "level": 100
+    },
+    "flesh-and-blood": {
+     "n": 114,
+     "median": 1993,
+     "level": 100
+    },
+    "godzilla-card-game": {
+     "n": 5,
+     "median": 4999,
+     "level": 100
+    },
+    "grand-archive": {
+     "n": 41,
+     "median": 2999,
+     "level": 100
+    },
+    "gundam-card-game": {
+     "n": 49,
+     "median": 5700,
+     "level": 100
+    },
+    "hololive": {
+     "n": 25,
+     "median": 1799,
+     "level": 100
+    },
+    "magic-the-gathering": {
+     "n": 1109,
+     "median": 6000,
+     "level": 100
+    },
+    "one-piece": {
+     "n": 115,
+     "median": 4200,
+     "level": 100
+    },
+    "palworld": {
+     "n": 6,
+     "median": 1749,
+     "level": 100
+    },
+    "pokemon": {
+     "n": 692,
+     "median": 5000,
+     "level": 100
+    },
+    "pokemon-japan": {
+     "n": 89,
+     "median": 6599,
+     "level": 100
+    },
+    "riftbound": {
+     "n": 27,
+     "median": 2999,
+     "level": 100
+    },
+    "shadowverse-evolve": {
+     "n": 30,
+     "median": 4399,
+     "level": 100
+    },
+    "sorcery-contested-realm": {
+     "n": 9,
+     "median": 10995,
+     "level": 100
+    },
+    "star-wars-unlimited": {
+     "n": 65,
+     "median": 2299,
+     "level": 95.59
+    },
+    "union-arena": {
+     "n": 47,
+     "median": 5499,
+     "level": 100
+    },
+    "universus": {
+     "n": 38,
+     "median": 1149,
+     "level": 100
+    },
+    "weiss-schwarz": {
+     "n": 136,
+     "median": 2574,
+     "level": 100
+    },
+    "wixoss": {
+     "n": 1,
+     "median": 2295,
+     "level": 100
+    },
+    "yugioh": {
+     "n": 156,
+     "median": 1548,
+     "level": 100
+    }
+   }
   }
  ]
 }

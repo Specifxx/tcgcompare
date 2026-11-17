@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-16T20:58:02.887Z",
+ "generatedAt": "2026-11-17T05:17:55.199Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -9,20 +9,6 @@
   }
  },
  "items": [
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Marvel: Darkhold Destiny - Collector Booster Display",
-   "url": "https://tcgprices.app/card/marvel-darkhold-destiny-collector-booster-display",
-   "cents": 45588,
-   "currency": "USD",
-   "store": "Minted TCG",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723266_200w.jpg",
-   "refCents": 66324,
-   "refLabel": "TCGplayer market price",
-   "savingPct": 31
-  },
   {
    "kind": "deal",
    "cluster": "cards",
@@ -83,6 +69,20 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
+   "title": "Premium Trainer's XY Collection",
+   "url": "https://tcgprices.app/card/premium-trainers-xy-collection",
+   "cents": 274999,
+   "currency": "USD",
+   "store": "Sweets and Geeks",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/148226_200w.jpg",
+   "refCents": 312500,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 12
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
    "title": "The Dominance of God Booster Box Case",
    "url": "https://tcgprices.app/card/the-dominance-of-god-booster-box-case",
    "cents": 239988,
@@ -109,9 +109,21 @@
    "kind": "preorder",
    "cluster": "cards",
    "region": "US",
+   "title": "Icons 2027 Edition Booster Box",
+   "url": "https://tcgprices.app/preorders/icons-2027-edition",
+   "cents": 7295,
+   "currency": "USD",
+   "store": "Lazarus Games",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/719671_200w.jpg",
+   "releaseDate": "2026-11-20"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
    "title": "The Dominance of God Booster Box",
    "url": "https://tcgprices.app/preorders/the-dominance-of-god",
-   "cents": 20999,
+   "cents": 19999,
    "currency": "USD",
    "store": "Wulf Gaming",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/712901_200w.jpg",
@@ -150,17 +162,6 @@
    "cents": 9499,
    "currency": "USD",
    "store": "Many Realms",
-   "releaseDate": "2026-12-11"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Reach the God Booster Box",
-   "url": "https://tcgprices.app/preorders/reach-the-god",
-   "cents": 14499,
-   "currency": "USD",
-   "store": "The Collection Realm",
    "releaseDate": "2026-12-11"
   }
  ]
