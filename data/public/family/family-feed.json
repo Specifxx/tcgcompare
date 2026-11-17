@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-17T05:17:55.199Z",
+ "generatedAt": "2026-11-17T19:51:51.310Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -111,9 +111,9 @@
    "region": "US",
    "title": "Icons 2027 Edition Booster Box",
    "url": "https://tcgprices.app/preorders/icons-2027-edition",
-   "cents": 7295,
+   "cents": 7999,
    "currency": "USD",
-   "store": "Lazarus Games",
+   "store": "Gaming Giant",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/719671_200w.jpg",
    "releaseDate": "2026-11-20"
   },

@@ -156,7 +156,7 @@
   {
    "d": "2026-11-17",
    "all": {
-    "n": 3156,
+    "n": 3162,
     "median": 4997,
     "level": 100
    },
@@ -192,7 +192,7 @@
      "level": 100
     },
     "disney-lorcana": {
-     "n": 108,
+     "n": 110,
      "median": 2450,
      "level": 100
     },
@@ -212,8 +212,8 @@
      "level": 100
     },
     "final-fantasy-tcg": {
-     "n": 31,
-     "median": 3999,
+     "n": 32,
+     "median": 4250,
      "level": 100
     },
     "flesh-and-blood": {
@@ -242,13 +242,13 @@
      "level": 100
     },
     "magic-the-gathering": {
-     "n": 1109,
+     "n": 1110,
      "median": 6000,
      "level": 100
     },
     "one-piece": {
-     "n": 115,
-     "median": 4200,
+     "n": 116,
+     "median": 4350,
      "level": 100
     },
     "palworld": {
@@ -257,7 +257,7 @@
      "level": 100
     },
     "pokemon": {
-     "n": 692,
+     "n": 693,
      "median": 5000,
      "level": 100
     },
@@ -293,7 +293,7 @@
     },
     "universus": {
      "n": 38,
-     "median": 1149,
+     "median": 1249,
      "level": 100
     },
     "weiss-schwarz": {
