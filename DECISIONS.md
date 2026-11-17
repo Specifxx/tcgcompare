@@ -584,3 +584,7 @@ Owner adopted the report's recommendations that fit the standing rules. What cha
 - **Cyber Weekend per-game hubs: not built.** The 30-day median they need does not exist yet: `data/history` holds at most 3 days
   per product (the site is 3 days old). `/black-friday` and `/cyber-monday` already list the real deals per game (under TCGplayer's
   market price, in stock). Revisit when 30 days of history exist.
+
+## 2026-11-17: TCGplayer data notice in the footer
+
+Grok growth report (2026-11-17), item 8 ("plain not-affiliated footer lines"), and the image-licence report (`/mnt/project-files/seo/grok-2026-11-17/image-licence-report.md`, item 11): TCGplayer's API terms ask for the notice "This product uses TCGplayer data but is not endorsed or certified by TCGplayer.", and no footer carried it. It is now one plain line in the footer, beside the existing not-affiliated lines (which are unchanged). Nothing else changed: no price, link, order or cache rule.
