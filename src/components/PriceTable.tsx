@@ -89,18 +89,27 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
   // eBay is always the first row. With no eBay listing in the data it is a tagged search of the visitor's own eBay
   // (the US site where eBay has none for the market), labelled Ad, with no price claimed.
   const ebayMarket = market === "UK" || market === "AU" || market === "CA" ? market : "US";
+  // Every price row has an Add to cart (owner, 2026-11-17), even a search row with no price: the line opens the row's own tagged link
+  // and says "See today's price" (priceCents 0), left out of the totals.
+  const searchCart = (url: string, storeName: string) => ({ href: tagged(url, subId(market, `${page}_cart`, productId)), productUrl: url, storeName, title: product ?? cartTitle ?? "", detail: "Search results", priceCents: 0, currency: cur, image });
+  const ebayCart = ebayQuery ? searchCart(ebaySearchUrl(ebayQuery, ebayMarket), ebayMarket === "US" ? "eBay" : `eBay ${ebayMarket}`) : null;
+  const tcgCart = tcgUrl ? searchCart(tcgUrl, "TCGplayer") : null;
   const ebaySearchRow = ebayQuery && !pinned.some((o) => o.source === "ebay") ? (
     <tr data-ebay-search-row className="border-t border-line">
       <td className="px-3 py-2.5">
         <span className="font-medium text-ink">{ebayMarket === "US" ? "eBay" : `eBay ${ebayMarket}`}</span>
         <span className="ad-pill ml-2">Ad</span>
+        {ebayCart && <span className="block sm:hidden"><CartAddButton {...ebayCart} inline className="text-xs" /></span>}
       </td>
       <td className="hidden px-3 py-2.5 text-xs text-muted sm:table-cell">New and sealed listings, cheapest first</td>
       <td className="px-3 py-2.5 text-right text-xs text-muted">See prices</td>
       <td className="px-3 py-2.5 text-right">
-        <a href={goHref({ url: ebaySearchUrl(ebayQuery, ebayMarket), source: "ebay", market }, productId, `${page}_pinned_search`, { pos: 1 })} rel="sponsored nofollow noopener" target="_blank" className="btn-primary min-h-10 whitespace-nowrap px-3 py-1.5">
-          Check eBay <span aria-hidden="true">↗</span>
-        </a>
+        <span className="inline-flex items-center justify-end gap-2">
+          {ebayCart && <CartAddButton {...ebayCart} className="hidden text-muted sm:inline-flex" />}
+          <a href={goHref({ url: ebaySearchUrl(ebayQuery, ebayMarket), source: "ebay", market }, productId, `${page}_pinned_search`, { pos: 1 })} rel="sponsored nofollow noopener" target="_blank" className="btn-primary min-h-10 whitespace-nowrap px-3 py-1.5">
+            Check eBay <span aria-hidden="true">↗</span>
+          </a>
+        </span>
       </td>
     </tr>
   ) : null;
@@ -110,13 +119,17 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
     <tr data-tcg-search-row className="border-t border-line">
       <td className="px-3 py-2.5">
         <span className="font-medium text-ink">TCGplayer</span>
+        {tcgCart && <span className="block sm:hidden"><CartAddButton {...tcgCart} inline className="text-xs" /></span>}
       </td>
       <td className="hidden px-3 py-2.5 text-xs text-muted sm:table-cell">Sealed listings on TCGplayer</td>
       <td className="px-3 py-2.5 text-right text-xs text-muted">See prices</td>
       <td className="px-3 py-2.5 text-right">
-        <a href={goHref({ url: tcgUrl, source: "tcgplayer", market }, productId, `${page}_pinned_search`, { pos: ebaySearchRow ? 2 : 1 })} rel="sponsored nofollow noopener" target="_blank" className="btn-tcg min-h-10 whitespace-nowrap px-3 py-1.5">
-          Check TCGplayer <span aria-hidden="true">↗</span>
-        </a>
+        <span className="inline-flex items-center justify-end gap-2">
+          {tcgCart && <CartAddButton {...tcgCart} className="hidden text-muted sm:inline-flex" />}
+          <a href={goHref({ url: tcgUrl, source: "tcgplayer", market }, productId, `${page}_pinned_search`, { pos: ebaySearchRow ? 2 : 1 })} rel="sponsored nofollow noopener" target="_blank" className="btn-tcg min-h-10 whitespace-nowrap px-3 py-1.5">
+            Check TCGplayer <span aria-hidden="true">↗</span>
+          </a>
+        </span>
       </td>
     </tr>
   ) : null;
@@ -196,7 +209,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
                     <span className="font-medium text-ink">{sourceName(o)}</span>
                     <StoreVote url={o.url} name={sourceName(o)} className="ml-2 text-muted" />
                     {/* Phones: the cart list's add button as a line under the store, where the row has no width to spare. */}
-                    {o.inStock && o.source !== "tcgplayer" && (
+                    {o.inStock && (
                       <span className="block sm:hidden"><CartAddButton href={tagged(o.url, subId(o.market, `${page}_cart`, productId), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={product ?? cartTitle ?? o.title} detail={o.printing && o.printing !== "Normal" ? o.printing : null} priceCents={o.cents} currency={o.currency} image={image} inline className="text-xs" /></span>
                     )}
                     {o.source === "ebay" && <span className="ad-pill ml-2">Ad</span>}
@@ -215,7 +228,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
                   <td className="px-3 py-2.5 text-right">
                     {/* The cart list (components/cart, owner 2026-11-06): an in-stock store row, beside its button. */}
                     <span className="inline-flex items-center justify-end gap-2">
-                    {o.inStock && o.source !== "tcgplayer" && (
+                    {o.inStock && (
                       <CartAddButton href={tagged(o.url, subId(o.market, `${page}_cart`, productId), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={product ?? cartTitle ?? o.title} detail={o.printing && o.printing !== "Normal" ? o.printing : null} priceCents={o.cents} currency={o.currency} image={image} className="hidden text-muted sm:inline-flex" />
                     )}
                     <a href={goHref(o, productId, pinned.includes(o) ? `${page}_pinned` : page, { pos: i + 1 + rowsAbove + (amazonAfter >= 0 && i > amazonAfter && amazonRow ? 1 : 0), gapPct: gapOf(o) })} rel="sponsored nofollow noopener" target="_blank" className={`min-h-10 whitespace-nowrap ${o.source === "tcgplayer" && o.inStock ? "btn-tcg px-3 py-1.5" : pinned.includes(o) && o.inStock ? "btn-primary px-3 py-1.5" : o.inStock ? "btn-soft px-3 py-1.5" : "btn-ghost px-3 py-1.5 opacity-80"}`}>

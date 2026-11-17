@@ -53,7 +53,7 @@ export function SealedQuickBuy({ items, title }: { items: QuickBuyItem[]; title:
               </div>
               {o ? (
                 <span className="inline-flex shrink-0 items-center gap-2">
-                  {o.source !== "tcgplayer" && <CartAddButton href={tagged(o.url, subId(o.market, "set_quickbuy_cart", p.id), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={p.name} priceCents={o.cents} currency={o.currency} image={p.image} className="text-muted" />}
+                  <CartAddButton href={tagged(o.url, subId(o.market, "set_quickbuy_cart", p.id), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={p.name} priceCents={o.cents} currency={o.currency} image={p.image} className="text-muted" />
                   <a href={goHref(o, p.id, "set_quickbuy")} rel="sponsored nofollow noopener" target="_blank" className="btn-buy min-h-10 shrink-0 whitespace-nowrap">
                     Buy now <span aria-hidden="true">↗</span>
                   </a>
