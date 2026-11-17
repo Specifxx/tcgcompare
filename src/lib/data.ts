@@ -13,6 +13,7 @@ import { decodeOffer } from "./offer-codec";
 import { isEbayOffer } from "./price-store";
 import { referenceCents } from "./import/tcgcsv";
 import type { Series } from "./series";
+import { INDEX_HISTORY_DAYS, INDEX_MIN_OFFERS, isFresh, type IndexSignals } from "./indexing";
 import { SITE } from "@/site.config";
 
 const DIR = path.join(process.cwd(), "data");
@@ -137,6 +138,31 @@ export const refCents = (id: number): number | null => referenceCents(summaryOf(
 export function historyOf(p: Product): Series {
   const h = read<Record<string, Series>>(`history/${p.setId}.json`, {});
   return h[p.id] ?? [];
+}
+
+let restoredSlugs: Set<string> | null = null;
+function restored(): Set<string> {
+  if (!restoredSlugs) restoredSlugs = new Set(read<{ slugs?: string[] }>("gsc/restore.json", {}).slugs ?? []);
+  return restoredSlugs;
+}
+
+/** What the index gate (lib/indexing.ts) reads about a product: store offers that are in stock, priced and read recently, its recent history days, and whether the catalogue itself is fresh. */
+export function indexSignals(p: Product, now = Date.now()): IndexSignals {
+  const m = meta();
+  const fresh = isFresh(m?.updatedAt, now);
+  const offers = priceOf(p.id).offers;
+  const stores = new Set<string>();
+  for (const o of offers) {
+    if (o.source === "ebay" || o.source === "amazon" || o.source === "tcgplayer" || !o.inStock || !(o.cents > 0)) continue;
+    // A store read more than 14 days ago no longer counts (a store the import stopped reading keeps no rows past 72 hours anyway).
+    const at = m?.stores?.[o.source]?.at ?? m?.updatedAt;
+    if (isFresh(at, now)) stores.add(`${o.market}:${o.source}`);
+  }
+  const since = Math.floor(now / 86_400_000) - INDEX_HISTORY_DAYS;
+  const historyPoints = new Set(historyOf(p).filter(([d]) => d >= since).map(([d]) => d)).size;
+  // A page Search Console showed demand for before it was noindexed comes back (scripts/gsc-weekly.ts, data/gsc/restore.json).
+  if (restored().has(p.slug) && p.sealedType !== "Insert") return { storeOffers: INDEX_MIN_OFFERS, historyPoints: 0, anyPrice: true, fresh: true };
+  return { storeOffers: stores.size, historyPoints, anyPrice: offers.some((o) => o.cents > 0) || refCents(p.id) != null, fresh };
 }
 
 export function productsInSet(setId: number) {

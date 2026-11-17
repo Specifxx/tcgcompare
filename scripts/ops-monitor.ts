@@ -73,6 +73,25 @@ async function main() {
       if (!Array.isArray(listed) || !listed.length) return { status: "ok", detail: "no stores probed yet (data/crawl/stores.json empty): run the Crawl probe workflow" };
       return crawlVerdict(meta, listed.length, Date.now());
     }),
+    // Search Console index-diet tracking (scripts/gsc-weekly.ts, Mondays): a missing credential or a stale week is amber, never red.
+    check("Search Console weekly", async () => {
+      let last: { date: string; impressions28d: number } | null = null;
+      try {
+        const lines = fs.readFileSync(path.join(process.cwd(), "data/gsc/weekly.jsonl"), "utf8").trim().split("\n").filter(Boolean);
+        last = lines.length ? JSON.parse(lines[lines.length - 1]) : null;
+      } catch {}
+      if (!last) return { status: "warn", detail: "no week recorded yet: needs Bill's Search Console sign-in (GSC_SERVICE_ACCOUNT_JSON secret, GSC_PROPERTY variable)" };
+      const age = (Date.now() - new Date(last.date).getTime()) / 86_400_000;
+      return age <= 10 ? { status: "ok", detail: `last week recorded ${last.date}, ${last.impressions28d} impressions in 28 days` } : { status: "warn", detail: `last week recorded ${last.date} (${age.toFixed(0)} days ago): check the Search Console weekly workflow` };
+    }),
+    // The index gate (lib/indexing.ts): how many product pages ask to be indexed. None means the data is stale or the gate broke.
+    check("Index gate", async () => {
+      const { products, indexSignals, setById } = await import("@/lib/data");
+      const { cardIndexable } = await import("@/lib/indexing");
+      const sealed = products().filter((p) => p.kind === "sealed");
+      const n = sealed.filter((p) => cardIndexable(p, indexSignals(p), setById(p.setId))).length;
+      return n > 0 ? { status: "ok", detail: `${n} of ${sealed.length} sealed product pages qualify for the index and sitemap` } : { status: "fail", detail: `0 of ${sealed.length} sealed product pages qualify for the index: the data is older than 14 days or the gate is broken` };
+    }),
     // The Compare Empire network feed (scripts/family-sync.ts): sisters' "Also in this cluster"
     // blocks read it from GitHub, so a stale one silently empties their tiles for this site.
     check("Family feed", async () => {

@@ -7,7 +7,7 @@ import { retiredCardTarget } from "@/lib/card-redirects";
 import { culledEntry, culledRedirect } from "@/lib/culled";
 import { gameHubOfLine, gameHubOfSet } from "@/lib/data";
 import { SITE } from "@/site.config";
-import { byValue, historyOf, looseSingleSetId, meta, priceOf, productBySlug, productsInSet, refCents, setById, setBySlug } from "@/lib/data";
+import { byValue, historyOf, indexSignals, looseSingleSetId, meta, priceOf, productBySlug, productsInSet, refCents, setById, setBySlug } from "@/lib/data";
 import { imageAt } from "@/lib/image";
 import { money, pct } from "@/lib/format";
 import { shortName } from "@/lib/names";
@@ -53,7 +53,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
     alternates: { canonical: `/card/${p.slug}` },
     // Pack inserts (worth cents, DECISIONS.md 2026-10-28) and cards with no
     // price and no listing at all (lib/indexing.ts) stay out of the index.
-    ...(cardIndexable(p, ref, priceOf(p.id).offers.length, set) ? {} : { robots: { index: false, follow: true } }),
+    ...(cardIndexable(p, indexSignals(p), set) ? {} : { robots: { index: false, follow: true } }),
     // The image is ./opengraph-image.tsx: the card and its real price gap (lib/share.ts).
     openGraph: { type: "website", siteName: SITE.name, url: `/card/${p.slug}`, title, description },
     twitter: { card: "summary_large_image" },

@@ -5,7 +5,8 @@
 // is no database.
 import { NextResponse } from "next/server";
 import { SITE } from "@/site.config";
-import { subId, tagged } from "@/lib/affiliate";
+import { isPaidSource, subId, tagged } from "@/lib/affiliate";
+import { track } from "@vercel/analytics/server";
 import { looksLikeBot } from "@/lib/bot-click";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ const ALLOWED = [
   ...[...SITE.stores, ...(SITE.kits?.stores ?? [])].map((s) => new RegExp(`(^|\\.)${new URL(s.base).hostname.replace(/^www\./, "").replace(/\./g, "\\.")}$`, "i")),
 ];
 
-export function GET(req: Request) {
+export async function GET(req: Request) {
   const u = new URL(req.url);
   const dest = u.searchParams.get("u") ?? "";
   let host = "";
@@ -31,6 +32,27 @@ export function GET(req: Request) {
   // c=1: an in-stock Shopify store row, sent straight to its checkout (lib/checkout-link.ts).
   // A bot still reaches the shop, untagged, so the affiliate network never counts it as our click (lib/bot-click.ts).
   const target = looksLikeBot(req.headers) ? dest : tagged(dest, subId(market, page, pid), { checkout: u.searchParams.get("c") === "1" });
+  // The click log's server half (DECISIONS.md, 2026-11-17): the visitor's country, which the browser does not know. No database:
+  // a Vercel Analytics event and one runtime-log line (scripts/paid-click-share.ts reads either). Bots are not logged.
+  if (!looksLikeBot(req.headers)) {
+    const source = (u.searchParams.get("s") ?? "").slice(0, 24);
+    const country = (req.headers.get("x-vercel-ip-country") ?? "").slice(0, 2).toUpperCase() || "XX";
+    const evt = {
+      country,
+      market,
+      retailer_key: source,
+      paid: isPaidSource(source),
+      position: Number(u.searchParams.get("r")) || 0,
+      price_gap_pct: u.searchParams.has("g") ? Number(u.searchParams.get("g")) : -1,
+      page,
+      product: pid ?? 0,
+      link_type: u.searchParams.get("c") === "1" ? "checkout" : "product",
+    };
+    console.log(JSON.stringify({ evt: "buy_click_geo", ...evt }));
+    try {
+      await track("buy_click_geo", evt);
+    } catch {}
+  }
   const res = NextResponse.redirect(target, 302);
   res.headers.set("X-Robots-Tag", "noindex, nofollow");
   // Affiliate links must be non-indexed and non-cacheable (Amazon Associates Operating Agreement, 2026-11-02).

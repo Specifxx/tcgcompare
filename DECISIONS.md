@@ -539,3 +539,34 @@ own, no pop-up, never in a price row or a ranking. Update the two instants next 
 ## 2026-11-17: New-release price guides, one per newest set of a game
 
 Bill asked for insightful posts on the newer releases of every game. TCG Prices holds sealed product only, so each new-release guide is a price guide for the whole set's sealed range, built from tokens so the numbers stay today's: `{{price:<id>}}` for a product, `{{ratio:<a>:<b>}}` (new, `lib/post-render.ts`) for one product's price as a multiple of another's, and the existing `{{sealed:<setId>}}` table of every product in the set with the cheapest in-stock store. First three: Pokémon Delta Reign, Magic Star Trek, Lorcana Hyperia City. Rules kept: no pack count or card text is stated (only what the listings carry), no estimate of what a box returns, no eBay or Amazon price. Single-card chase and signature guides belong to the sites that hold singles (Rift for Riftbound), not here.
+
+## 2026-11-17: Grok growth report: the index gate, a click log, IndexNow on change only, weekly Search Console tracking
+
+Owner adopted the report's recommendations that fit the standing rules. What changed here:
+
+- **Index gate** (`lib/indexing.ts`, `indexSignals` in `lib/data.ts`): a sealed product page asks to be indexed, and is in the
+  sitemap, only with 2 or more in-stock priced STORE offers (never eBay, Amazon or the TCGplayer row) from stores read in the last
+  14 days, or 1 such offer plus 4 or more history days in the last 30, and only while the catalogue's own import is under 14 days
+  old. Everything else is `noindex, follow`, still reachable, nothing 404s or redirects that did not before. Upcoming-set products
+  keep the reveal-week exception (any priced listing or reference) but also need fresh data. Today 2,903 of 4,503 product URLs
+  qualify (was 4,503, the old rule indexed a TCGplayer reference alone). That is far above the report's "about 300": every
+  qualifying page has two real stores, and the history clause is dormant until the history is 4 days deep (it is 3 at most). Query
+  variants were already blocked by robots.txt (`/*?`) and canonicalise to the clean URL. `data/gsc/restore.json` (written by the
+  weekly Search Console job) can put back a noindexed page that had demand.
+- **IndexNow** (`scripts/indexnow-submit.ts`) now sends only never-sent qualifying product, set and guide URLs, and products
+  whose cheapest in-stock USD store price moved 5% or more since last sent; no hubs, nothing every refresh, at most 1,000 a run.
+  The record is `data/state/indexnow.json`, committed by `refresh-prices.yml` in a separate commit with no deploy marker.
+- **Click log**: `/go` links carry the row's position (`r`) and its percent gap to the cheapest in-stock store (`g`); the browser's
+  `buy_click` event gains `paid`, `position`, `price_gap_pct`, and `/go` writes `buy_click_geo` (country from
+  `x-vercel-ip-country`, paid or store, position, gap) to Vercel Analytics and one runtime-log line. No database, no new egress.
+  There is no landed cost on this site (postage is shown, never added), so the rank is the item-price gap. `scripts/paid-click-share.ts`
+  sums paid share by AU, US, UK, CA, EU and the rest from an exported log.
+- **Weekly Search Console tracking** (`scripts/gsc-weekly.ts`, `gsc-weekly.yml`, ops check "Search Console weekly"): appends one row a
+  week to `data/gsc/weekly.jsonl`. It needs Bill's sign-in (a service account added to the property: `GSC_SERVICE_ACCOUNT_JSON`
+  secret, `GSC_PROPERTY` variable); until then it is a no-op and the check is amber. Ops check "Index gate" is red if no product qualifies.
+- **Inline price alert**: the product page's target-price form is open by default (`defaultOpen`), still inline, no pop-up.
+- **Methodology** names its editor (Bill, first name only: the owner can add a surname), what is and is not tracked, and the
+  affiliate disclosure; the footer already carried the plain "not affiliated" line. "Prices checked" already shows on product pages.
+- **Cyber Weekend per-game hubs: not built.** The 30-day median they need does not exist yet: `data/history` holds at most 3 days
+  per product (the site is 3 days old). `/black-friday` and `/cyber-monday` already list the real deals per game (under TCGplayer's
+  market price, in stock). Revisit when 30 days of history exist.

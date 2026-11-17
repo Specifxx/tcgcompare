@@ -29,13 +29,23 @@ test("homepage, set and sealed hubs list their products as an ItemList", () => {
 // upcoming set) are indexed; JSON-LD prices carry a priceValidUntil of tomorrow.
 test("card pages with no price and no listing are kept out of the index", async () => {
   const { cardIndexable, priceValidUntil } = await import("../src/lib/indexing");
-  const card = { kind: "card" as const, sealedType: null };
-  assert.equal(cardIndexable(card, null, 0, { upcoming: false }), false);
-  assert.equal(cardIndexable(card, 250, 0, { upcoming: false }), true);
-  assert.equal(cardIndexable(card, null, 1, { upcoming: false }), false);
-  assert.equal(cardIndexable(card, null, 2, { upcoming: false }), true);
-  assert.equal(cardIndexable(card, null, 0, { upcoming: true }), true);
-  assert.equal(cardIndexable({ kind: "sealed", sealedType: "Insert" }, 5000, 3, { upcoming: false }), false);
+  const card = { kind: "sealed" as const, sealedType: "Booster Box" };
+  const sig = (storeOffers: number, historyPoints = 0, over: Partial<{ anyPrice: boolean; fresh: boolean }> = {}) => ({ storeOffers, historyPoints, anyPrice: storeOffers > 0, fresh: true, ...over });
+  const live = { upcoming: false };
+  assert.equal(cardIndexable(card, sig(0), live), false);
+  assert.equal(cardIndexable(card, sig(1), live), false); // one store and no track record is thin
+  assert.equal(cardIndexable(card, sig(1, 3), live), false);
+  assert.equal(cardIndexable(card, sig(1, 4), live), true); // one store plus four history days in 30
+  assert.equal(cardIndexable(card, sig(2), live), true);
+  assert.equal(cardIndexable(card, sig(5, 9, { fresh: false }), live), false); // data older than 14 days
+  assert.equal(cardIndexable(card, sig(0, 0, { anyPrice: true }), { upcoming: true }), true);
+  assert.equal(cardIndexable(card, sig(0), { upcoming: true }), false);
+  assert.equal(cardIndexable({ kind: "sealed", sealedType: "Insert" }, sig(3), live), false);
+  const { isFresh } = await import("../src/lib/indexing");
+  const now = Date.UTC(2026, 10, 17);
+  assert.equal(isFresh("2026-11-04T00:00:00Z", now), true);
+  assert.equal(isFresh("2026-11-02T00:00:00Z", now), false);
+  assert.equal(isFresh(undefined, now), false);
   assert.equal(priceValidUntil(Date.UTC(2026, 10, 4, 12)), "2026-11-05");
   const src = read("src/app/card/[slug]/page.tsx");
   assert.match(src, /cardIndexable\(/);

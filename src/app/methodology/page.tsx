@@ -16,6 +16,13 @@ export default function Methodology() {
         <li><b>Currencies</b> — store prices are shown as the store charges them. Converted figures (marked ≈) use the day&apos;s European Central Bank reference rate.</li>
       </ul>
       <p>The store&apos;s checkout price is always final. Shipping is shown where the listing publishes it.</p>
+      <h2>What we track, and what we don&apos;t</h2>
+      <p>We track sealed product only: booster boxes, cases, packs, tins, bundles, collections and decks, new and in the original language of each market. We do not track single cards, graded or opened product, resealed product, repacks, break spots, lots or second-hand listings, and we never convert one currency into another to rank stores. A price is shown only when we can tie the listing to one exact product; we would rather miss a price than show the wrong one.</p>
+      <p>A product page is offered to search engines only when two or more stores have it in stock at a price we read recently (or one store plus a month of price history). Other products stay reachable here, but we do not ask search engines to list them. Every page says when prices were last checked.</p>
+      <h2>Who is behind it</h2>
+      <p>{SITE.name} is edited by Bill, who owns the site, chooses which stores are listed and reviews how matching and ranking rules change. Questions and corrections go to <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a> or <a href="/contact">the contact page</a>. This page was last reviewed on 17 November 2026.</p>
+      <h2>How we make money</h2>
+      <p>Some buy links are affiliate links (eBay Partner Network, TCGplayer, Amazon). If you buy through one the retailer may pay us a commission at no cost to you. Commission never decides the order of the stores: they are ranked by price alone, and an affiliate row is always labelled and never called the cheapest. {SITE.name} is not affiliated with, endorsed by or sponsored by any game publisher.</p>
     </StaticPage>
   );
 }
