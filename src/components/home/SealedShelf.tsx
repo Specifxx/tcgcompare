@@ -27,6 +27,7 @@ function ShelfCard({ i, market }: { i: HeroItem; market: Market }) {
         )}
       </div>
       <div className="card-body pc-body">
+        {i.game && <p className="text-xs font-semibold uppercase tracking-wide text-muted">{i.game}</p>}
         <p className="pc-name">{i.name}</p>
         <div className="mt-auto">
           <p className={`pc-stock ${pr ? (pre ? "pc-pre" : "pc-open") : "pc-sold"}`} title={pr ? `${pre ? "Pre-order" : "In stock"} at ${unit} in ${MARKET_LABEL[market]}` : undefined}>

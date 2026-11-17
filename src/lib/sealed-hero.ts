@@ -14,6 +14,8 @@ import { SITE } from "@/site.config";
 import { CURRENCY, MARKETS, type Market, type Product } from "@/lib/site-types";
 import { featureMin, priceOf, refCents, setById } from "@/lib/data";
 import { featuredSealed, preorderSetList, sealedInSet } from "@/lib/hubs";
+import { popularBoxes } from "@/lib/popular-boxes";
+import { lineOfSet } from "@/lib/lines";
 import { imageAt } from "@/lib/image";
 import { isPreorder, preorderPath } from "@/lib/preorders";
 import { shortName } from "@/lib/names";
@@ -40,6 +42,8 @@ export interface HeroItem {
   slug: string;
   name: string;
   set: string | null;
+  /** The game's short name ("Pokémon"), so a shelf that mixes games says which. */
+  game: string | null;
   image: string | null;
   /** The release date when the product's set is still on pre-order. */
   releasesOn: string | null;
@@ -97,6 +101,7 @@ export function heroItem(p: Product): HeroItem {
     slug: p.slug,
     name: shortName(p.name),
     set: set?.name ?? null,
+    game: lineOfSet(set)?.short ?? null,
     image: imageAt(p.image, "400w"),
     releasesOn: pre ? set?.releasedOn ?? null : null,
     prices,
@@ -109,7 +114,10 @@ const PREORDER_TYPES = new Set(["Booster Box", "Display", "Collection", "Special
 // Eight boxes: two full rows of the home shelf's four-across grid (it was seven in a swipeable row until 2026-11-13).
 export function sealedHero(featuredCount = 8, preorderSetsMax = 2, perSet = 4): SealedHeroData {
   const sold = (i: HeroItem) => Object.keys(i.prices).length > 0;
-  const featured = featuredSealed(featuredCount + 4).map(heroItem).filter(sold).slice(0, featuredCount);
+  // The most in-demand booster boxes across every game (lib/popular-boxes.ts); the newest boxes fill any gap.
+  const demanded = popularBoxes(featuredCount + 2);
+  const taken = new Set(demanded.map((p) => p.id));
+  const featured = [...demanded, ...featuredSealed(featuredCount + 4).filter((p) => !taken.has(p.id))].map(heroItem).filter(sold).slice(0, featuredCount);
   const preorders = preorderSetList()
     .filter((s) => isPreorder(s))
     .map((s) => ({

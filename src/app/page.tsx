@@ -127,7 +127,7 @@ export default function Home() {
           {
             label: boxes ? "Booster boxes" : "Sealed",
             panel: (
-              <Shelf heading={`The newest ${SITE.gameShort} ${boxes ? "booster boxes" : "sealed products"}, each at its cheapest store today`} links={[{ href: boxes ? "/sealed/booster-box" : "/sealed", label: boxes ? "All booster boxes" : "All sealed products" }]}>
+              <Shelf heading={boxes ? "The most in-demand booster boxes across every game, each at its cheapest store today" : `The newest ${SITE.gameShort} sealed products, each at its cheapest store today`} links={[{ href: boxes ? "/sealed/booster-box" : "/sealed", label: boxes ? "All booster boxes" : "All sealed products" }]}>
                 <SealedShelf items={hero.featured} />
               </Shelf>
             ),
