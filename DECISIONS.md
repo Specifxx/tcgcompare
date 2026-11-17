@@ -626,3 +626,15 @@ previous size). Pages outside the cap stay indexable (the gate is unchanged) and
 ## 2026-11-17 AI assistants: count their visits, and say how to cite us
 
 Crawl access, llms.txt, JSON-LD and the open CSV/index were already in place; what was missing was any way to see whether AI answers send visitors. `AiReferralTracker` (client, once per session) reads `document.referrer` and `utm_source` (ChatGPT adds `utm_source=chatgpt.com`) through `lib/ai-referral.ts`, sends the Vercel Web Analytics event `ai_referral` (assistant, landing path) and tags later `buy_click` events with `ai_source`. Read it in Vercel → Analytics → Events, filtered by `assistant`. Nothing is stored beyond sessionStorage. llms.txt gains a "Citing these prices" block: dated prices, the CSV/index URLs, the licence and a suggested credit line. No spend, no new route, no change to ranking or links.
+
+## 2026-11-17: Fiverr first-time-shopper review of DexCompare, applied here (owner)
+
+The owner bought a professional first-time-shopper QA review of DexCompare and asked for every finding that generalises to reach every site.
+Applied here (the full reasoning is in DexCompare's DECISIONS.md, same date):
+
+- **Cart hand-off:** the cart drawer opens with "You pay each store on its own site. We never take payment." (normal-size text, first thing in the
+  drawer); "Total before postage" became "Estimated total (before postage)"; the add button's tooltip says you pay at the store. The label stays
+  "Add to cart" (owner, 2026-11-14: a literal "Add to cart" on every row).
+- **The quick view sets the tab title and description while it is open** and restores them on close (the tab used to keep the list's title).
+- **A total beside the shipping figure** on a row that charges postage ("+ $X shipping · ≈ $Y total").
+- Already true here, no change: an eBay or Amazon row is never "the cheapest" or "Best price" (`neverCheapest`), so the table never contradicts its own headline.
