@@ -609,3 +609,10 @@ so it is not used for a trend.
 ## 2026-11-17: Quick view: price history at the very bottom, at most 10 rows (owner)
 
 Owner, 2026-11-17: the price-history chart at the top of the quick view is "not even that valuable". It now sits at the very bottom of the panel, below the rows and the ad pair, and the quick view lists at most 10 rows (`maxRows`): the pinned eBay and TCGplayer rows first, then the cheapest others, with "N more listings on the full page" (the page and "See price history and details" still show everything). The Cheapest price box and the Add to cart buttons are unchanged. Paid rows, their order and wording are untouched in every A/B arm (Dex and MTG tests, 20 Nov to 3 Dec).
+
+## 2026-11-17: The sitemap lists the strongest 1,200 products, growing 300 a week (Gemini SEO report; owner's yes)
+
+A Gemini report suggested a 150–250 URL sitemap for the new domain, widened as Google indexes it. The owner said cutting further is fine. `app/sitemap.ts` now lists every indexable
+sealed product ranked by fresh in-stock store count, then 30-day history points (`rankForSitemap`, `lib/indexing.ts`), capped at `sitemapProductCap()`: 1,200 from 17 Nov, +300 a week, at most 2,900 (the
+previous size). Pages outside the cap stay indexable (the gate is unchanged) and are found by links; IndexNow and the weekly GSC index diet are unchanged. A weekly step stands in for "expand once
+80% of the last batch is indexed"; if Search Console shows under half of the first 1,200 indexed by 1 Dec, hold the cap. `tests/sitemap-cap.test.ts`.
