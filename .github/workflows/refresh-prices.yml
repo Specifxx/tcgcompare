@@ -199,3 +199,11 @@ jobs:
           INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
         run: npx tsx scripts/indexnow-submit.ts || true
+      # What IndexNow was sent and at what price (data/state/indexnow.json). A separate commit WITHOUT a deploy marker.
+      - name: Commit IndexNow state
+        if: success()
+        run: |
+          git add data/state/indexnow.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "data: IndexNow record"
+          git push origin HEAD:main || (git pull --rebase origin main && git push origin HEAD:main) || true

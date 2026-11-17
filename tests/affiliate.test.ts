@@ -47,7 +47,7 @@ test("every partner tag starts with the site key, so earnings split by site", ()
 
 test("/go tags with site, market, placement and product", async () => {
   const { GET } = await import("@/app/go/route");
-  const res = GET(new Request("https://example.test/go?" + new URLSearchParams({ u: "https://www.ebay.com/itm/9", s: "ebay", m: "UK", p: "42", from: "card_top" }), { headers: BROWSER }));
+  const res = await GET(new Request("https://example.test/go?" + new URLSearchParams({ u: "https://www.ebay.com/itm/9", s: "ebay", m: "UK", p: "42", from: "card_top" }), { headers: BROWSER }));
   const loc = new URL(res.headers.get("location")!);
   assert.match(loc.searchParams.get("customid")!, /^[a-z]+-uk-card_top-42$/);
 });

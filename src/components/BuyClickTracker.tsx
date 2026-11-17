@@ -9,6 +9,7 @@
 import { useEffect } from "react";
 import { track } from "@vercel/analytics";
 import { SITE } from "@/site.config";
+import { isPaidSource } from "@/lib/affiliate";
 
 const NAMES: Record<string, string> = {
   tcgplayer: "TCGplayer",
@@ -37,6 +38,10 @@ export function BuyClickTracker() {
           page: q.get("from") ?? location.pathname,
           host,
           link_type: q.get("c") === "1" ? "checkout" : "product",
+          // Click log (DECISIONS.md, 2026-11-17): paid (eBay, TCGplayer, Amazon) or a store, the row's position, and its item-price gap (%) to the cheapest in-stock store. The visitor's country is added server-side by /go ("buy_click_geo").
+          paid: isPaidSource(source),
+          position: Number(q.get("r")) || 0,
+          price_gap_pct: q.has("g") ? Number(q.get("g")) : -1,
         });
       } catch {}
     };

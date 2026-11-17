@@ -47,6 +47,7 @@ export function PriceAlertForm({
   className,
   buttonClassName,
   summary = "Email me when the price drops",
+  defaultOpen = false,
 }: {
   /** this site's key in the alert service ("mtg", "gundam", …) */
   site: string;
@@ -58,8 +59,10 @@ export function PriceAlertForm({
   className?: string;
   buttonClassName?: string;
   summary?: string;
+  /** Show the target-price field already open (the product page: inline, never a pop-up). */
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [state, setState] = useState<State>({ status: "idle" });
   const sym = SYMBOL[region] ?? "";
   const start = priceCents ? (suggestTarget(priceCents) / 100).toFixed(0) : "";
