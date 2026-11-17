@@ -622,3 +622,7 @@ A Gemini report suggested a 150–250 URL sitemap for the new domain, widened as
 sealed product ranked by fresh in-stock store count, then 30-day history points (`rankForSitemap`, `lib/indexing.ts`), capped at `sitemapProductCap()`: 1,200 from 17 Nov, +300 a week, at most 2,900 (the
 previous size). Pages outside the cap stay indexable (the gate is unchanged) and are found by links; IndexNow and the weekly GSC index diet are unchanged. A weekly step stands in for "expand once
 80% of the last batch is indexed"; if Search Console shows under half of the first 1,200 indexed by 1 Dec, hold the cap. `tests/sitemap-cap.test.ts`.
+
+## 2026-11-17 AI assistants: count their visits, and say how to cite us
+
+Crawl access, llms.txt, JSON-LD and the open CSV/index were already in place; what was missing was any way to see whether AI answers send visitors. `AiReferralTracker` (client, once per session) reads `document.referrer` and `utm_source` (ChatGPT adds `utm_source=chatgpt.com`) through `lib/ai-referral.ts`, sends the Vercel Web Analytics event `ai_referral` (assistant, landing path) and tags later `buy_click` events with `ai_source`. Read it in Vercel → Analytics → Events, filtered by `assistant`. Nothing is stored beyond sessionStorage. llms.txt gains a "Citing these prices" block: dated prices, the CSV/index URLs, the licence and a suggested credit line. No spend, no new route, no change to ranking or links.
