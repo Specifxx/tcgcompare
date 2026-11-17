@@ -22,14 +22,25 @@ function track(name: string, params: Record<string, unknown>) {
   }
 }
 
+let drawerOwner: symbol | null = null;
+
 export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [checks, setChecks] = useState<Checks>({});
   const [checking, setChecking] = useState(false);
   const [blocked, setBlocked] = useState<CheckoutItem[] | null>(null);
   const [opened, setOpened] = useState(0);
+  // One drawer draws, whichever header button asked (a header can mount the button twice).
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (drawerOwner) return;
+    const me = Symbol("cart-drawer");
+    drawerOwner = me;
+    setMounted(true);
+    return () => {
+      if (drawerOwner === me) drawerOwner = null;
+    };
+  }, []);
   const ref = useRef("");
   const panel = useRef<HTMLDivElement>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
