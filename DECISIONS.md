@@ -512,3 +512,11 @@ import (`FOCUS_SIZING=1`, `data/crawl/focus-sizing.json`; nothing changes).
 ## 2026-11-17 — Urgent release for the header-menu click fix
 
 The dropdown items could not be clicked in Safari and Firefox on macOS (the menu closed on mousedown, before the click) and the owner asked for an urgent deploy. The fix was merged earlier on 2026-11-16 without a marker and the manual release was skipped by the 12-hour gap, so this entry lands with `[deploy] [urgent]` in its merge subject (owner: "deploy urgently"). One build.
+
+## 2026-11-17: a culled product comes back when one store has it in stock
+
+Owner's tap on a decision card (as many stores and listings as possible). Sizing from the trial import: widening the whole
+sealed focus would add about 4,100 products, but only about 660 have any store offer (2,444 offers), so `minStores` goes
+from 2 to 1 (a store has it IN STOCK, any age) and products with no store stay out. A product with no TCGplayer price and
+fewer than two offers is noindex and out of the sitemap (`cardIndexable`), so one-store pages are not thin search pages.
+Never widen the age or price floors for a product with no store.

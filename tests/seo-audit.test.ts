@@ -32,7 +32,8 @@ test("card pages with no price and no listing are kept out of the index", async 
   const card = { kind: "card" as const, sealedType: null };
   assert.equal(cardIndexable(card, null, 0, { upcoming: false }), false);
   assert.equal(cardIndexable(card, 250, 0, { upcoming: false }), true);
-  assert.equal(cardIndexable(card, null, 1, { upcoming: false }), true);
+  assert.equal(cardIndexable(card, null, 1, { upcoming: false }), false);
+  assert.equal(cardIndexable(card, null, 2, { upcoming: false }), true);
   assert.equal(cardIndexable(card, null, 0, { upcoming: true }), true);
   assert.equal(cardIndexable({ kind: "sealed", sealedType: "Insert" }, 5000, 3, { upcoming: false }), false);
   assert.equal(priceValidUntil(Date.UTC(2026, 10, 4, 12)), "2026-11-05");

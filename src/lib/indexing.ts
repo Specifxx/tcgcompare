@@ -11,7 +11,8 @@
 export function cardIndexable(p: { kind: "card" | "sealed"; sealedType: string | null }, refCents: number | null, offerCount: number, set: { upcoming: boolean } | null | undefined): boolean {
   if (p.sealedType === "Insert") return false; // pack inserts, as before (DECISIONS.md, 2026-10-28)
   if (set?.upcoming) return true;
-  return refCents != null || offerCount > 0;
+  // One store and no TCGplayer reference is a thin page (owner, 2026-11-17): it exists for the visitor who lands on it, not for search.
+  return refCents != null || offerCount >= 2;
 }
 
 /** Store prices refresh on the daily import, so a price in JSON-LD is good until tomorrow (schema.org priceValidUntil, YYYY-MM-DD). */

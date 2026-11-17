@@ -198,7 +198,7 @@ export const SITE: SiteConfig = {
     headlineMaxAgeMonths: 36,
     otherMaxAgeMonths: 18,
     minCents: 500,
-    minStores: 2,
+    minStores: 1,
     groupMaxAgeMonths: 60,
     // TCGplayer's catch-all groups, dated by the group, not by their products (lib/import/continuity.ts): Magic's
     // Secret Lair Drop Series, Secret Lair Series and Challenger Decks, Pokemon's Miscellaneous Cards & Products.
