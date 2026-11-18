@@ -22,6 +22,7 @@ import { adSearch, cardAds } from "@/lib/card-ads";
 import { sealedSets } from "@/lib/hubs";
 import { Fold, Folds } from "@/components/Fold";
 import { packOfBox } from "@/lib/packs";
+import { ShareButton } from "@/components/ShareButton";
 
 export const dynamic = "force-dynamic"; // one CDN copy per URL (next.config.js CDN_PAGES), never ISR
 
@@ -74,6 +75,7 @@ export default function SetPage({ params }: { params: { slug: string } }) {
           <p className="mt-3 text-sm text-muted">
             {sealed.length} sealed product{sealed.length === 1 ? "" : "s"}, compared across every store we track, TCGplayer, eBay and Amazon.
           </p>
+          <ShareButton path={`/sets/${s.slug}`} name={`${s.name} sealed prices`} medium="set" text={`${s.name}: every booster box and sealed price, compared on ${SITE.name}`} className="mt-3" />
           {preorderSetList().some((x) => x.id === s.id) && (
             <p className="mt-3 text-sm"><Link className="link font-semibold" href={preorderPath(s)}>{isPreorder(s) ? `${s.name} pre-order prices at every store →` : `${s.name} booster box prices at every store →`}</Link></p>
           )}
