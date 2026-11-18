@@ -1,5 +1,5 @@
-// The movers page's share image (owner, 2026-11-18: "we need more shareable artefacts"): this week's five biggest
-// risers and three biggest fallers by TCGplayer market price, the list people post in finance threads. One image for
+// The movers page's share image (owner, 2026-11-18: "we need more shareable artefacts"): this week's four biggest
+// risers...  by TCGplayer market price, the list people post in finance threads. One image for
 // the whole site, text only like the card image (the Vercel cost cap, 2026-11-08), kept a day. Before a week of
 // history exists it says so instead of inventing a list.
 import { ImageResponse } from "next/og";
@@ -18,10 +18,10 @@ const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trim
 export default function Image() {
   const t = SITE.theme;
   const w = movers(7, 300);
-  const up = w.up.slice(0, 5);
+  const up = w.up.slice(0, 4);
   const down = w.down.slice(0, 3);
   const Row = ({ name, cents, change }: { name: string; cents: number; change: number }) => (
-    <div style={{ display: "flex", alignItems: "baseline", fontSize: 30, marginTop: 10 }}>
+    <div style={{ display: "flex", alignItems: "baseline", fontSize: 28, marginTop: 8 }}>
       <span style={{ width: 150, fontWeight: 800, color: change >= 0 ? "#4ade80" : "#f87171" }}>{pct(change)}</span>
       <span style={{ flex: 1, color: "#f8fafc" }}>{clip(name, 38)}</span>
       <span style={{ color: "#cfd6e6" }}>{money(cents)}</span>
