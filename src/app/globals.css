@@ -1436,3 +1436,10 @@ a.card:hover {
 
 /* The phone bottom nav (components/BottomNav.tsx): the return nudge sits above it, not under it, while it shows. */
 html[data-bottomnav] [data-return-nudge] { bottom: calc(env(safe-area-inset-bottom) + 72px); }
+
+/* Premium members (lib/premium-member.ts, 2026-11-18): no banner ads. The sponsored banners, the inline block and the phone dock go;
+   price tables and their pinned rows are untouched. */
+html[data-adfree] [data-ad="banners"],
+html[data-adfree] [data-ad="inline"] {
+  display: none;
+}
