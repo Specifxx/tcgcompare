@@ -785,3 +785,13 @@ insights … the ability to share pages and guides", then "if you share … you 
   visitor's own tap, closes with ✕, and shows nothing that is not free anyway: a store row only, never eBay, Amazon or
   TCGplayer, never a price withheld. The other half is the control. Events: `share { medium, arm }`, `share_unlock { medium }`,
   `share_visit { medium }` as before. Read share rate per arm at two weeks; keep the reward only if it raises shares.
+## 2026-11-18: Barcodes on sealed pages (owner: "unique identifiers … are easy SEO results")
+
+Search Console says it plainly (TCGEmpire maintenance task `gsc-identifiers`, 90 days to 15 Nov): on KaeYoung every one of its 22 Google
+clicks came from someone typing a product's barcode (318 barcode queries, 862 impressions), ScentCompare's barcodes drew 355 impressions,
+and Gundam Compare's kit JANs show up too. TCGplayer's catalogue (`extendedData` "UPC", already read by RiftCompare's Pokémon section)
+carries a barcode for about half of the sealed products, so each import now keeps it as `Product.upc` (`lib/gtin.ts`): check digit verified,
+an 11-digit UPC given back its leading zero, and dropped when TCGplayer files the same code on two or more products (a case code on every
+blister), because it would name the wrong product. Never taken from a store title, never invented.
+The product page shows it ("UPC barcode" / "EAN barcode") with the TCGplayer ID, its Product markup carries `gtin12`/`gtin13` and
+`productID: tcgplayer:<id>`, and `/api/search` finds a product when the whole barcode or TCGplayer id is typed (exact only). No new URLs.
