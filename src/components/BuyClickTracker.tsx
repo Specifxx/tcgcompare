@@ -41,6 +41,7 @@ export function BuyClickTracker() {
           // Click log (DECISIONS.md, 2026-11-17): paid (eBay, TCGplayer, Amazon) or a store, the row's position, and its item-price gap (%) to the cheapest in-stock store. The visitor's country is added server-side by /go ("buy_click_geo").
           paid: isPaidSource(source),
           nudge_arm: (() => { try { return localStorage.getItem("rn-arm") ?? ""; } catch { return ""; } })(),
+          leave_arm: (() => { try { return localStorage.getItem("ln-arm") ?? ""; } catch { return ""; } })(),
           ai_source: (window as unknown as { __aiSource?: string }).__aiSource ?? "",
           position: Number(q.get("r")) || 0,
           price_gap_pct: q.has("g") ? Number(q.get("g")) : -1,
