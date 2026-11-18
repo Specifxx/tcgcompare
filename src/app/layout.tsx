@@ -33,6 +33,7 @@ import { DockAds } from "@/components/DockAds";
 import { BottomNav } from "@/components/BottomNav";
 import { AskSheet } from "@/components/AskSheet";
 import { cardAds } from "@/lib/card-ads";
+import { ReturnBeacon } from "@/components/ReturnBeacon";
 
 // The engine's two faces (DexCompare and MTG Compare: Bricolage Grotesque for headings, Inter for text), bundled as the latin
 // subsets of the variable fonts (OFL, src/app/fonts): no font request at build or at runtime. Display is optional, not swap:
@@ -114,6 +115,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AdFreeSync />
         <AiReferralTracker />
         <ShareArrival />
+        <ReturnBeacon />
       </body>
     </html>
   );
