@@ -935,3 +935,24 @@ the same honesty rule as RiftCompare's Hot 40. `/movers` links to it.
 **Why.** Owner, 2026-11-18: RiftCompare's Hot chart works on Reddit as a plain link and title and brings real visits;
 every site should have one stable URL to post once a week (tagged `utm_source=reddit&utm_medium=social&utm_campaign=hot100-<site>-<date>`).
 Rides the next import release; the chart fills once a week of history exists (from 21 Nov 2026). `tests/hot100.test.ts`.
+
+## Titles in each game's own words, and set pages as landing pages (Cardmarket's playbook) — 2026-11-18
+
+**What.** Every set and sealed product title now leads with its game as its players type it, from `GameLine.seo` in
+`site.config.ts` (`lib/game-seo.ts`): "One Piece The Dominance of God (OP18) Booster Box & Sealed Prices",
+"Pokémon Delta Reign Booster Box & ETB Prices", "Gundam Stardust Trails Booster Box (GD06) Price". Before, every one
+said `SITE.gameShort` ("TCG ME06: Delta Reign Booster Box Price — TCG ME06: Delta Reign"), so no page named its game.
+TCGplayer's code prefix leaves the name ("ME06: "), a set code is added only for games whose players search by it
+(One Piece, Yu-Gi-Oh!, Gundam, Union Arena, Fusion World, Digimon, Vanguard, DBS, Shadowverse, Palworld), and
+Pokémon says ETB. Set pages also get: breadcrumbs Home > game > set (product pages Home > game > set > product), the
+"older/newer" and "Other sets" links kept inside the set's own game (a Pokémon set linked Magic sets before), the H1
+with the game's name, and a short "About" paragraph built only from our data (`lib/set-facts.ts`: release date, the
+product types we compare, the cheapest in-stock US booster box against TCGplayer's market price) with links to
+`/how-we-pick-stores` and `/methodology`. Product JSON-LD `brand` is the game, not "TCG". URLs, h2s and the sitemap
+are unchanged.
+
+**Why.** Owner, 2026-11-18: apply what Cardmarket did (Semrush, "How Cardmarket wins search", July 2026). Its six
+steps include metadata templated per game in the community's language, expansion pages treated as high-intent landing
+pages with set-specific copy beside the listings, and verifiable trust signals. We write no copy we cannot source: no
+pack counts, print runs, MSRP or card text. `tests/game-seo.test.ts`. Read the effect with real Search Console numbers
+on 2 Dec and 16 Dec 2026 (set and product pages, non-branded queries).
