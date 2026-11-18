@@ -669,3 +669,24 @@ Z Fold. This bar does NO position arithmetic: `fixed inset-x-0 bottom-0` (the pl
 ## 2026-11-18: cart checkout opens every store or none (owner)
 
 Checkout (`openAll`, `src/lib/cart-checkout.ts`) opens one blank tab per store inside the click, and only when every one opens does it send each to its store's own tagged link. If the browser refuses any, it closes the ones that opened, visits nothing, and the drawer shows the allow-pop-ups steps and a "Try again" button. Before, the first store opened and the rest were refused, which left the visitor with one tab. Chrome 157 on dexcompare.io and on url-opener.com (the owner's model, which does the same close-and-ask) both give one tab until pop-ups are allowed for the site; with them allowed, all open. No browser API grants that permission from a click, so the steps stay.
+
+## 2026-11-18: Gap crawl, Bandai's games at the stores BandaiCompare does not list
+
+Site loop, per-game coverage report (`scripts/coverage-report.ts`, 17 Nov import): Union Arena had 94 of 151 products with
+no in-stock store, Fusion World 50 of 84, Digimon 32 of 112. Their store rows came only from BandaiCompare (318 store
+entries, about 190 kept products after its cull) and from the 9 / 24 / 68 own-list shops whose collections name them; the
+crawl took 6 Union Arena and 19 Fusion World listings on 17 Nov. The rest of the 1,355-store directory (Dex, MTG, YGO and
+the other sisters' shops) was never read for those games, though many sell them.
+
+- `GameLine.gapCrawl` (`ua`, `fw`, `dg` in `site.config.ts`): the weekly probe reads those games' `ownCrawl` words at a
+  directory store ONLY when BandaiCompare's own store list (from `SISTER_DIR`) does not name its host. A sister list not
+  checked out means the game is read nowhere. The crawl words (`crawl`) stay for games no sister covers
+  (`tests/crawl.test.ts`), so "no store is visited for a game a sister covers" still holds at every store that sister reads.
+- The uncovered games keep their collections and their slots: a collection an uncovered game claims is never re-read as a
+  gap game's, and gap games take only the slots of the 8-a-store cap the uncovered games leave (`capWithGap`). With no gap
+  option the probe's result is byte for byte what it was.
+- `addCrawlOffers` (import): a sister's row for the same store, market and product always wins and the crawl's is left out
+  (a store BandaiCompare added after the weekly probe). Listings are taken by the same rules as every crawl listing (id,
+  title rule, AI placement), so matching is not loosened.
+- Measure after the next probe (Sunday) and the import after it: Union Arena / Fusion World / Digimon products with 0
+  stores, against 94 / 50 / 32. If it lifts them, the same flag is the way for another sister's thin game.

@@ -402,6 +402,31 @@ export interface CrawlTake {
   listings: number;
 }
 
+/**
+ * Adds the crawl's offers to the sisters' result. A store and product a sister already prices keeps the sister's row:
+ * the crawl's would be a second row of the same shop (a gap game at a store the sister added since the probe). The
+ * crawl's own rows are marked in `mark`; returns the store keys used and the rows left out.
+ */
+export function addCrawlOffers(into: Map<number, Offer[]>, from: ReadonlyMap<number, readonly Offer[]>, mark: WeakSet<Offer>): { used: Set<string>; shadowed: number } {
+  const used = new Set<string>();
+  let shadowed = 0;
+  for (const [id, list] of from) {
+    if (!into.has(id)) into.set(id, []);
+    const rows = into.get(id)!;
+    const sisterRow = new Set(rows.filter((o) => !mark.has(o)).map((o) => `${o.source}|${o.market}`));
+    for (const o of list) {
+      if (sisterRow.has(`${o.source}|${o.market}`)) {
+        shadowed++;
+        continue;
+      }
+      mark.add(o);
+      used.add(o.source);
+      rows.push(o);
+    }
+  }
+  return { used, shadowed };
+}
+
 /** Every listing of the run through pickId: one offer per store and product (in stock first, then the cheaper). */
 /** 99999, 999900, 999999 and the like: a store's "not for sale" number. */
 const PLACEHOLDER_CENTS = /^9{4,}(00)?$/;

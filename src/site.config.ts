@@ -108,6 +108,10 @@ const OWN_CRAWL: Record<string, GameLine["ownCrawl"]> = {
   cp: { any: ["cyberpunk"] },
 };
 
+// Sisters' games whose sister lists few stores (BandaiCompare: 318 store entries, about 190 kept products): read at
+// the directory's other stores too, never at one the sister lists (DECISIONS.md 2026-11-18, "Gap crawl").
+const GAP_CRAWL = new Set(["ua", "fw", "dg"]);
+
 const LINES: GameLine[] = [
   g("mtg", 1, "Magic: The Gathering", "Magic", "magic-the-gathering", "magic", "magic the gathering", "#b8742a", "Play Booster and Collector Booster boxes, bundles, Commander decks and Secret Lair-era sealed product."),
   g("pkm", 3, "Pokémon", "Pokémon", "pokemon", "pokemon", "pokemon", "#d9a514", "Booster boxes, Elite Trainer Boxes, booster bundles, tins and premium collections from every current set."),
@@ -140,7 +144,7 @@ const LINES: GameLine[] = [
   g("wx", 67, "WIXOSS", "WIXOSS", "wixoss", "all", "wixoss", "#9a5a9a", "English booster boxes and starter decks."),
   g("bss", 72, "Battle Spirits Saga", "Battle Spirits", "battle-spirits-saga", "all", "battle spirits saga", "#b0553c", "Booster boxes and starter decks."),
   g("ac", 78, "Alpha Clash", "Alpha Clash", "alpha-clash", "all", "alpha clash tcg", "#5a8a4a", "Booster boxes and starter decks."),
-].map((l) => ({ ...l, ...(LOGOS.has(l.id) ? { logo: `/games/${l.id}.webp` } : {}), ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}), ...(OWN_CRAWL[l.id] ? { ownCrawl: OWN_CRAWL[l.id] } : {}) }));
+].map((l) => ({ ...l, ...(LOGOS.has(l.id) ? { logo: `/games/${l.id}.webp` } : {}), ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}), ...(OWN_CRAWL[l.id] ? { ownCrawl: OWN_CRAWL[l.id] } : {}), ...(GAP_CRAWL.has(l.id) && OWN_CRAWL[l.id] ? { gapCrawl: true } : {}) }));
 
 export const SITE: SiteConfig = {
   // The affiliate sub-id prefix (eBay customid, Impact subId1): `tcgprices-us-card_pinned-1234`.
