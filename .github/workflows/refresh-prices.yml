@@ -222,6 +222,9 @@ jobs:
       - name: Commit IndexNow state
         if: success()
         run: |
+          # No INDEXNOW_KEY means the script writes no record: nothing to commit, and a bare `git add` of the missing
+          # file failed every refresh red after the prices had already landed (17-18 Nov).
+          [ -f data/state/indexnow.json ] || exit 0
           git add data/state/indexnow.json
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: IndexNow record"
