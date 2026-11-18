@@ -6,6 +6,7 @@ import { MarketChooser } from "@/components/ClientPrefs";
 import { DealGrid, TileGrid } from "@/components/ProductTile";
 import { deals, latestReleasedSet, meta, products, refCents, worthFeaturing } from "@/lib/data";
 import { ago, money } from "@/lib/format";
+import { LiveAgo } from "@/components/LiveAgo";
 import { posts } from "@/lib/posts";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_URL } from "@/lib/site";
@@ -227,7 +228,7 @@ export default function Home() {
               <span aria-hidden="true" className="hidden sm:inline">
                 ·
               </span>
-              <span className="basis-full sm:basis-auto">prices updated {ago(m.updatedAt)}</span>
+              <span className="basis-full sm:basis-auto">prices updated <LiveAgo iso={m.updatedAt} initial={ago(m.updatedAt)} /></span>
             </>
           ) : (
             <span>Prices update daily</span>
