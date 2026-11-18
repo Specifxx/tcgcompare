@@ -4,6 +4,7 @@ import { canon } from "@/lib/site";
 import { dealRows } from "@/lib/tools";
 import { shortName } from "@/lib/names";
 import { DealFinder } from "./DealFinder";
+import { ShareButton } from "@/components/ShareButton";
 
 export const revalidate = 86400; // data only changes with a release (DECISIONS.md, "Vercel cost")
 export const metadata: Metadata = {
@@ -18,6 +19,7 @@ export default function Page() {
     <div>
       <h1 className="font-display text-3xl font-black">{SITE.gameShort} Deal Finder</h1>
       <p className="mt-2 text-muted">{rows.length} in-stock listings 8–60% below TCGplayer market right now. Prices converted to US$ for the comparison; the store charges its own currency.</p>
+      <ShareButton path="/tools/deal-finder" name={`${SITE.gameShort} Deal Finder`} medium="tool" text={`${rows.length} sealed products in stock below TCGplayer market today, on ${SITE.name}`} className="mt-3" />
       <DealFinder rows={rows} />
     </div>
   );
