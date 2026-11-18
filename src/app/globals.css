@@ -1435,7 +1435,7 @@ a.card:hover {
 }
 
 /* The phone bottom nav (components/BottomNav.tsx): the return nudge sits above it, not under it, while it shows. */
-html[data-bottomnav] [data-return-nudge] { bottom: calc(env(safe-area-inset-bottom) + 72px); }
+html[data-bottomnav] [data-return-nudge], html[data-bottomnav] [data-leave-nudge] { bottom: calc(env(safe-area-inset-bottom) + 72px); }
 
 /* The phone bottom nav (components/BottomNav.tsx). Moves on transform only, opaque (a backdrop blur on a fixed bar repaints every
    scroll frame on a phone), hides AFTER its slide so it never pops out. */
