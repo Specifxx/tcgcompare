@@ -1028,3 +1028,20 @@ normal index gate. Set and game hubs are unchanged. Reverse a line only if its s
 John Mueller (Bluesky, 10 Nov) on "crawled, currently not indexed": making a site smaller does not by itself raise its
 quality, so this is about not competing with ourselves, not a quality fix.
 
+
+## 2026-11-19: Core-update quality pass: no ad banners under the hero, fewer links, no leave pop-up, who runs the site
+
+Google's November 2026 core update took several sister sites to near-zero impressions (a quality verdict, not a technical
+fault). Owner, 2026-11-19: "all the ads that can negatively impact our indexing let's remove and have more strategically
+placed ads".
+
+- **Ads**: the `AdBanners` row under each hero (2026-11-14) is gone from the home, card, set and sealed pages, where the
+  page's one native ad block already sits below the content; on a game page the banners move to the foot of the page. On
+  a card page that removes the banner row that sat between the buy block and the price table. The exit "leave nudge"
+  pop-up is off (`LEAVE_NUDGE_ON = false`). Cross-site cluster tiles are off (`CROSS_SITE_BLOCKS = false`).
+- **Fewer links**: the header shows three tools and the tools page, no creators or feedback link, and 6 sets (was 12). The
+  footer drops seasonal sale pages, the report, widgets, pre-orders, collection, stores, creators, feedback and
+  list-your-store (~27 → ~14).
+- **Who runs it**: the about page names the co-founders (Bill and George), says AI tools help build the site and draft
+  guides while prices are read by a program, and gives the running cost (about A$790 a month for the group, our books to
+  15 Nov 2026). It drops the YGO wording ("structure deck") it was copied with.

@@ -51,9 +51,6 @@ export default function GamePage({ params }: { params: { slug: string } }) {
         </header>
       </div>
 
-      {/* The ad banners, right under the hero (owner, 2026-11-14). */}
-      <AdBanners {...adSearch(null, { line: line.id })} page="game" />
-
       <nav aria-label={`${line.name} product types`} className="-mt-4 flex flex-wrap gap-2">
         {gameTypeHubs(line).filter((h) => h.items.length >= GAME_TYPE_MIN).map((h) => (
           <Link key={h.slug} href={`/games/${line.slug}/${h.slug}`} className="chip hover:border-brand">{h.label} <span className="text-muted">· {h.items.length}</span></Link>
@@ -101,6 +98,8 @@ export default function GamePage({ params }: { params: { slug: string } }) {
         </div>
       </section>
 
+      {/* The ad banners sit below the page's own content, never under the hero (2026-11-19, core-update quality pass). */}
+      <AdBanners {...adSearch(null, { line: line.id })} page="game" />
     </div>
   );
 }

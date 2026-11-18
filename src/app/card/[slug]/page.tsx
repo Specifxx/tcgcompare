@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AdBanners } from "@/components/AdBanners";
 import Link from "@/components/Link";
 import { Fragment } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -177,7 +176,6 @@ export default function CardPage({ params }: { params: { slug: string } }) {
             {SITE.priceAlerts && <WatchPrice site={SITE.key} productId={p.id} prices={lowestByMarket(e.offers)} />}
             {SITE.priceAlerts && <SeenPrice productId={p.id} prices={lowestByMarket(e.offers)} />}
           </header>
-          <AdBanners {...adSearch(set?.name, set)} page="card" />
           <section>
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4">
               <h2 className="text-lg font-bold">Compare prices</h2>

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AdBanners } from "@/components/AdBanners";
 import { SITE } from "@/site.config";
 import { canon } from "@/lib/site";
 import { byValue, products, setById } from "@/lib/data";
@@ -43,7 +42,6 @@ export default function Sealed() {
           </nav>
         )}
       </header>
-      <AdBanners {...adSearch()} page="sealed" className="mt-6" />
       {groups.map((g) => {
         const href = sealedHref(g.t);
         return (
