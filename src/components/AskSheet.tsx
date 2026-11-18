@@ -4,6 +4,7 @@ import Link from "@/components/Link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { track } from "@vercel/analytics";
+import { ASK_AI_VISITOR_DAILY_CAP } from "@/lib/ask-ai";
 import { ASK_EXAMPLES, askPick, askSearchUrl, askSeeAll, parseAsk, type AskGame, type AskRoute } from "@/lib/ask";
 import { Icon } from "./Icon";
 
@@ -31,6 +32,32 @@ export function AskSheet({ games }: { games: AskGame[] }) {
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<Hit[] | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>();
+  // The in-words answer (lib/ask-ai.ts): offered only when the build says it is on (NEXT_PUBLIC_ASK_AI=1) and answered only when the server has
+  // its key; a button press asks, never a keystroke, and a visitor gets ASK_AI_VISITOR_DAILY_CAP of them a day (counted in their own browser).
+  const aiOn = process.env.NEXT_PUBLIC_ASK_AI === "1";
+  const [ai, setAi] = useState<{ q: string; answer: string | null; picks: Hit[] } | "busy" | "none" | null>(null);
+  useEffect(() => setAi(null), [q]);
+  async function askAi() {
+    const key = `ask-ai-${new Date().toISOString().slice(0, 10)}`;
+    let n = 0;
+    try {
+      n = Number(localStorage.getItem(key)) || 0;
+    } catch {}
+    if (n >= ASK_AI_VISITOR_DAILY_CAP) return setAi("none");
+    try {
+      localStorage.setItem(key, String(n + 1));
+    } catch {}
+    setAi("busy");
+    track("ask_ai", { words: ask.words.slice(0, 60) });
+    try {
+      const r = await fetch(`/api/ask?q=${encodeURIComponent(q.trim().slice(0, 120))}`);
+      const j = (await r.json()) as { ai: boolean; answer?: string | null; picks?: number[]; hits?: Hit[] };
+      if (!j.ai) return setAi("none");
+      setAi({ q, answer: j.answer ?? null, picks: (j.picks ?? []).map((i) => j.hits?.[i]).filter((h): h is Hit => !!h) });
+    } catch {
+      setAi("none");
+    }
+  }
 
   useEffect(() => {
     const open = () => {
@@ -128,6 +155,30 @@ export function AskSheet({ games }: { games: AskGame[] }) {
                   {x}
                 </button>
               ))}
+            </div>
+          )}
+          {aiOn && !ask.link && ask.words.split(" ").length >= 2 && (ai === null || ai === "none") && (
+            <button type="button" onClick={askAi} disabled={ai === "none"} className="mt-3 h-11 w-full rounded-full border border-line text-sm font-semibold disabled:text-muted">
+              {ai === "none" ? "Answers in words are unavailable right now" : "Answer in words"}
+            </button>
+          )}
+          {ai === "busy" && <p className="mt-3 text-sm text-muted">Reading our price files…</p>}
+          {ai && typeof ai === "object" && (
+            <div className="mt-3 rounded-xl border border-line bg-raised px-3 py-3 text-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">AI answer, from this site&apos;s own results</p>
+              <p className="mt-1">{ai.answer ?? (ai.picks.length ? "These match best:" : "Nothing here answers that well. Try the results below or the whole site.")}</p>
+              {ai.picks.length > 0 && (
+                <ul className="mt-2 divide-y divide-line">
+                  {ai.picks.map((h) => (
+                    <li key={h.slug}>
+                      <Link href={h.href ?? `/card/${h.slug}`} prefetch={false} onClick={() => track("ask_ai_click", { slug: h.slug.slice(0, 80) })} className="flex min-h-11 items-center justify-between gap-3 py-2">
+                        <span className="min-w-0 truncate font-semibold">{h.name}</span>
+                        <span className="tabular shrink-0 font-bold">{h.price}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
           {ask.routes.length > 0 && <div className="mt-3 grid gap-2">{ask.routes.map(route)}</div>}
