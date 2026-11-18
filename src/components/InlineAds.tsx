@@ -12,6 +12,7 @@
 //     lists after the grid). Never beside a buy button, never above a price, never in the quick view, one per page.
 //   • Every link is rel sponsored through /go under `<page>-inline-ebay` or `<page>-inline-tcg` (and `-all`)..
 import { useEffect, useState } from "react";
+import { applyAdLook } from "@/lib/ad-look";
 import { SITE } from "@/site.config";
 import type { CardAds } from "@/lib/card-ads";
 import type { KitAdTile } from "@/lib/kits";
@@ -32,6 +33,7 @@ const TILE = "group flex h-full flex-col rounded-lg border border-line bg-surfac
 const WORD = "block h-4 truncate text-[10px] font-semibold uppercase leading-4 tracking-wide text-muted";
 
 export function InlineAds({ ads, search, kit, page }: { ads?: CardAds; search?: InlineSearch; kit?: KitAdTile[]; page: string }) {
+  useEffect(() => applyAdLook(), []);
   const { market } = useMarket();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);

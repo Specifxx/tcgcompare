@@ -8,7 +8,8 @@ import { refCents, setById, summaryOf } from "@/lib/data";
 import { isPreorder } from "@/lib/preorders";
 import { rankItems, type DemandFile, type RankFacts } from "./home-rank";
 
-export const HOME_DEMAND = raw as unknown as DemandFile; // via unknown: JSON arrays read as number[], never the [28d, 7d] tuple
+// Through `unknown`: the JSON import types each day's file literally, and a day with no clicks yet ({}) no longer overlaps DemandFile.
+export const HOME_DEMAND = raw as unknown as DemandFile;
 
 const NOT_A_STORE = new Set(["ebay", "amazon", "tcgplayer"]);
 
