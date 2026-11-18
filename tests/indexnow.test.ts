@@ -29,3 +29,12 @@ test("restore: only noindexed pages with 10+ impressions, only when impressions 
   assert.deepEqual(restoreList(1000, 800, pages, no), []);
   assert.deepEqual(restoreList(null, 1, pages, no), []);
 });
+
+test("the IndexNow commit step is a no-op when no record was written (no key)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const wf = readFileSync(".github/workflows/refresh-prices.yml", "utf8");
+  const step = wf.slice(wf.indexOf("name: Commit IndexNow state"));
+  const guard = step.indexOf("[ -f data/state/indexnow.json ] || exit 0");
+  assert.ok(guard > 0, "the step must skip when the file does not exist");
+  assert.ok(guard < step.indexOf("git add data/state/indexnow.json"), "the guard must run before git add");
+});
