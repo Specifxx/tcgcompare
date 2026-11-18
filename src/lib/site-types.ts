@@ -136,6 +136,8 @@ export interface SiteConfig {
   priceAlerts?: boolean;
   /** The phone bottom nav: "optin" (?bn=1 only), "on" (everyone on a phone) or "off" (the rollback). */
   bottomNav?: "off" | "optin" | "on";
+  /** "Ask our prices" (components/AskSheet.tsx): the bottom nav's Search tab opens it. No model, no cost. */
+  ask?: boolean;
   /** The site's own Amazon US tracking ID (hard-coded, owner 2026-11-02); riftcompare-20 when unset. */
   amazonUsTag?: string;
   /** The site's own Amazon AU tracking ID in the owner's AU account (hard-coded, owner 2026-11-03); compareempire-22 when unset. */
