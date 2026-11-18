@@ -11,7 +11,7 @@ import { byValue, historyOf, indexSignals, looseSingleSetId, meta, priceOf, prod
 import { imageAt } from "@/lib/image";
 import { money, pct } from "@/lib/format";
 import { shortName } from "@/lib/names";
-import { ebayQueryOf } from "@/lib/lines";
+import { ebayQueryOf, lineOfSet } from "@/lib/lines";
 import { ebayQueryFor, jsonLdOffers, usCheapestQuoted } from "@/lib/product-page";
 import { PriceTable } from "@/components/PriceTable";
 import { VaultOwn } from "@/components/vault/VaultOwn";
@@ -36,6 +36,7 @@ import { attrHref, rarityHref, sealedHref } from "@/lib/hubs";
 import { packOfBox } from "@/lib/packs";
 
 import { cardTitleCandidates, fitTitle } from "@/lib/seo-title";
+import { namesGame, productTitleLadder, setPhrase } from "@/lib/game-seo";
 import { cardIndexable, priceValidUntil } from "@/lib/indexing";
 import { gtinLabel, gtinLd } from "@/lib/gtin";
 
@@ -47,10 +48,13 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   const set = setById(p.setId);
   const ref = refCents(p.id);
   const name = shortName(p.name);
-  // "<card> <number> Price — <game> <set>", stepped down to fit 60 characters (lib/seo-title.ts).
-  const title = fitTitle(cardTitleCandidates(name, p.number, set?.name ?? null, p.kind === "sealed")).absolute;
+  // Sealed: the game's own words lead ("One Piece The Dominance of God Booster Box (OP18) Price", lib/game-seo.ts,
+  // DECISIONS.md 2026-11-18); a card keeps "<card> <number> Price — <game> <set>". Stepped down to fit 60 characters.
+  const title = fitTitle(p.kind === "sealed" ? productTitleLadder(name, set ?? null) : cardTitleCandidates(name, p.number, set?.name ?? null, false)).absolute;
   const stores = new Set(priceOf(p.id).offers.map((o) => o.source)).size;
-  const description = `${name} (${set?.name ?? SITE.gameShort}${p.rarity ? `, ${p.rarity}` : ""}) ${ref ? `is worth about ${money(ref)} today` : "has no TCGplayer market price yet"}. Compare ${stores} live prices from TCGplayer, eBay and ${SITE.gameShort} stores, with price history.`;
+  const game = set ? lineOfSet(set) : null;
+  const lead = set && game && !namesGame(name, game) ? `${game.seo?.name ?? game.short} ${name}` : name;
+  const description = `${lead} (${set ? setPhrase(set) : SITE.gameShort}${p.rarity ? `, ${p.rarity}` : ""}) ${ref ? `is worth about ${money(ref)} today` : "has no TCGplayer market price yet"}. Compare ${stores} live prices from TCGplayer, eBay and ${game ? `${game.short} ` : ""}stores, with price history.`;
   return {
     title: { absolute: title },
     description,
@@ -115,7 +119,7 @@ export default function CardPage({ params }: { params: { slug: string } }) {
             sku: String(p.id),
             productID: `tcgplayer:${p.id}`,
             ...gtinLd(p.upc),
-            brand: { "@type": "Brand", name: SITE.game },
+            brand: { "@type": "Brand", name: (set ? lineOfSet(set)?.name : null) ?? SITE.game },
             category: p.kind === "card" ? "Trading card" : "Sealed trading card product",
             url: abs(`/card/${p.slug}`),
             offers: {
@@ -130,7 +134,8 @@ export default function CardPage({ params }: { params: { slug: string } }) {
           }}
         />
       )}
-      <Breadcrumbs items={[{ name: "Sealed", href: "/sealed" }, ...(set ? [{ name: set.name, href: `/sets/${set.slug}` }] : []), { name }]} />
+      {/* Game, then set, then product (Cardmarket's hierarchy, DECISIONS.md 2026-11-18): each crumb is a real hub. */}
+      <Breadcrumbs items={[(set && lineOfSet(set)) ? { name: lineOfSet(set)!.short, href: `/games/${lineOfSet(set)!.slug}` } : { name: "Sealed", href: "/sealed" }, ...(set ? [{ name: set.name, href: `/sets/${set.slug}` }] : []), { name }]} />
       <div className="grid gap-8 md:grid-cols-[minmax(0,320px)_1fr]">
         {/* Phones: the name, price and Buy come first; the big image and the
             details follow the prices (RiftCompare's card page, 2026-09-26). */}
