@@ -670,6 +670,13 @@ Z Fold. This bar does NO position arithmetic: `fixed inset-x-0 bottom-0` (the pl
 
 Checkout (`openAll`, `src/lib/cart-checkout.ts`) opens one blank tab per store inside the click, and only when every one opens does it send each to its store's own tagged link. If the browser refuses any, it closes the ones that opened, visits nothing, and the drawer shows the allow-pop-ups steps and a "Try again" button. Before, the first store opened and the rest were refused, which left the visitor with one tab. Chrome 157 on dexcompare.io and on url-opener.com (the owner's model, which does the same close-and-ask) both give one tab until pop-ups are allowed for the site; with them allowed, all open. No browser API grants that permission from a click, so the steps stay.
 
+## 2026-11-18: Search and sort the movers by % gain or loss (visitor feedback, RiftCompare)
+
+A RiftCompare visitor asked to "search and sort index by % of gain or loss (better than just toggling the gainers or losers button)". `/movers`
+now opens with one list (`MoversTable.tsx`) of every product in its four lists, merged per product with both its 7-day and 30-day change: a
+search box, a "Sort by" menu (biggest % move either way, biggest gain, biggest loss, price, name), a 7/30-day switch and a Risers/Fallers
+toggle. It reads the rows the page already ranks (`movers()`), so no new data or fetch; every % is the product's own TCGplayer market change.
+The four lists stay below it. It hides itself until there are two movers.
 ## 2026-11-18: Gap crawl, Bandai's games at the stores BandaiCompare does not list
 
 Site loop, per-game coverage report (`scripts/coverage-report.ts`, 17 Nov import): Union Arena had 94 of 151 products with
