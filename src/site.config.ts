@@ -172,6 +172,9 @@ export const SITE: SiteConfig = {
 
   // Registered with RiftCompare's shared alert service (TCGEmpire sites.ts, key tcgprices), 2026-11-16.
   priceAlerts: true,
+  // The phone bottom nav (components/BottomNav.tsx, DECISIONS.md 2026-11-18): "optin" = only a visitor who opens any page with ?bn=1 sees it;
+  // "off" is the rollback (it ignores ?bn=1 too); "on" = everyone on a phone. Owner tries it on his own phone first.
+  bottomNav: "optin",
   // Impact (account 7385758) ownership token for tcgprices.app's own property, 2026-11-17.
   impactSiteVerification: "e1a72ccd-92e2-422a-826a-2ddbaafad054",
   // Defaults only: every game has its own category, slug and eBay words (lines).

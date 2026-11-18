@@ -27,6 +27,7 @@ import { ReturnNudge } from "@/components/ReturnNudge";
 import { AiReferralTracker } from "@/components/AiReferralTracker";
 import { ShareArrival } from "@/components/ShareArrival";
 import { DockAds } from "@/components/DockAds";
+import { BottomNav } from "@/components/BottomNav";
 import { cardAds } from "@/lib/card-ads";
 
 // The engine's two faces (DexCompare and MTG Compare: Bricolage Grotesque for headings, Inter for text), bundled as the latin
@@ -99,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <RateCard />
           {/* The phone dock (the side rails are gone, owner 2026-11-13): eBay and TCGplayer tiles along the foot of a narrow screen, after a scroll. */}
           <DockAds ads={cardAds({ limit: 10 })} />
+          {(SITE.bottomNav ?? "off") !== "off" && <BottomNav mode={SITE.bottomNav ?? "off"} />}
         </PrefsProvider>
         <Analytics />
         <BuyClickTracker />

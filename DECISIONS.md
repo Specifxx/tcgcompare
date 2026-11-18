@@ -651,6 +651,21 @@ rel sponsored, `from=<placement>_nudge`. Once a session, 20 s or ✕ or Esc, nev
 the placement's own clicks (`from` ends `_nudge`). Rollback: remove `<ReturnNudge />` from the root layout. `lib/return-nudge.ts`,
 `components/ReturnNudge.tsx`, `tests/return-nudge.test.ts`.
 
+## A phone bottom nav, opt-in first, built to avoid what killed Rift's — 2026-11-18
+
+Owner liked Catchback's bottom bar. Rift deleted its own on 2026-09-18 (TCGEmpire DECISIONS.md) after three fixes for one fault: it
+computed where the browser's address bar was (`100lvh - 100dvh`, then a `visualViewport` "lift") and floated under pinch-zoom and on a
+Z Fold. This bar does NO position arithmetic: `fixed inset-x-0 bottom-0` (the placement the ad dock has used since 2026-11-06) plus
+`env(safe-area-inset-bottom)`, moved by `transform` only. `tests/bottom-nav.test.ts` fails on lvh/dvh/svh or a `visualViewport` height.
+
+- Tabs: Home, Search, Deals, Cart (opens the cart drawer), Menu (opens the existing menu). Browser only, below 768px, nothing in the
+  server HTML. Hides on scroll down (10 px of real movement), shows on scroll up and at the top; hidden while zoomed, while a text
+  field has focus, while any open dialog / the menu / the cart drawer is up, on a buy-bar page, and whenever an Add to cart button is
+  in the strip it would cover. The ad dock yields to it (`html[data-bottomnav]`), so one bar at a time.
+- `SITE.bottomNav`: "optin" (only `?bn=1`, kept in localStorage; `?bn=0` clears), "on", or "off" (rollback; ignores `?bn=1`).
+  Shipped "optin": the owner tries it on his own phone before anyone else sees it.
+- Found on the way: the closed cart drawer is always in the DOM as `aria-modal="true"` (inert and aria-hidden while closed), and
+  `AdDock`'s "a dialog is open" check matches it, so the dock may never show on this site. Not changed here; see the thread.
 ## 2026-11-18: cart checkout opens every store or none (owner)
 
 Checkout (`openAll`, `src/lib/cart-checkout.ts`) opens one blank tab per store inside the click, and only when every one opens does it send each to its store's own tagged link. If the browser refuses any, it closes the ones that opened, visits nothing, and the drawer shows the allow-pop-ups steps and a "Try again" button. Before, the first store opened and the rest were refused, which left the visitor with one tab. Chrome 157 on dexcompare.io and on url-opener.com (the owner's model, which does the same close-and-ask) both give one tab until pop-ups are allowed for the site; with them allowed, all open. No browser API grants that permission from a click, so the steps stay.

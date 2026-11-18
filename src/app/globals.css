@@ -1433,3 +1433,6 @@ a.card:hover {
   width: 9rem;
   padding: 0.4rem 0.7rem;
 }
+
+/* The phone bottom nav (components/BottomNav.tsx): the return nudge sits above it, not under it, while it shows. */
+html[data-bottomnav] [data-return-nudge] { bottom: calc(env(safe-area-inset-bottom) + 72px); }
