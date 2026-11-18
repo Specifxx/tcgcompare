@@ -768,6 +768,23 @@ a keystroke. The hard ceiling is the owner's Anthropic workspace spend limit; th
 OFF until the owner sets `ANTHROPIC_API_KEY` and `ASK_AI=1` on Vercel Production AND `NEXT_PUBLIC_ASK_AI=1` (the button only shows then); off,
 the sheet is the rules-only version. Nothing about the visitor is stored. Roll back: unset `ASK_AI`.
 
+## 2026-11-18: Share cards say more, guides and sets get the button, and a share-for-a-deal test (owner)
+
+Owner: "a share feature … a very simple link and a link thumbnail that is very aesthetic and contains enough detail … some
+insights … the ability to share pages and guides", then "if you share … you can open Deal Finder … gives incentive".
+
+- The card share image (`card/[slug]/opengraph-image.tsx`) keeps its text-only rule (no photo, ~58 KB) and adds a right-hand
+  panel: the market price line over the last 30 days (`sparkPath`, a vector path), the week's or month's move in words
+  (`moveNote`, real changes only) and how many sellers have it in stock. Still drawn on first request and kept a day.
+- The link stays the page's own canonical URL plus `utm_source=share&utm_medium=<what>`: already short (`/card/<slug>`), and a
+  separate short-link host or `/s/<code>` table would add a function, a redirect and a store of codes for no gain in previews.
+- Guides (`/blog/<slug>`), set pages and Deal Finder now carry the share button (mediums `guide`, `set`, `tool`).
+- Share-for-a-deal: half of browsers (`share_arm` in localStorage, `pickShareArm`) see "Share · get a deal"; after a share
+  completes the button opens a small card under itself with today's best store deal in the visitor's market and a link to
+  Deal Finder, from the static `/share-deal.json` (`force-static`, built with the deploy, fetched only then). It is the
+  visitor's own tap, closes with ✕, and shows nothing that is not free anyway: a store row only, never eBay, Amazon or
+  TCGplayer, never a price withheld. The other half is the control. Events: `share { medium, arm }`, `share_unlock { medium }`,
+  `share_visit { medium }` as before. Read share rate per arm at two weeks; keep the reward only if it raises shares.
 ## 2026-11-18: Barcodes on sealed pages (owner: "unique identifiers … are easy SEO results")
 
 Search Console says it plainly (TCGEmpire maintenance task `gsc-identifiers`, 90 days to 15 Nov): on KaeYoung every one of its 22 Google

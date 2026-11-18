@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { AdSlot } from "@/components/AdSlot";
 import { abs } from "@/lib/site";
 import { renderPost } from "@/lib/post-render";
+import { ShareButton } from "@/components/ShareButton";
 
 export const revalidate = 86400;
 // Blog posts are code, not database rows: prerendering them costs nothing.
@@ -32,6 +33,7 @@ export default function PostPage({ params }: { params: { slug: string } }) {
       <p className="text-xs text-muted">{p.updated ? `Updated ${p.updated}` : p.date}</p>
       <h1 className="mt-2 font-display text-3xl font-black md:text-4xl">{p.title}</h1>
       <p className="mt-3 text-lg text-muted">{p.description}</p>
+      <ShareButton path={`/blog/${p.slug}`} name={p.title} medium="guide" text={`${p.title}, on ${SITE.name}`} className="mt-3" />
       {p.image && (
         // The post's own thumbnail, a static file in public/blog: no optimiser, no function.
         // eslint-disable-next-line @next/next/no-img-element
