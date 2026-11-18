@@ -21,7 +21,7 @@ import { focusCatalog, marketCents } from "@/lib/import/focus";
 import { loadSisterOffers, MAX_AGE_H as SISTER_MAX_AGE_H } from "@/lib/import/sisters";
 import { carryDownSisters, groupsToKeep, heldForDownSisters, updateCulled, type CulledMap, type SisterMemo } from "@/lib/import/continuity";
 import { OFFER_FLOOR, vetStores, type Refusal } from "@/lib/import/vet";
-import { carryCrawl, crawlStoreKeys, storeIdentity, takeCrawl, type CrawlRun, type CrawlStore } from "@/lib/import/crawl";
+import { addCrawlOffers, carryCrawl, crawlStoreKeys, storeIdentity, takeCrawl, type CrawlRun, type CrawlStore } from "@/lib/import/crawl";
 import type { CrawlMeta } from "@/lib/site-types";
 import { buildIndex, type MatchIndex, handleOf, isForeign, isPreorder, isUnfitListing, looksSealed, matchCard, matchSealed, printingOf } from "@/lib/import/match";
 import {
@@ -519,11 +519,13 @@ function mergeOwnCrawl(a: {
     console.warn(`[crawl] data/crawl/listings.json is from ${run.at}: not this run's, ignored`);
     run = null;
   }
-  const crawlLines = new Set((SITE.lines ?? []).filter((l) => l.crawl).map((l) => l.id));
   // Own stores (data/crawl/own-stores.json) are read for every game; one a sister now lists is left to the sister.
   const sisterIdents = new Set(res.stores.map((s) => storeIdentity(s.base, s.market)));
   const ownIdents = new Set(entries.filter((e) => e.own).map((e) => storeIdentity(e.base, e.market)).filter((id) => !sisterIdents.has(id)));
   const ownLines = new Set((SITE.lines ?? []).filter((l) => l.crawl || l.ownCrawl).map((l) => l.id));
+  // The sisters' stores are read for the uncovered games and the gap games (GameLine.gapCrawl; the probe never reads a
+  // store for a gap game its own sister lists, and addCrawlOffers leaves any product a sister already prices there).
+  const sisterStoreLines = new Set((SITE.lines ?? []).filter((l) => l.crawl || (l.gapCrawl && l.ownCrawl)).map((l) => l.id));
   const lineOfSet = new Map(sets.map((st) => [st.id, st.line]));
   const all = new Map(products.map((p) => [p.id, p]));
   const lineOf = (p: { setId: number }) => lineOfSet.get(p.setId);
@@ -570,22 +572,20 @@ function mergeOwnCrawl(a: {
     crawledProduct: (id, ident) => {
       const p = all.get(id);
       const line = p && lineOf(p);
-      return !!line && (ownIdents.has(ident) ? ownLines : crawlLines).has(line);
+      return !!line && (ownIdents.has(ident) ? ownLines : sisterStoreLines).has(line);
     },
     fresh: got.fresh,
     now,
     maxAgeH: CRAWL_CARRY_H,
   });
   const used = new Set<string>();
-  for (const src of [got.offers, carry.offers])
-    for (const [id, list] of src) {
-      if (!res.offers.has(id)) res.offers.set(id, []);
-      for (const o of list) {
-        a.crawlOffers.add(o);
-        used.add(o.source);
-        res.offers.get(id)!.push(o);
-      }
-    }
+  let shadowed = 0;
+  for (const src of [got.offers, carry.offers]) {
+    const r = addCrawlOffers(res.offers, src, a.crawlOffers);
+    for (const k of r.used) used.add(k);
+    shadowed += r.shadowed;
+  }
+  if (shadowed) console.log(`[crawl] ${shadowed} crawl rows left to a sister's own row for the same store and product`);
   for (const st of added) if (used.has(st.key)) res.stores.push(st);
   res.stores.sort((x, y) => x.key.localeCompare(y.key));
   const stopped: Record<string, number> = {};

@@ -25,7 +25,7 @@ import {
   type PickContext,
   type ShopifyListing,
 } from "../src/lib/import/crawl";
-import { capHandles, mergeProbe, PRODUCT_PAGES, runCrawl, runProbe } from "../src/lib/import/crawl-run";
+import { capHandles, capWithGap, mergeProbe, PRODUCT_PAGES, runCrawl, runProbe } from "../src/lib/import/crawl-run";
 import { eachStore, isChallenge, parseRobots, RequestBudget, StopStore, StoreSession } from "../src/lib/import/polite-http";
 import type { CrawlMeta, Product, SetInfo, StoreConfig } from "../src/lib/site-types";
 
@@ -591,4 +591,82 @@ test("an AI placement outside the wide price band, on another game's product or 
   assert.ok("refuse" in pickByAi(aiListing(), "cards.test", aiCtx({ inBandWide: () => false }), "US"));
   assert.ok("refuse" in pickByAi(aiListing(), "cards.test", aiCtx({}, { id: 523456, pass: true, reasons: [] }), "US"));
   assert.ok("refuse" in pickByAi(aiListing({ title: "Legends of the Force Display" , lines: ["swu"], refuse: undefined }), "cards.test", aiCtx({ products: new Map() }), "US"));
+});
+
+// ── Gap games: a sister's game at the stores its sister does not list (2026-11-18) ─────────────────
+
+test("gap games: only Bandai's thin games, with their own-store words, never a crawl word", () => {
+  const gap = (SITE.lines ?? []).filter((l) => l.gapCrawl);
+  assert.deepEqual(gap.map((l) => l.id).sort(), ["dg", "fw", "ua"]);
+  const sisterLines = new Set(SISTERS.flatMap((s) => s.lines));
+  for (const l of gap) {
+    assert.ok(sisterLines.has(l.id), `${l.id} has a sister`);
+    assert.ok(l.ownCrawl && !l.crawl, `${l.id}: own-store words only`);
+  }
+});
+
+test("capWithGap: the uncovered games keep their slots; a gap game takes only what they leave", () => {
+  const full = capWithGap(
+    [{ line: "a", handles: ["a1", "a2", "a3", "a4"] }, { line: "b", handles: ["b1", "b2", "b3", "b4"] }],
+    [{ line: "ua", handles: ["u1"] }],
+  );
+  assert.deepEqual(full, [{ line: "a", handles: ["a1", "a2", "a3", "a4"] }, { line: "b", handles: ["b1", "b2", "b3", "b4"] }]);
+  const some = capWithGap([{ line: "a", handles: ["a1", "a2"] }], [{ line: "fw", handles: ["f1", "f2", "f3", "f4"] }, { line: "ua", handles: ["u1", "u2", "u3", "u4"] }]);
+  assert.deepEqual(some, [{ line: "a", handles: ["a1", "a2"] }, { line: "fw", handles: ["f1", "f2", "f3"] }, { line: "ua", handles: ["u1", "u2", "u3"] }]);
+  assert.equal(some.flatMap((x) => x.handles).length, MAX_HANDLES_PER_STORE);
+});
+
+test("the probe reads a gap game only where its sister does not list the shop, and never steals an uncovered game's collection", async () => {
+  const cols = { body: { collections: [
+    { handle: "union-arena-booster-boxes", title: "Union Arena Booster Boxes", products_count: 20 },
+    { handle: "fusion-world", title: "Dragon Ball Super Fusion World", products_count: 15 },
+    { handle: "grand-archive", title: "Grand Archive", products_count: 7 },
+    { handle: "pokemon", title: "Pokemon", products_count: 99 },
+  ] } };
+  const net = fakeNet({ "https://free.test/collections.json": cols, "https://bandai.test/collections.json": cols });
+  const lines = (SITE.lines ?? []).filter((l) => l.gapCrawl).map((l) => ({ id: l.id, crawl: l.ownCrawl }));
+  const r = await runProbe(
+    [{ key: "free", name: "Free", base: "https://free.test", market: "US" }, { key: "bandai", name: "Listed", base: "https://bandai.test", market: "US" }],
+    SITE.lines ?? [],
+    { fetch: net.f, sleep: net.sleep, now: net.now, budget: 100, perStoreCap: 6, gap: { lines, sisterLists: (host) => host === "bandai.test" } },
+  );
+  const of = (host: string) => r.entries.filter((e) => e.host === host).map((e) => [e.line, e.handles]);
+  assert.deepEqual(of("free.test"), [["fw", ["fusion-world"]], ["ga", ["grand-archive"]], ["ua", ["union-arena-booster-boxes"]]]);
+  assert.deepEqual(of("bandai.test"), [["ga", ["grand-archive"]]], "a shop the sister lists is left to it");
+  // No gap option: exactly the old result.
+  const net2 = fakeNet({ "https://free.test/collections.json": cols });
+  const r2 = await runProbe([{ key: "free", name: "Free", base: "https://free.test", market: "US" }], SITE.lines ?? [], { fetch: net2.f, sleep: net2.sleep, now: net2.now, budget: 100, perStoreCap: 6 });
+  assert.deepEqual(r2.entries.map((e) => e.line), ["ga"]);
+});
+
+test("addCrawlOffers: a sister's row for the same store, market and product wins; other rows are added and marked", async () => {
+  const { addCrawlOffers } = await import("../src/lib/import/crawl");
+  const row = (source: string, cents: number, market: "US" | "UK" = "US") => ({ source, market, currency: market === "US" ? "USD" : "GBP", cents, inStock: true, url: `https://${source}.test/p`, title: "x" });
+  const sister = row("shop", 10000);
+  const into = new Map([[1, [sister]]]);
+  const mark = new WeakSet<ReturnType<typeof row>>();
+  const dup = row("shop", 9000);
+  const other = row("other", 9500);
+  const uk = row("shop", 8000, "UK");
+  const fresh = row("shop", 7000);
+  const r = addCrawlOffers(into, new Map([[1, [dup, other, uk]], [2, [fresh]]]), mark);
+  assert.equal(r.shadowed, 1);
+  assert.deepEqual(into.get(1), [sister, other, uk]);
+  assert.deepEqual(into.get(2), [fresh]);
+  assert.ok(mark.has(other) && mark.has(fresh) && !mark.has(sister) && !mark.has(dup));
+  assert.deepEqual([...r.used].sort(), ["other", "shop"]);
+});
+
+test("sisterHostsByLine: each sister's games map to its listed hosts; a list not checked out is unknown", async () => {
+  const os = await import("node:os");
+  const path = await import("node:path");
+  const { sisterHostsByLine } = await import("../scripts/crawl-probe");
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sis-"));
+  fs.mkdirSync(path.join(root, "bandaicompare/src/content"), { recursive: true });
+  fs.writeFileSync(path.join(root, "bandaicompare/src/content/stores.ts"), `[\n  { key: "a", base: "https://www.Shop-A.com.au", market: "AU" },\n  { key: "b", base: "https://b.test", market: "US" },\n]`);
+  const m = sisterHostsByLine(root);
+  assert.deepEqual([...m.get("ua")!].sort(), ["b.test", "shop-a.com.au"]);
+  assert.equal(m.get("fw"), m.get("ua"));
+  assert.equal(m.get("mtg"), null, "mtg's list is not checked out");
+  fs.rmSync(root, { recursive: true, force: true });
 });

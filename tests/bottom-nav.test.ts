@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { bottomNavEnabled, bottomNavShows, nextDir, NAV_DELTA, NAV_TOP, type BottomNavState } from "../src/components/BottomNav";
+import { bottomNavEnabled, bottomNavShows, nextDir, NAV_DELTA, NAV_DELTA_UP, NAV_TOP, type BottomNavState } from "../src/components/BottomNav";
 
 const ok: BottomNavState = { enabled: true, narrow: true, scrollY: 0, dir: "", zoomed: false, typing: false, modal: false, buybar: false, covers: false };
 
@@ -30,10 +30,10 @@ test("direction flips only after NAV_DELTA of real movement", () => {
   assert.equal(s.dir, "down");
   s = nextDir(s.dir, s.anchor, 700);
   assert.equal(s.dir, "down");
-  s = nextDir(s.dir, s.anchor, 700 - NAV_DELTA + 2);
+  s = nextDir(s.dir, s.anchor, 700 - NAV_DELTA_UP + 1);
   assert.equal(s.dir, "down", "a small bounce back does not flip it");
-  s = nextDir(s.dir, s.anchor, 700 - NAV_DELTA - 5);
-  assert.equal(s.dir, "up");
+  s = nextDir(s.dir, s.anchor, 700 - NAV_DELTA_UP - 1);
+  assert.equal(s.dir, "up", "the first real upward flick shows the bar");
   s = nextDir(s.dir, s.anchor, 300);
   assert.equal(s.dir, "up");
 });
@@ -53,7 +53,18 @@ test("no position arithmetic: no lvh/dvh/svh, no visualViewport height or offset
   assert.ok(!/\b\d*(lvh|dvh|svh)\b/.test(src), "the deleted bar's first attempt");
   assert.ok(!/visualViewport(\?)?\.(height|offsetTop|pageTop)/.test(src), "the deleted bar's third attempt");
   assert.ok(!/style\.(bottom|transform)/.test(src), "placement is CSS only");
-  assert.ok(/fixed inset-x-0 bottom-0/.test(src));
+  const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  const bn = css.slice(css.indexOf(".bn {"), css.indexOf(".bn-row"));
+  assert.ok(/position: fixed; left: 0; right: 0; bottom: 0/.test(bn));
+  assert.ok(!/backdrop|blur/.test(bn), "a blur on a fixed bar repaints every scroll frame on a phone");
+  assert.ok(/transition: transform/.test(bn) && !/transition:[^;]*\bbottom\b/.test(bn), "moves on transform only");
+});
+
+test("the scroll path does no layout reads and no React state", () => {
+  const src = readFileSync(new URL("../src/components/BottomNav.tsx", import.meta.url), "utf8").replace(/\/\/.*$/gm, "");
+  assert.ok(!/getBoundingClientRect|offsetHeight|offsetTop|getComputedStyle/.test(src), "layout reads force a reflow mid-scroll");
+  assert.ok(!/setShown/.test(src), "show/hide is an attribute write, not a re-render");
+  assert.ok(/addEventListener\("scroll", decide, \{ passive: true \}\)/.test(src));
 });
 
 test("the layout mounts it only through SITE.bottomNav, and the server HTML never carries it", () => {
