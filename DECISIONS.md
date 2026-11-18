@@ -670,6 +670,14 @@ Z Fold. This bar does NO position arithmetic: `fixed inset-x-0 bottom-0` (the pl
 
 Checkout (`openAll`, `src/lib/cart-checkout.ts`) opens one blank tab per store inside the click, and only when every one opens does it send each to its store's own tagged link. If the browser refuses any, it closes the ones that opened, visits nothing, and the drawer shows the allow-pop-ups steps and a "Try again" button. Before, the first store opened and the rest were refused, which left the visitor with one tab. Chrome 157 on dexcompare.io and on url-opener.com (the owner's model, which does the same close-and-ask) both give one tab until pop-ups are allowed for the site; with them allowed, all open. No browser API grants that permission from a click, so the steps stay.
 
+## The bottom nav, made smoother — 2026-11-18
+
+Owner tried `?bn=1` on his phone: good, "a bit of lag". Changes: no backdrop blur (it repaints every scroll frame on a phone; the bar is
+opaque); the bar always slides on `transform` and hides AFTER the slide (it used to pop out); the scroll handler reads `scrollY` only, no
+React state and no layout reads (an open dialog and an Add to cart button in the bar's strip are cached, refreshed by a
+MutationObserver and an IntersectionObserver); it shows on the first 4 px upward flick (hides after 10 px down); tabs have instant
+`:active` feedback and `router.prefetch` on touch-down. Measured at 4x CPU throttle on an iPhone-sized viewport: frames over 33 ms
+58 with the bar vs 68 without. Owner: happy to have it on every site.
 ## 2026-11-18: Search and sort the movers by % gain or loss (visitor feedback, RiftCompare)
 
 A RiftCompare visitor asked to "search and sort index by % of gain or loss (better than just toggling the gainers or losers button)". `/movers`
@@ -697,6 +705,16 @@ the other sisters' shops) was never read for those games, though many sell them.
   title rule, AI placement), so matching is not loosened.
 - Measure after the next probe (Sunday) and the import after it: Union Arena / Fusion World / Digimon products with 0
   stores, against 94 / 50 / 32. If it lifts them, the same flag is the way for another sister's thin game.
+
+## 2026-11-18 — Accounts on TCG Prices (one network account)
+
+Owner (18 Nov): expand accounts beyond RiftCompare and OP Compare, team decides. TCG Prices plugs into RiftCompare's sister account
+service like DexCompare and MTG Compare: `/account` (emailed sign-in link; Google once `NEXT_PUBLIC_TCGPRICES_GOOGLE_CLIENT_ID` holds
+its own client), `/watches` (every price alert set with that email, any device, with a stop button), `/premium` (RiftCompare Premium:
+no banner ads, 200 alerts). A quiet account icon in the header from sm up and "Sign in / My watches" in the phone menu; no pop-up, no
+corner card. No back-in-stock button yet: the card page is one CDN copy for every market and needs a per-market island first.
+Members' banner ads (`data-ad="banners"`, `data-ad="inline"`) are hidden by `data-adfree`; the price table is untouched.
+The browser keeps one token (`tcgprices_premium_v1`); no page reads a cookie or header. Sign-ups: RiftCompare admin Accounts › TCG Prices.
 
 ## 2026-11-18: Home pages rank items by demand (owner: "the most popular items should be on the homepage in that order")
 

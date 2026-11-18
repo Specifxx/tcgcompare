@@ -2,6 +2,7 @@
 
 import Link from "@/components/Link";
 import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { CART_OPEN_EVENT, cartCount, onCartChange, readCart } from "@/lib/cart-list";
 import { CartIcon } from "./cart/CartIcon";
@@ -41,8 +42,10 @@ export interface BottomNavState {
 
 /** The scroll distance below which the bar always shows (the top of a page). */
 export const NAV_TOP = 80;
-/** The least a scroll must move, in px, to flip the direction (finger jitter and iOS rubber-banding never flip it). */
+/** The least a scroll must move, in px, to flip the direction (finger jitter and iOS rubber-banding never flip it). Down is slower to
+ *  decide than up: showing the bar on the first real upward flick is what makes it feel immediate. */
 export const NAV_DELTA = 10;
+export const NAV_DELTA_UP = 4;
 /** The bar's height above the safe area. */
 export const NAV_H = 56;
 const OPT_KEY = "bn";
@@ -59,7 +62,7 @@ export function nextDir(dir: "up" | "down" | "", anchor: number, y: number): { d
   // The anchor is the scroll position the direction was last decided at: it follows the page while the direction holds and stays
   // put until the page has moved NAV_DELTA the other way.
   if (y > anchor + NAV_DELTA) return { dir: "down", anchor: y };
-  if (y < anchor - NAV_DELTA) return { dir: "up", anchor: y };
+  if (y < anchor - NAV_DELTA_UP) return { dir: "up", anchor: y };
   if (dir === "down" && y > anchor) return { dir, anchor: y };
   if (dir === "up" && y < anchor) return { dir, anchor: y };
   return { dir, anchor };
@@ -94,23 +97,14 @@ const tabs = (): Tab[] => [
   { key: "menu", label: "Menu", icon: <Icon name="menu" size={22} /> },
 ];
 
-/** Whether an Add to cart button is in the strip along the foot of the screen the bar would cover: the bar then stays away, so it never sits on one. */
-function coversCart(): boolean {
-  const strip = window.innerHeight - NAV_H - 12;
-  return [...document.querySelectorAll(".ce-cart-add, .ce-cart-inline")].some((el) => {
-    const r = el.getBoundingClientRect();
-    return r.width > 0 && r.bottom > strip && r.top < window.innerHeight;
-  });
-}
-
 function narrowNow(): boolean {
   return window.matchMedia("(max-width: 767px)").matches;
 }
 
 export function BottomNav({ mode }: { mode: BottomNavMode }) {
   const pathname = usePathname() || "/";
+  const router = useRouter();
   const [enabled, setEnabled] = useState(false);
-  const [shown, setShown] = useState(false);
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLElement>(null);
 
@@ -140,24 +134,40 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
     return onCartChange(sync);
   }, [enabled]);
 
+  // The controller. SMOOTHNESS (owner, 2026-11-18: "a bit of lag"): the scroll path reads scrollY and nothing else (no layout reads, no
+  // React state, no re-render): the show/hide is two attribute writes, and CSS moves the bar on `transform` alone. Everything that
+  // needs the DOM (an open dialog, a cart button in the bar's strip) is cached and refreshed by observers, never in the scroll handler.
   useEffect(() => {
     if (!enabled) return;
+    const el = ref.current as (HTMLElement & { inert?: boolean }) | null;
+    if (!el) return;
     const root = document.documentElement;
+    const stripPx = NAV_H + 12;
     let dir: "up" | "down" | "" = "";
     let anchor = window.scrollY;
     let typing = false;
-    let frame = 0;
-    const modal = () =>
-      // The cart drawer is always in the DOM, aria-modal but inert and aria-hidden while closed: only an open one counts.
-      [...document.querySelectorAll("dialog[open], [aria-modal='true']")].some((el) => !el.closest("[inert], [aria-hidden='true']")) || document.body.style.overflow === "hidden" || root.style.overflow === "hidden";
-    const update = () => {
-      frame = 0;
+    let modal = false;
+    let buybar = false;
+    let covers = 0;
+    let last: boolean | null = null;
+
+    const apply = (show: boolean) => {
+      if (show === last) return;
+      last = show;
+      el.dataset.bottomnavBar = show ? "shown" : "hidden";
+      el.inert = !show;
+      if (show) el.removeAttribute("aria-hidden");
+      else el.setAttribute("aria-hidden", "true");
+      root.toggleAttribute("data-bottomnav", show);
+      root.style.scrollPaddingBottom = show ? `calc(${NAV_H}px + env(safe-area-inset-bottom))` : "";
+    };
+    const decide = () => {
       const y = Math.max(0, window.scrollY); // iOS rubber-banding reports negative values past the top
       const n = nextDir(dir, anchor, y);
       dir = n.dir;
       anchor = n.anchor;
       const vv = window.visualViewport;
-      setShown(
+      apply(
         bottomNavShows({
           enabled: true,
           narrow: narrowNow(),
@@ -166,45 +176,93 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
           // Pinch-zoomed: the visual viewport is smaller than the layout one and a fixed bar is drawn at the zoomed scale.
           zoomed: !!vv && vv.scale > 1.02,
           typing,
-          modal: modal() || root.matches(".capacitor-native"),
-          buybar: !!document.querySelector("[data-buybar]"),
-          covers: coversCart(),
+          modal,
+          buybar,
+          covers: covers > 0,
         }),
       );
     };
+
+    // Cached facts, refreshed when the DOM changes (not per scroll frame).
+    const refresh = () => {
+      modal =
+        // The cart drawer is always in the DOM, aria-modal but inert and aria-hidden while closed: only an open one counts.
+        [...document.querySelectorAll("dialog[open], [aria-modal='true']")].some((d) => !d.closest("[inert], [aria-hidden='true']")) ||
+        document.body.style.overflow === "hidden" ||
+        root.style.overflow === "hidden" ||
+        root.matches(".capacitor-native");
+      buybar = !!document.querySelector("[data-buybar]");
+      decide();
+    };
+
+    // An Add to cart button inside the strip along the foot of the screen: the bar stays away. An IntersectionObserver reports it
+    // (no layout reads in the scroll path); its root is the viewport shrunk from the top to just that strip.
+    let io: IntersectionObserver | null = null;
+    const inStrip = new Set<Element>();
+    const watch = () => {
+      io?.disconnect();
+      inStrip.clear();
+      covers = 0;
+      if (typeof IntersectionObserver === "undefined") return;
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) (e.isIntersecting ? inStrip.add(e.target) : inStrip.delete(e.target));
+          covers = inStrip.size;
+          decide();
+        },
+        { rootMargin: `-${Math.max(0, window.innerHeight - stripPx)}px 0px 0px 0px` },
+      );
+      document.querySelectorAll(".ce-cart-add, .ce-cart-inline").forEach((b) => io!.observe(b));
+    };
+
+    let frame = 0;
     const later = () => {
-      if (!frame) frame = requestAnimationFrame(update);
+      if (!frame) frame = requestAnimationFrame(() => ((frame = 0), refresh(), watch()));
     };
     const onFocus = (e: FocusEvent) => {
       const t = e.target as HTMLElement | null;
       typing = !!t?.matches?.("input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]), textarea, select, [contenteditable='true']");
-      later();
+      decide();
     };
     const onBlur = () => {
       typing = false;
-      later();
+      decide();
     };
-    update();
-    window.addEventListener("scroll", later, { passive: true });
-    window.addEventListener("resize", later, { passive: true });
-    window.visualViewport?.addEventListener("resize", later);
+    const onResize = () => {
+      watch();
+      decide();
+    };
+
+    el.dataset.bottomnavBar = "hidden";
+    refresh();
+    watch();
+    window.addEventListener("scroll", decide, { passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
+    window.visualViewport?.addEventListener("resize", decide);
     document.addEventListener("focusin", onFocus);
     document.addEventListener("focusout", onBlur);
-    const mo = new MutationObserver(later);
-    mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["open", "aria-modal", "style", "data-buybar"] });
+    // Its own attribute writes (inert, aria-hidden) are not news.
+    const mo = new MutationObserver((recs) => {
+      if (recs.some((r) => !el.contains(r.target))) later();
+    });
+    // Two targets (observe() on the same node twice REPLACES its options): the page for what opens and closes, the body for its overflow.
+    mo.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["open", "aria-modal", "aria-hidden", "inert", "data-buybar"] });
+    mo.observe(document.body, { attributes: true, attributeFilter: ["style"] });
     return () => {
       if (frame) cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", later);
-      window.removeEventListener("resize", later);
-      window.visualViewport?.removeEventListener("resize", later);
+      window.removeEventListener("scroll", decide);
+      window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("resize", decide);
       document.removeEventListener("focusin", onFocus);
       document.removeEventListener("focusout", onBlur);
       mo.disconnect();
+      io?.disconnect();
+      root.removeAttribute("data-bottomnav");
+      root.style.scrollPaddingBottom = "";
     };
   }, [enabled, pathname]);
 
-  // Room under the footer (set once: below the fold, so no layout shift), the dock yields to the bar, nothing focused scrolls under it,
-  // and while hidden the bar is out of the tab order.
+  // Room under the footer (set once: below the fold, so no layout shift).
   useEffect(() => {
     if (!enabled) return;
     const root = document.documentElement;
@@ -215,62 +273,52 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
       document.body.style.paddingBottom = "";
     };
   }, [enabled]);
-  useEffect(() => {
-    const root = document.documentElement;
-    const el = ref.current as (HTMLElement & { inert?: boolean }) | null;
-    if (el) el.inert = !shown;
-    root.toggleAttribute("data-bottomnav", shown);
-    if (!shown) return;
-    root.style.scrollPaddingBottom = `calc(${NAV_H}px + env(safe-area-inset-bottom))`;
-    return () => {
-      root.style.scrollPaddingBottom = "";
-      root.removeAttribute("data-bottomnav");
-    };
-  }, [shown]);
 
   if (!enabled) return null;
 
   const click = (key: string) => {
-    // One event per tap, read by the site's analytics through the same attribute the other controls use.
     if (key === "cart") window.dispatchEvent(new CustomEvent(CART_OPEN_EVENT));
     if (key === "menu") document.querySelector<HTMLButtonElement>("button[aria-controls='site-menu']")?.click();
   };
 
-  const cls = (active: boolean) =>
-    `relative flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold leading-none outline-offset-[-3px] ${active ? "text-ink" : "text-muted"}`;
-
   return (
-    <nav
-      ref={ref}
-      aria-label="Quick links"
-      aria-hidden={shown ? undefined : true}
-      data-bottomnav-bar={shown ? "shown" : "hidden"}
-      className={`fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden ${
-        shown ? "translate-y-0 transition-transform duration-200 ease-out motion-reduce:transition-none" : "invisible translate-y-full"
-      }`}
-    >
-      <ul className="mx-auto flex max-w-[640px] items-stretch">
+    <nav ref={ref} aria-label="Quick links" data-bottomnav-bar="hidden" aria-hidden="true" className="bn md:hidden">
+      <ul className="bn-row">
         {tabs().map((t) => {
           const active = t.href ? isActivePath(pathname, t.href, t.also) && (t.href !== "/" || pathname === "/") : false;
           return (
-            <li key={t.key} className="flex min-w-0 flex-1">
+            <li key={t.key} className="bn-cell">
               {t.href ? (
-                <Link href={t.href} prefetch={false} aria-current={active ? "page" : undefined} data-bn={t.key} className={cls(active)}>
-                  {active && <span aria-hidden="true" className="absolute inset-x-6 top-0 h-0.5 rounded-b bg-ink" />}
-                  {t.icon}
-                  <span>{t.label}</span>
+                <Link
+                  href={t.href}
+                  prefetch={false}
+                  aria-current={active ? "page" : undefined}
+                  data-bn={t.key}
+                  className="bn-tab"
+                  // The target starts loading on touch-down, a head start on the tap itself (one page, only when it is touched).
+                  onPointerDown={() => router.prefetch(t.href!)}
+                >
+                  <span className="bn-ico">{t.icon}</span>
+                  <span className="bn-label">{t.label}</span>
                 </Link>
               ) : (
-                <button type="button" data-bn={t.key} aria-haspopup="dialog" aria-label={t.key === "cart" && count ? `Cart, ${count} item${count === 1 ? "" : "s"}` : t.label} onClick={() => click(t.key)} className={cls(false)}>
-                  <span className="relative">
+                <button
+                  type="button"
+                  data-bn={t.key}
+                  aria-haspopup="dialog"
+                  aria-label={t.key === "cart" && count ? `Cart, ${count} item${count === 1 ? "" : "s"}` : t.label}
+                  onClick={() => click(t.key)}
+                  className="bn-tab"
+                >
+                  <span className="bn-ico">
                     {t.icon}
                     {t.key === "cart" && count > 0 && (
-                      <span aria-hidden="true" className="absolute -right-2.5 -top-1.5 min-w-4 rounded-full bg-ink px-1 text-center text-[10px] font-bold leading-4 text-bg">
+                      <span aria-hidden="true" className="bn-badge">
                         {count > 99 ? "99+" : count}
                       </span>
                     )}
                   </span>
-                  <span>{t.label}</span>
+                  <span className="bn-label">{t.label}</span>
                 </button>
               )}
             </li>
