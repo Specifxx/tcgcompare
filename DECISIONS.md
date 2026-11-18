@@ -739,3 +739,9 @@ The owner wants every site's home page to lead with the items most likely to ear
   a demand file under 30 views for a list means that list ran on the fallback and is read apart.
 
 Here: the home page lists (featured shelf, packs, pre-order rows, the newest set's row, deals) are ranked; `data/demand.json` is written into the daily data commit by `refresh-prices.yml`.
+
+## The bottom nav is ON for every phone visitor on TCG Prices — 2026-11-18
+
+Owner tried the opt-in build on his phone (good; lag fixed by the smoother build, verified live) and wants it on every site. `SITE.bottomNav`
+is now "on": below 768px everyone gets it; `?bn=0` turns it off for a visitor (kept in localStorage), `?bn=1` back on, and "off" in the
+config is the rollback for all of them. Everything else in the 2026-11-18 entries stands.
