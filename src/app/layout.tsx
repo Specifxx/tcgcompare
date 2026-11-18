@@ -34,6 +34,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { AskSheet } from "@/components/AskSheet";
 import { cardAds } from "@/lib/card-ads";
 import { ReturnBeacon } from "@/components/ReturnBeacon";
+import { SinceLastVisit } from "@/components/SinceLastVisit";
 
 // The engine's two faces (DexCompare and MTG Compare: Bricolage Grotesque for headings, Inter for text), bundled as the latin
 // subsets of the variable fonts (OFL, src/app/fonts): no font request at build or at runtime. Display is optional, not swap:
@@ -96,6 +97,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {holidayNav() ? <HolidayStrip /> : <PreorderStrip />}
           {/* ONE navigation since 2026-11-13 (owner: "we're making things too complicated"): the header. The sidebar that repeated
               its menus down the left of every desktop page is gone; the page is one centred column (tailwind.config.ts max-w-page). */}
+          {/* Retention lever 2 (2026-11-18): a returning visitor's first page of a day, only when something they looked at is cheaper. */}
+          {SITE.priceAlerts && <SinceLastVisit wrap="page" />}
           <main id="main" className="min-w-0 flex-1">
             <div className="page py-6">{children}</div>
           </main>
