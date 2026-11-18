@@ -78,3 +78,25 @@ test("guides, set pages and Deal Finder can be shared; the thank-you file is sta
   assert.match(fs.readFileSync("src/app/share-deal.json/route.ts", "utf8"), /force-static/);
   assert.doesNotMatch(fs.readFileSync("src/app/share-deal.json/route.ts", "utf8"), /headers\(\)|cookies\(\)/);
 });
+
+// More shareable artefacts (DECISIONS.md, 2026-11-18): the collection card, the movers and Deal Finder images.
+import { cardLink, cardModel } from "../src/components/vault/collection-card";
+
+test("the collection card carries the visitor's own totals, three items at most, and a tagged link", () => {
+  const m = cardModel({ site: "TCG Prices", what: "TCG", host: "tcgprices.app", total: "$1,234.00", change: { up: true, text: "$100.00 (+9%) since I added them" }, units: 7, market: "US", top: [1, 2, 3, 4].map((n) => ({ name: `A very long product name number ${n} that goes on`, price: "$10.00" })), date: new Date("2026-11-18T00:00:00Z") });
+  assert.equal(m.top.length, 3);
+  assert.ok(m.top.every((t) => t.name.length <= 30));
+  assert.equal(m.meta, "7 items · US store prices · Nov 18, 2026");
+  assert.equal(m.footer, "Track yours free at tcgprices.app");
+  assert.equal(cardLink("https://tcgprices.app"), "https://tcgprices.app/?utm_source=share&utm_medium=collection&utm_campaign=collection-card");
+});
+
+test("movers and Deal Finder have their own share image and no images key that would hide it", () => {
+  for (const dir of ["movers", "tools/deal-finder"]) {
+    assert.ok(fs.existsSync(`src/app/${dir}/opengraph-image.tsx`), dir);
+    const page = fs.readFileSync(`src/app/${dir}/page.tsx`, "utf8");
+    assert.ok(!/images\s*:/.test(page) && !page.includes("canon("), `${dir} page must not set og images`);
+    assert.ok(page.includes("<ShareButton"), `${dir} has a share button`);
+    assert.ok(!/<img|card art|p\.image/.test(fs.readFileSync(`src/app/${dir}/opengraph-image.tsx`, "utf8")), `${dir} image is text only`);
+  }
+});
