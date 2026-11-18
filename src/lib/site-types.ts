@@ -81,6 +81,11 @@ export interface GameLine {
    *  directory the covering sister does NOT list, in the slots the uncovered games leave (crawl-run.ts runProbe). A
    *  store the sister lists is never read for it, and a sister's own row for a product and store always wins. */
   gapCrawl?: boolean;
+  /** How this game's players name it and its sets in a search (lib/game-seo.ts; Cardmarket's "metadata by game in the
+   *  community's own words", DECISIONS.md 2026-11-18). `name` leads every set and product title ("One Piece", "MTG");
+   *  `codes` adds the set code players type ("OP18", "GD06", "BT27"); `terms` swaps a product type for the word the
+   *  community uses ("Elite Trainer Box" -> "ETB"). Left out, titles fall back to `short` with no code. */
+  seo?: { name: string; codes?: boolean; terms?: Record<string, string> };
 }
 
 /** The sealed focus (lib/import/focus.ts): which sealed products keep a page. */

@@ -108,6 +108,44 @@ const OWN_CRAWL: Record<string, GameLine["ownCrawl"]> = {
   cp: { any: ["cyberpunk"] },
 };
 
+// How each game's players search (lib/game-seo.ts; owner 2026-11-18, Cardmarket's playbook: "metadata templated by game,
+// in the community's language"). `codes` only where players type the set code itself (One Piece "op18", Gundam "gd06",
+// Digimon "bt27", Fusion World "fb12", Union Arena "ue27bt", Vanguard "dz-bt17", Yu-Gi-Oh! "glvi"); our own Search
+// Console shows OP and Gundam codes searched (seo/identifier-searches-baseline-2026-11-18.txt).
+const SEO: Record<string, GameLine["seo"]> = {
+  mtg: { name: "MTG" },
+  pkm: { name: "Pokémon", terms: { "Elite Trainer Box": "ETB" } },
+  pkj: { name: "Japanese Pokémon" },
+  op: { name: "One Piece", codes: true },
+  ygo: { name: "Yu-Gi-Oh!", codes: true },
+  rb: { name: "Riftbound" },
+  lor: { name: "Lorcana" },
+  gun: { name: "Gundam", codes: true },
+  ua: { name: "Union Arena", codes: true },
+  fw: { name: "Fusion World", codes: true },
+  dg: { name: "Digimon", codes: true },
+  swu: { name: "Star Wars Unlimited" },
+  fab: { name: "Flesh and Blood" },
+  ws: { name: "Weiss Schwarz" },
+  cfv: { name: "Vanguard", codes: true },
+  sor: { name: "Sorcery TCG" },
+  ga: { name: "Grand Archive" },
+  holo: { name: "hololive OCG" },
+  gz: { name: "Godzilla TCG" },
+  cp: { name: "Cyberpunk TCG" },
+  ff: { name: "Final Fantasy TCG" },
+  dbs: { name: "Dragon Ball Super", codes: true },
+  sve: { name: "Shadowverse Evolve", codes: true },
+  uvs: { name: "UniVersus" },
+  nar: { name: "Naruto TCG" },
+  ele: { name: "Elestrals" },
+  cr: { name: "CookieRun Braverse" },
+  pal: { name: "Palworld TCG", codes: true },
+  wx: { name: "WIXOSS" },
+  bss: { name: "Battle Spirits Saga" },
+  ac: { name: "Alpha Clash" },
+};
+
 // Sisters' games whose sister lists few stores (BandaiCompare: 318 store entries, about 190 kept products): read at
 // the directory's other stores too, never at one the sister lists (DECISIONS.md 2026-11-18, "Gap crawl").
 const GAP_CRAWL = new Set(["ua", "fw", "dg"]);
@@ -144,7 +182,7 @@ const LINES: GameLine[] = [
   g("wx", 67, "WIXOSS", "WIXOSS", "wixoss", "all", "wixoss", "#9a5a9a", "English booster boxes and starter decks."),
   g("bss", 72, "Battle Spirits Saga", "Battle Spirits", "battle-spirits-saga", "all", "battle spirits saga", "#b0553c", "Booster boxes and starter decks."),
   g("ac", 78, "Alpha Clash", "Alpha Clash", "alpha-clash", "all", "alpha clash tcg", "#5a8a4a", "Booster boxes and starter decks."),
-].map((l) => ({ ...l, ...(LOGOS.has(l.id) ? { logo: `/games/${l.id}.webp` } : {}), ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}), ...(OWN_CRAWL[l.id] ? { ownCrawl: OWN_CRAWL[l.id] } : {}), ...(GAP_CRAWL.has(l.id) && OWN_CRAWL[l.id] ? { gapCrawl: true } : {}) }));
+].map((l) => ({ ...l, ...(LOGOS.has(l.id) ? { logo: `/games/${l.id}.webp` } : {}), ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}), ...(OWN_CRAWL[l.id] ? { ownCrawl: OWN_CRAWL[l.id] } : {}), ...(GAP_CRAWL.has(l.id) && OWN_CRAWL[l.id] ? { gapCrawl: true } : {}), ...(SEO[l.id] ? { seo: SEO[l.id] } : {}) }));
 
 export const SITE: SiteConfig = {
   // The affiliate sub-id prefix (eBay customid, Impact subId1): `tcgprices-us-card_pinned-1234`.
