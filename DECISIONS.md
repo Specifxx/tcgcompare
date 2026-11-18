@@ -923,3 +923,15 @@ asks product-page readers, low on the page and never beside a price, a buy butto
 tools they want: Best Basket, box value, pull tracker, set tracker. One tap per visitor (localStorage) sends `tool_interest
 {tool, page}`; nothing else is stored or sent. Read about 4 Dec: a tool is built on a site only if it clears 5 taps per 1,000
 product viewers. Remove the box once read. Plan: /mnt/project-files/strategy/premium-network-plan-2026-11-18.html (project files).
+
+## The weekly Hot 100 at /hot-100 — 2026-11-18
+
+**What.** A new page, `/hot-100`, with its own share image: every product whose TCGplayer market price rose over the
+last seven days, biggest rise first, up to 100, each with its place on last week's chart (▲ / ▼ / NEW). Built only from
+the committed daily price history (`lib/hot100.ts`, pure; `hotInputs()` in `lib/data.ts` reads one history file per
+set). A week with fewer real risers (products worth $3 or more) is the Hot 37, never padded with flat or falling ones,
+the same honesty rule as RiftCompare's Hot 40. `/movers` links to it.
+
+**Why.** Owner, 2026-11-18: RiftCompare's Hot chart works on Reddit as a plain link and title and brings real visits;
+every site should have one stable URL to post once a week (tagged `utm_source=reddit&utm_medium=social&utm_campaign=hot100-<site>-<date>`).
+Rides the next import release; the chart fills once a week of history exists (from 21 Nov 2026). `tests/hot100.test.ts`.
