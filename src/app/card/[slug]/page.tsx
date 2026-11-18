@@ -17,6 +17,7 @@ import { PriceTable } from "@/components/PriceTable";
 import { VaultOwn } from "@/components/vault/VaultOwn";
 import { PriceAlert } from "@/components/PriceAlert";
 import { WatchPrice } from "@/components/WatchPrice";
+import { SeenPrice } from "@/components/SinceLastVisit";
 import { lowestByMarket } from "@/lib/alert-feed";
 import { CheckedAgo } from "@/components/CardBuy";
 import { PriceChart } from "@/components/PriceChart";
@@ -168,6 +169,7 @@ export default function CardPage({ params }: { params: { slug: string } }) {
               </p>
             )}
             {SITE.priceAlerts && <WatchPrice site={SITE.key} productId={p.id} prices={lowestByMarket(e.offers)} />}
+            {SITE.priceAlerts && <SeenPrice productId={p.id} prices={lowestByMarket(e.offers)} />}
           </header>
           <AdBanners {...adSearch(set?.name, set)} page="card" />
           <section>
