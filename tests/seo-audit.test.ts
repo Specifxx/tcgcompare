@@ -41,6 +41,9 @@ test("card pages with no price and no listing are kept out of the index", async 
   assert.equal(cardIndexable(card, sig(0, 0, { anyPrice: true }), { upcoming: true }), true);
   assert.equal(cardIndexable(card, sig(0), { upcoming: true }), false);
   assert.equal(cardIndexable({ kind: "sealed", sealedType: "Insert" }, sig(3), live), false);
+  // A game a sister site still ranks for is live and noindex here; a game whose sister lost Google stays indexable.
+  for (const line of ["mtg", "pkm", "pkj", "op", "lor", "rb"]) assert.equal(cardIndexable(card, sig(5, 9), { upcoming: false, line }), false, line);
+  for (const line of ["ygo", "gun", "ua", "fw", "dg", "cp", "fab", "swu"]) assert.equal(cardIndexable(card, sig(5, 9), { upcoming: false, line }), true, line);
   const { isFresh } = await import("../src/lib/indexing");
   const now = Date.UTC(2026, 10, 17);
   assert.equal(isFresh("2026-11-04T00:00:00Z", now), true);

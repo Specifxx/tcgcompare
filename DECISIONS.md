@@ -1016,3 +1016,15 @@ sitting on top of it.
   `var(--bn-space)` + a small gap up, and the body's bottom padding follows it. Hidden, it slides fully off-screen (transform only, CLS 0).
 - **Measured** (local build, dock stacked): Pixel 7 412×915 nav + dock take 129px (14.1%); iPhone 15 393×852 with a 34px safe area
   143px (16.8%); iPhone SE 375×667 129px (19.3%); the old flush bar took about the same plus the full safe area.
+
+## 2026-11-18: Products of games a sister still ranks for are noindex here (core update)
+
+The November 2026 core update (from 10 Nov) took YGO, Gundam and Cyberpunk Compare out of Google, while MTG Compare,
+DexCompare, OP Compare, Lorcana Compare and Rift Compare kept ranking. This site lists the same sealed products as those
+sisters, from the sisters' own store rows, so for about 2,800 of its 4,535 products two of our hosts would compete for one
+search. Product pages of `mtg`, `pkm`, `pkj`, `op`, `lor` and `rb` (`SISTER_RANKED_LINES`, `lib/indexing.ts`) are live for
+visitors, noindex and out of the sitemap; every other game, including the four whose sister already lost Google, keeps the
+normal index gate. Set and game hubs are unchanged. Reverse a line only if its sister stops ranking or folds into this site.
+John Mueller (Bluesky, 10 Nov) on "crawled, currently not indexed": making a site smaller does not by itself raise its
+quality, so this is about not competing with ourselves, not a quality fix.
+

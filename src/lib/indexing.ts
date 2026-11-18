@@ -25,7 +25,13 @@ export interface IndexSignals {
   fresh: boolean;
 }
 
-export function cardIndexable(p: { kind: "card" | "sealed"; sealedType: string | null }, s: IndexSignals, set: { upcoming: boolean } | null | undefined): boolean {
+// Games a sister site still ranks for in Google (MTG Compare, DexCompare for both Pokémon lines, OP Compare, Lorcana Compare,
+// Rift Compare): their product pages here are live and noindex, so two of our hosts never compete for one product
+// (November 2026 core update, DECISIONS.md 2026-11-18). YGO, Gundam, Bandai and Cyberpunk Compare already lost Google.
+export const SISTER_RANKED_LINES: ReadonlySet<string> = new Set(["mtg", "pkm", "pkj", "op", "lor", "rb"]);
+
+export function cardIndexable(p: { kind: "card" | "sealed"; sealedType: string | null }, s: IndexSignals, set: { upcoming: boolean; line?: string } | null | undefined): boolean {
+  if (set?.line && SISTER_RANKED_LINES.has(set.line)) return false;
   if (p.sealedType === "Insert") return false; // pack inserts, as before (DECISIONS.md, 2026-10-28)
   if (!s.fresh) return false;
   if (set?.upcoming) return s.anyPrice;
