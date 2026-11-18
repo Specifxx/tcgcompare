@@ -669,3 +669,12 @@ Z Fold. This bar does NO position arithmetic: `fixed inset-x-0 bottom-0` (the pl
 ## 2026-11-18: cart checkout opens every store or none (owner)
 
 Checkout (`openAll`, `src/lib/cart-checkout.ts`) opens one blank tab per store inside the click, and only when every one opens does it send each to its store's own tagged link. If the browser refuses any, it closes the ones that opened, visits nothing, and the drawer shows the allow-pop-ups steps and a "Try again" button. Before, the first store opened and the rest were refused, which left the visitor with one tab. Chrome 157 on dexcompare.io and on url-opener.com (the owner's model, which does the same close-and-ask) both give one tab until pop-ups are allowed for the site; with them allowed, all open. No browser API grants that permission from a click, so the steps stay.
+
+## The bottom nav, made smoother — 2026-11-18
+
+Owner tried `?bn=1` on his phone: good, "a bit of lag". Changes: no backdrop blur (it repaints every scroll frame on a phone; the bar is
+opaque); the bar always slides on `transform` and hides AFTER the slide (it used to pop out); the scroll handler reads `scrollY` only, no
+React state and no layout reads (an open dialog and an Add to cart button in the bar's strip are cached, refreshed by a
+MutationObserver and an IntersectionObserver); it shows on the first 4 px upward flick (hides after 10 px down); tabs have instant
+`:active` feedback and `router.prefetch` on touch-down. Measured at 4x CPU throttle on an iPhone-sized viewport: frames over 33 ms
+58 with the bar vs 68 without. Owner: happy to have it on every site.
