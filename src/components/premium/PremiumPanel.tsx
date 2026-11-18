@@ -15,7 +15,7 @@ const FEATURES = [
   "No banner ads, on every page and on your phone",
   "Up to 200 price alerts (free: 25)",
   "Your watch list with today's lowest price",
-  "One account for TCG Prices, DexCompare, TCG Prices and RiftCompare",
+  "One account for TCG Prices, DexCompare, MTG Compare and RiftCompare",
 ];
 
 /**
