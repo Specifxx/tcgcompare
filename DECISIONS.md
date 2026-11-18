@@ -745,3 +745,13 @@ Here: the home page lists (featured shelf, packs, pre-order rows, the newest set
 Owner tried the opt-in build on his phone (good; lag fixed by the smoother build, verified live) and wants it on every site. `SITE.bottomNav`
 is now "on": below 768px everyone gets it; `?bn=0` turns it off for a visitor (kept in localStorage), `?bn=1` back on, and "off" in the
 config is the rollback for all of them. Everything else in the 2026-11-18 entries stands.
+
+## "Ask our prices": the Search tab opens a plain-words sheet, no model — 2026-11-18
+
+Owner liked Catchback's chat. Its "chat" is an AI agent that routes a sentence to a filtered page, not a person. Ours (`lib/ask.ts`,
+`components/AskSheet.tsx`, `SITE.ask`): rules turn a sentence into (a) our own section pages (pre-orders, back in stock, movers, deals, the
+game's hub), (b) a search of the words left after the filler is removed, answered from `/api/search` (CDN-cached), "cheapest" keeping the
+lowest-priced matches, (c) a pasted store link to the "is this a good price" checker. No model call, no key, no database, nothing stored
+about the visitor; no match says so and offers the search page. It only opens from a tap on the phone bottom nav's Search tab (a plain link
+to /search without it, or with a modifier key): never by itself, no bubble, no pop-up. Events: ask_open, ask_query, ask_result_click,
+ask_route. An AI-answered version needs the owner's OK and the AI budget; it is not built. Ships with the daily release, not urgent.

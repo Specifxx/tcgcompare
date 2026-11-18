@@ -297,6 +297,13 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
                   className="bn-tab"
                   // The target starts loading on touch-down, a head start on the tap itself (one page, only when it is touched).
                   onPointerDown={() => router.prefetch(t.href!)}
+                  onClick={(e) => {
+                    // Search opens "Ask our prices" where it is mounted (a plain link to /search otherwise, and with a modifier key).
+                    if (t.key !== "search" || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                    if (!document.querySelector("dialog[data-ask]")) return;
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent("ask-open"));
+                  }}
                 >
                   <span className="bn-ico">{t.icon}</span>
                   <span className="bn-label">{t.label}</span>
