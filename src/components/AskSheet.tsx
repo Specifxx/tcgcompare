@@ -187,7 +187,7 @@ export function AskSheet({ games }: { games: AskGame[] }) {
               {shownHits.map((h) => (
                 <li key={h.slug}>
                   <Link href={h.href ?? `/card/${h.slug}`} prefetch={false} onClick={() => track("ask_result_click", { slug: h.slug.slice(0, 80) })} className="flex min-h-14 items-center gap-3 px-3 py-2">
-                    {h.image ? <img src={h.image} alt="" width={40} height={40} loading="lazy" referrerPolicy="no-referrer" className="h-10 w-10 shrink-0 rounded-md bg-raised object-contain" /> : <span className="h-10 w-10 shrink-0 rounded-md bg-raised" />}
+                    {h.image ? <img src={h.image} alt={h.name} width={40} height={40} loading="lazy" referrerPolicy="no-referrer" className="h-10 w-10 shrink-0 rounded-md bg-raised object-contain" /> : <span className="h-10 w-10 shrink-0 rounded-md bg-raised" />}
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold">{h.name}</span>
                       <span className="block truncate text-xs text-muted">{h.set}</span>
