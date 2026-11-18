@@ -31,6 +31,7 @@ import { amazonCarries, amazonCells } from "@/lib/amazon-live";
 import { abs } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ShareButton } from "@/components/ShareButton";
+import { ToolInterest } from "@/components/ToolInterest";
 import { attrHref, rarityHref, sealedHref } from "@/lib/hubs";
 import { packOfBox } from "@/lib/packs";
 
@@ -192,6 +193,8 @@ export default function CardPage({ params }: { params: { slug: string } }) {
               {e.change30d != null ? `, ${e.change30d >= 0 ? "up" : "down"} ${Math.abs(e.change30d)}% over 30 days` : ""}. {usCheapest ? `The cheapest in-stock US price we track is ${money(usCheapest.cents, usCheapest.currency)}.` : ""} Prices from {SITE.stores.length} stores, TCGplayer and eBay are checked every day.
             </p>
           </section>
+          {/* Which RiftCompare tool to build here next: a one-tap demand test, low on the page, never by a price (2026-11-18). */}
+          <ToolInterest page="card" />
         </div>
       </div>
       {related.length > 0 && (
