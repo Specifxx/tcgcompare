@@ -1,0 +1,13 @@
+{
+  "at": "2026-11-18T04:04:31.378Z",
+  "model": "claude-sonnet-5-5",
+  "idLess": 20629,
+  "reused": 20460,
+  "asked": 169,
+  "matched": 53,
+  "passedGuards": 42,
+  "stoppedAtCeiling": false,
+  "calls": 169,
+  "spentUsd": 0.3181,
+  "cacheEntries": 35295
+}
