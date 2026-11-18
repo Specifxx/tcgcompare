@@ -7,9 +7,18 @@
 //   - momentum: TCGplayer's 7-day price change (rising is demand; a missing figure is neutral, never a boost)
 // Games are mixed: every game's best box is placed before any game gets a second, and no game has more than two, so one
 // big game cannot fill the shelf. Same input, same shelf: it moves only when the import's data does.
+// Since 2026-11-18 (owner: "the most popular items should be on the homepage in that order") visitors' own demand multiplies
+// the score: product page views and buy clicks from data/demand.json (counts only, nothing private).
 import type { Product } from "@/lib/site-types";
 import { products, refCents, setById, summaryOf, worthFeaturing } from "@/lib/data";
 import { isPreorder, todayIso } from "@/lib/preorders";
+import { CLICK_WEIGHT, MIN_SIGNAL, demandOf } from "@/lib/home-rank";
+import { HOME_DEMAND, productFacts } from "@/lib/home-demand";
+
+const visitsOf = (p: Product) => {
+  const [views, clicks] = demandOf(productFacts(p), HOME_DEMAND);
+  return views + clicks * CLICK_WEIGHT;
+};
 
 export interface Candidate {
   id: number;
@@ -19,6 +28,8 @@ export interface Candidate {
   ageDays: number;
   marketCents: number;
   change7d: number | null;
+  /** Visitors' demand (owner, 2026-11-18; lib/home-rank.ts): product page views plus 20 per buy click, last 28 days and the last 7 again. */
+  visits?: number;
 }
 
 const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
@@ -34,7 +45,9 @@ export function demandScore(c: Candidate): number {
 
 /** The best `limit` candidates, every game's best before any game's second, at most `perGame` a game. */
 export function mixAcrossGames(list: Candidate[], limit = 8, perGame = 2): Candidate[] {
-  const scored = list.map((c) => ({ c, s: demandScore(c) })).sort((a, b) => b.s - a.s || a.c.id - b.c.id);
+  // What visitors did multiplies the import's signals (lib/home-rank.ts): nothing under MIN_SIGNAL across the list, so thin data changes nothing.
+  const signal = list.reduce((n, c) => n + (c.visits ?? 0), 0);
+  const scored = list.map((c) => ({ c, s: demandScore(c) * (signal >= MIN_SIGNAL ? 1 + Math.log1p(c.visits ?? 0) : 1) })).sort((a, b) => b.s - a.s || a.c.id - b.c.id);
   const out: Candidate[] = [];
   for (let round = 0; round < perGame && out.length < limit; round++) {
     const seen = new Set<string>();
@@ -68,7 +81,7 @@ export function popularBoxes(limit = 8): Product[] {
     // A pre-order is as new as it gets; one more than 60 days away is not demand yet.
     if (isPreorder(set) && out - now > 60 * DAY) continue;
     byId.set(p.id, p);
-    list.push({ id: p.id, game: set.line, stores: sm.inStockSources, ageDays: Math.round((now - out) / DAY), marketCents: market, change7d: sm.change7d });
+    list.push({ id: p.id, game: set.line, stores: sm.inStockSources, ageDays: Math.round((now - out) / DAY), marketCents: market, change7d: sm.change7d, visits: visitsOf(p) });
   }
   return mixAcrossGames(list, limit).map((c) => byId.get(c.id)!);
 }

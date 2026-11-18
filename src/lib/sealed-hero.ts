@@ -19,6 +19,7 @@ import { lineOfSet } from "@/lib/lines";
 import { imageAt } from "@/lib/image";
 import { isPreorder, preorderPath } from "@/lib/preorders";
 import { shortName } from "@/lib/names";
+import { rankProducts } from "@/lib/home-demand";
 
 const NOT_A_STORE = new Set(["ebay", "amazon", "tcgplayer"]);
 const STORE_NAME: Record<string, string> = Object.fromEntries(SITE.stores.map((s) => [s.key, s.name]));
@@ -124,9 +125,11 @@ export function sealedHero(featuredCount = 8, preorderSetsMax = 2, perSet = 4): 
       name: s.name,
       href: preorderPath(s),
       releasesOn: s.releasedOn ?? null,
-      items: sealedInSet(s.id)
+      items: rankProducts(
+        sealedInSet(s.id)
         .filter((p) => p.sealedType !== "Booster Pack" && p.sealedType !== "Case" && (PREORDER_TYPES.has(p.sealedType ?? "") || /box|display/i.test(p.name)))
-        .filter((p) => { const r = refCents(p.id); return r == null || r >= featureMin(); })
+        .filter((p) => { const r = refCents(p.id); return r == null || r >= featureMin(); }),
+      )
         .map(heroItem)
         .filter(sold)
         .slice(0, perSet),
