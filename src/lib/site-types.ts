@@ -75,8 +75,12 @@ export interface GameLine {
    *  or title uses for this game (every word of one `any` phrase, no whole `not` phrase). Left out, never crawled. */
   crawl?: { any: string[]; not?: string[] };
   /** The same words for a game a sister site covers: used ONLY for the stores of data/crawl/own-stores.json, which no
-   *  sister reads (lib/import/crawl.ts). Never read for a store a sister lists. */
+   *  sister reads (lib/import/crawl.ts). Never read for a store a sister lists, except under `gapCrawl`. */
   ownCrawl?: { any: string[]; not?: string[] };
+  /** A sister's game whose sister lists few stores (2026-11-18): its `ownCrawl` words are also read at a store of the
+   *  directory the covering sister does NOT list, in the slots the uncovered games leave (crawl-run.ts runProbe). A
+   *  store the sister lists is never read for it, and a sister's own row for a product and store always wins. */
+  gapCrawl?: boolean;
 }
 
 /** The sealed focus (lib/import/focus.ts): which sealed products keep a page. */

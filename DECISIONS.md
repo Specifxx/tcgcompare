@@ -677,3 +677,23 @@ now opens with one list (`MoversTable.tsx`) of every product in its four lists, 
 search box, a "Sort by" menu (biggest % move either way, biggest gain, biggest loss, price, name), a 7/30-day switch and a Risers/Fallers
 toggle. It reads the rows the page already ranks (`movers()`), so no new data or fetch; every % is the product's own TCGplayer market change.
 The four lists stay below it. It hides itself until there are two movers.
+## 2026-11-18: Gap crawl, Bandai's games at the stores BandaiCompare does not list
+
+Site loop, per-game coverage report (`scripts/coverage-report.ts`, 17 Nov import): Union Arena had 94 of 151 products with
+no in-stock store, Fusion World 50 of 84, Digimon 32 of 112. Their store rows came only from BandaiCompare (318 store
+entries, about 190 kept products after its cull) and from the 9 / 24 / 68 own-list shops whose collections name them; the
+crawl took 6 Union Arena and 19 Fusion World listings on 17 Nov. The rest of the 1,355-store directory (Dex, MTG, YGO and
+the other sisters' shops) was never read for those games, though many sell them.
+
+- `GameLine.gapCrawl` (`ua`, `fw`, `dg` in `site.config.ts`): the weekly probe reads those games' `ownCrawl` words at a
+  directory store ONLY when BandaiCompare's own store list (from `SISTER_DIR`) does not name its host. A sister list not
+  checked out means the game is read nowhere. The crawl words (`crawl`) stay for games no sister covers
+  (`tests/crawl.test.ts`), so "no store is visited for a game a sister covers" still holds at every store that sister reads.
+- The uncovered games keep their collections and their slots: a collection an uncovered game claims is never re-read as a
+  gap game's, and gap games take only the slots of the 8-a-store cap the uncovered games leave (`capWithGap`). With no gap
+  option the probe's result is byte for byte what it was.
+- `addCrawlOffers` (import): a sister's row for the same store, market and product always wins and the crawl's is left out
+  (a store BandaiCompare added after the weekly probe). Listings are taken by the same rules as every crawl listing (id,
+  title rule, AI placement), so matching is not loosened.
+- Measure after the next probe (Sunday) and the import after it: Union Arena / Fusion World / Digimon products with 0
+  stores, against 94 / 50 / 32. If it lifts them, the same flag is the way for another sister's thin game.

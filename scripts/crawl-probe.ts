@@ -12,7 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { SITE } from "@/site.config";
 import type { Market } from "@/lib/site-types";
-import { mergeProbe, runProbe, type ProbeStore } from "@/lib/import/crawl-run";
+import { mergeProbe, runProbe, type GapProbe, type ProbeStore } from "@/lib/import/crawl-run";
 import type { CrawlStore } from "@/lib/import/crawl";
 import { SISTERS } from "@/lib/import/sisters";
 
@@ -68,6 +68,28 @@ export function sisterPlatforms(root: string): Map<string, "shopify" | "other"> 
   return out;
 }
 
+/** line → the hosts of the sister that covers it (from its store list under `root`). A sister whose list is not
+ *  checked out is unknown: its gap games are then read nowhere (sisterLists answers true). */
+export function sisterHostsByLine(root: string): Map<string, Set<string> | null> {
+  const out = new Map<string, Set<string> | null>();
+  for (const s of SISTERS) {
+    const file = s.stores ? path.join(root, s.dir, s.stores) : "";
+    let hosts: Set<string> | null = null;
+    if (file && fs.existsSync(file)) {
+      hosts = new Set<string>();
+      const text = fs.readFileSync(file, "utf8");
+      if (file.endsWith(".json")) {
+        for (const st of readJson<{ base?: string }[]>(file, [])) if (st.base) hosts.add(hostOf(st.base));
+      } else {
+        for (const m of text.matchAll(/base:\s*"([^"]+)"/g)) hosts.add(hostOf(m[1]));
+      }
+      hosts.delete("");
+    }
+    for (const line of s.lines) out.set(line, hosts);
+  }
+  return out;
+}
+
 async function main() {
   const stores = readJson<ProbeStore[]>(path.join(ROOT, "data", "public", "stores.json"), []);
   const blocklist = readJson<Record<string, string>>(path.join(ROOT, "data", "store-blocklist.json"), {});
@@ -101,10 +123,20 @@ async function main() {
   const minutes = Number(process.env.PROBE_MAX_MINUTES ?? 100);
   const deadline = Date.now() + minutes * 60_000;
   const budget = Number(process.env.PROBE_BUDGET ?? 8000);
+  // Gap games (GameLine.gapCrawl): a sister's game read at the directory's stores that sister does not list.
+  const hostsByLine = process.env.SISTER_DIR ? sisterHostsByLine(process.env.SISTER_DIR) : new Map<string, Set<string> | null>();
+  const gap: GapProbe = {
+    lines: (SITE.lines ?? []).filter((l) => l.gapCrawl && l.ownCrawl && hostsByLine.get(l.id)).map((l) => ({ id: l.id, crawl: l.ownCrawl })),
+    sisterLists: (host, line) => {
+      const hosts = hostsByLine.get(line);
+      return !hosts || hosts.has(host);
+    },
+  };
+  console.log(`[probe] gap games: ${gap.lines.map((l) => l.id).join(", ") || "none (no sister lists checked out)"}`);
   const r = await runProbe(
     list.map((s) => ({ ...s, market: s.market as Market })),
     SITE.lines ?? [],
-    { budget, perStoreCap: 6, deadline, log: console.log },
+    { budget, perStoreCap: 6, deadline, log: console.log, gap },
   );
   const ownLines = (SITE.lines ?? []).map((l) => ({ id: l.id, crawl: l.crawl ?? l.ownCrawl }));
   const ro = await runProbe(

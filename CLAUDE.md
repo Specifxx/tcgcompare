@@ -40,6 +40,10 @@ For the games no sister prices (the `crawl` words in `site.config.ts`; never a g
   store lists; never a refused or blocked store) and writes `data/crawl/stores.json`: per store and game, at most four
   collections whose handle or title names that game alone, never a singles or accessories collection, and at most
   eight a store in all (so one full read fits the per-store cap). A shop listed in two markets is asked once.
+- **Gap games** (`GameLine.gapCrawl`: Union Arena, Fusion World, Digimon; 2026-11-18): BandaiCompare lists few stores, so the
+  probe also reads those games' `ownCrawl` words at a directory store BandaiCompare's own list does NOT name, only in the
+  slots the uncovered games leave (`capWithGap`), never stealing their collections. A store the sister lists is never read
+  for its game, and a sister's row for the same store and product always wins in the import (`addCrawlOffers`).
 - `scripts/crawl-uncovered.ts` runs before the import in `refresh-prices.yml` and `trial-import.yml` (never fatal, a
   no-op while the list is empty), reads those collections' `products.json` (4 pages each) and leaves the listings in
   the git-ignored `data/crawl/listings.json`. The import takes a listing ONLY by the TCGplayer id the listing carries

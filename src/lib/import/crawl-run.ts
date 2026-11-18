@@ -165,7 +165,7 @@ export interface ProbeResult {
 
 /** Which collections at each store hold a game we crawl (by its line's `crawl` words). A shop listed in two markets
  *  is asked once: its collections are the same in every market. */
-export async function runProbe(stores: readonly ProbeStore[], lines: readonly Pick<GameLine, "id" | "crawl">[], o: RunOptions): Promise<ProbeResult> {
+export async function runProbe(stores: readonly ProbeStore[], lines: readonly Pick<GameLine, "id" | "crawl">[], o: RunOptions & { gap?: GapProbe }): Promise<ProbeResult> {
   const now = o.now ?? Date.now;
   const budget = new RequestBudget(o.budget);
   const crawlLines = lines.filter((l) => l.crawl);
@@ -187,21 +187,31 @@ export async function runProbe(stores: readonly ProbeStore[], lines: readonly Pi
           cs.push(...list.filter((c) => c && typeof c.handle === "string"));
           if (list.length < PAGE) break;
         }
+        const host = hostOfBase(base);
+        // Gap games (GameLine.gapCrawl) only at a store their own sister does not list, and only for a collection no
+        // uncovered game claims, so the uncovered games' assignment is exactly what it was without them.
+        const gapLines = (o.gap?.lines ?? []).filter((l) => !o.gap!.sisterLists(host, l.id));
         const byLine = new Map<string, typeof cs>();
+        const byGap = new Map<string, typeof cs>();
         for (const c of cs) {
           const line = lineOfCollection(c, crawlLines);
-          if (!line) continue;
-          if (!byLine.has(line)) byLine.set(line, []);
-          byLine.get(line)!.push(c);
+          const gap = line ? null : lineOfCollection(c, gapLines);
+          const into = line ? byLine : byGap;
+          const key = line ?? gap;
+          if (!key) continue;
+          if (!into.has(key)) into.set(key, []);
+          into.get(key)!.push(c);
         }
-        const host = hostOfBase(base);
-        const chosen = capHandles([...byLine].sort((a, b) => a[0].localeCompare(b[0])).map(([line, list]) => ({ line, handles: chooseHandles(list) })));
+        const chosen = capWithGap(
+          [...byLine].sort((a, b) => a[0].localeCompare(b[0])).map(([line, list]) => ({ line, handles: chooseHandles(list) })),
+          [...byGap].sort((a, b) => a[0].localeCompare(b[0])).map(([line, list]) => ({ line, handles: chooseHandles(list) })),
+        );
         for (const st of group) {
           const b = st.base.replace(/\/+$/, "");
           for (const { line, handles } of chosen) if (handles.length) entries.push({ host, key: st.key, name: st.name, base: b, market: st.market, line, handles, probedAt: new Date(now()).toISOString() });
           probed.add(storeIdentity(b, st.market));
         }
-        o.log?.(`[probe] ${label}: ${cs.length} collections, games ${[...byLine.keys()].join(", ") || "none"}`);
+        o.log?.(`[probe] ${label}: ${cs.length} collections, games ${[...byLine.keys(), ...[...byGap.keys()].map((g) => `${g} (gap)`)].join(", ") || "none"}`);
       } catch (e) {
         if (!(e instanceof StopStore)) throw e;
         if (e.reason === "blocked" || e.reason === "challenge") for (const st of group) blocked.add(storeIdentity(st.base, st.market));
@@ -234,6 +244,25 @@ export function capHandles(byLine: readonly { line: string; handles: string[] }[
     if (!any) break;
   }
   return out.filter((x) => x.handles.length);
+}
+
+/** The gap games for the sisters' stores (GameLine.gapCrawl; scripts/crawl-probe.ts builds it from SISTER_DIR). */
+export interface GapProbe {
+  /** The gap games, each with its `ownCrawl` words as `crawl`. */
+  lines: readonly Pick<GameLine, "id" | "crawl">[];
+  /** Whether the sister that covers `line` lists the shop at `host`: then the shop is never read for that game. */
+  sisterLists: (host: string, line: string) => boolean;
+}
+
+/** The uncovered games first (capHandles, as before); the gap games take only the slots they leave. */
+export function capWithGap(
+  uncovered: readonly { line: string; handles: string[] }[],
+  gap: readonly { line: string; handles: string[] }[],
+  max = MAX_HANDLES_PER_STORE,
+): { line: string; handles: string[] }[] {
+  const first = capHandles(uncovered, max);
+  const left = max - first.reduce((n, x) => n + x.handles.length, 0);
+  return left > 0 ? [...first, ...capHandles(gap, left)] : first;
 }
 
 /** This week's probe over last week's list: a store probed again replaces its entries, one that blocked us leaves. */
