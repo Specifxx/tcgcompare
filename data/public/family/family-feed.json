@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-17T19:51:51.310Z",
+ "generatedAt": "2026-11-18T04:12:33.375Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -9,6 +9,20 @@
   }
  },
  "items": [
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Marvel: Darkhold Destiny - Collector Booster Display",
+   "url": "https://tcgprices.app/card/marvel-darkhold-destiny-collector-booster-display",
+   "cents": 45588,
+   "currency": "USD",
+   "store": "Minted TCG",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723266_200w.jpg",
+   "refCents": 66324,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 31
+  },
   {
    "kind": "deal",
    "cluster": "cards",
@@ -33,9 +47,23 @@
    "currency": "USD",
    "store": "Collector Store",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/501999_200w.jpg",
-   "refCents": 110906,
+   "refCents": 110526,
    "refLabel": "TCGplayer market price",
    "savingPct": 23
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "The Hobbit - Collector Booster Display Case",
+   "url": "https://tcgprices.app/card/the-hobbit-collector-booster-display-case",
+   "cents": 379900,
+   "currency": "USD",
+   "store": "Apollo's Vault",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/692964_200w.jpg",
+   "refCents": 467188,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 19
   },
   {
    "kind": "deal",
@@ -55,20 +83,6 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "The Hobbit - Collector Booster Display Case",
-   "url": "https://tcgprices.app/card/the-hobbit-collector-booster-display-case",
-   "cents": 379900,
-   "currency": "USD",
-   "store": "Apollo's Vault",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/692964_200w.jpg",
-   "refCents": 450160,
-   "refLabel": "TCGplayer market price",
-   "savingPct": 16
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
    "title": "Premium Trainer's XY Collection",
    "url": "https://tcgprices.app/card/premium-trainers-xy-collection",
    "cents": 274999,
@@ -78,20 +92,6 @@
    "refCents": 312500,
    "refLabel": "TCGplayer market price",
    "savingPct": 12
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
-   "title": "The Dominance of God Booster Box Case",
-   "url": "https://tcgprices.app/card/the-dominance-of-god-booster-box-case",
-   "cents": 239988,
-   "currency": "USD",
-   "store": "Wulf Gaming",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712902_200w.jpg",
-   "refCents": 259840,
-   "refLabel": "TCGplayer market price",
-   "savingPct": 8
   },
   {
    "kind": "preorder",
@@ -123,23 +123,11 @@
    "region": "US",
    "title": "The Dominance of God Booster Box",
    "url": "https://tcgprices.app/preorders/the-dominance-of-god",
-   "cents": 19999,
+   "cents": 18900,
    "currency": "USD",
-   "store": "Wulf Gaming",
+   "store": "Hobbiesville",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/712901_200w.jpg",
    "releaseDate": "2026-11-20"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Glorious Victors Booster Box",
-   "url": "https://tcgprices.app/preorders/glorious-victors",
-   "cents": 7000,
-   "currency": "USD",
-   "store": "Skybox Collectibles",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/713238_200w.jpg",
-   "releaseDate": "2026-12-04"
   },
   {
    "kind": "preorder",
@@ -162,6 +150,17 @@
    "cents": 9499,
    "currency": "USD",
    "store": "Many Realms",
+   "releaseDate": "2026-12-11"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Reach the God Booster Box",
+   "url": "https://tcgprices.app/preorders/reach-the-god",
+   "cents": 14499,
+   "currency": "USD",
+   "store": "The Collection Realm",
    "releaseDate": "2026-12-11"
   }
  ]
