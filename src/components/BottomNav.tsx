@@ -4,7 +4,7 @@ import Link from "@/components/Link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { CART_OPEN_EVENT, cartCount, onCartChange, readCart } from "@/lib/cart-list";
+import { cartArm, CART_OPEN_EVENT, cartCount, onCartChange, readCart } from "@/lib/cart-list";
 import { CartIcon } from "./cart/CartIcon";
 import { Icon } from "./Icon";
 import { isActivePath } from "./NavLink";
@@ -106,6 +106,9 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
   const router = useRouter();
   const [enabled, setEnabled] = useState(false);
   const [count, setCount] = useState(0);
+  // The cart A/B (lib/cart-list.ts cartArm): the "off" arm has no Cart tab unless its cart already holds lines.
+  const [cartOn, setCartOn] = useState(false);
+  useEffect(() => setCartOn(cartArm() === "on"), []);
   const ref = useRef<HTMLElement>(null);
 
   // The opt-in, read once in the browser (never in the server HTML).
@@ -284,7 +287,7 @@ export function BottomNav({ mode }: { mode: BottomNavMode }) {
   return (
     <nav ref={ref} aria-label="Quick links" data-bottomnav-bar="hidden" aria-hidden="true" className="bn md:hidden">
       <ul className="bn-row">
-        {tabs().map((t) => {
+        {tabs().filter((t) => t.key !== "cart" || cartOn || count > 0).map((t) => {
           const active = t.href ? isActivePath(pathname, t.href, t.also) && (t.href !== "/" || pathname === "/") : false;
           return (
             <li key={t.key} className="bn-cell">
