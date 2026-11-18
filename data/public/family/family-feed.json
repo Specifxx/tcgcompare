@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-18T04:12:33.375Z",
+ "generatedAt": "2026-11-18T19:32:42.225Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -123,9 +123,9 @@
    "region": "US",
    "title": "The Dominance of God Booster Box",
    "url": "https://tcgprices.app/preorders/the-dominance-of-god",
-   "cents": 18900,
+   "cents": 19999,
    "currency": "USD",
-   "store": "Hobbiesville",
+   "store": "Wulf Gaming",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/712901_200w.jpg",
    "releaseDate": "2026-11-20"
   },
