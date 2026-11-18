@@ -705,3 +705,13 @@ the other sisters' shops) was never read for those games, though many sell them.
   title rule, AI placement), so matching is not loosened.
 - Measure after the next probe (Sunday) and the import after it: Union Arena / Fusion World / Digimon products with 0
   stores, against 94 / 50 / 32. If it lifts them, the same flag is the way for another sister's thin game.
+
+## 2026-11-18 — Accounts on TCG Prices (one network account)
+
+Owner (18 Nov): expand accounts beyond RiftCompare and OP Compare, team decides. TCG Prices plugs into RiftCompare's sister account
+service like DexCompare and MTG Compare: `/account` (emailed sign-in link; Google once `NEXT_PUBLIC_TCGPRICES_GOOGLE_CLIENT_ID` holds
+its own client), `/watches` (every price alert set with that email, any device, with a stop button), `/premium` (RiftCompare Premium:
+no banner ads, 200 alerts). A quiet account icon in the header from sm up and "Sign in / My watches" in the phone menu; no pop-up, no
+corner card. No back-in-stock button yet: the card page is one CDN copy for every market and needs a per-market island first.
+Members' banner ads (`data-ad="banners"`, `data-ad="inline"`) are hidden by `data-adfree`; the price table is untouched.
+The browser keeps one token (`tcgprices_premium_v1`); no page reads a cookie or header. Sign-ups: RiftCompare admin Accounts › TCG Prices.
