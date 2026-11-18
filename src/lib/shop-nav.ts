@@ -35,10 +35,10 @@ function build(): ShopNav {
   const setLinks: NavLink[] = released.map((s) => ({ href: `/sets/${s.slug}`, label: s.name }));
   const all: NavLink = { href: "/sealed", label: "All sealed" };
   const sealed: NavGroup[] = types.length ? [{ title: "By product type", links: [...types, all] }] : [];
-  const sets: NavGroup[] = [{ title: "Newest sets", links: cap(setLinks, 12, { href: "/sets", label: `All ${listed.length} sets` }) }];
+  const sets: NavGroup[] = [{ title: "Newest sets", links: cap(setLinks, 6, { href: "/sets", label: `All ${listed.length} sets` }) }];
   const groups: NavGroup[] = [
     ...(types.length ? [{ title: "Sealed by type", links: [...types, all] }] : []),
-    { title: "Sets", links: cap(setLinks, 12, { href: "/sets", label: "Every set" }) },
+    { title: "Sets", links: cap(setLinks, 6, { href: "/sets", label: "Every set" }) },
   ];
   return { menus: { sealed, sets }, groups };
 }

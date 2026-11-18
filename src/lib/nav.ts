@@ -8,7 +8,6 @@
 // never from here.
 import { SITE } from "@/site.config";
 import { TOOLS } from "@/lib/tool-list";
-import { creatorsOn } from "@/lib/creators";
 
 // Pages that are empty until a week of daily prices exists. The caller (a server
 // component) passes `history` from lib/data.ts historyOn(); this file is also read
@@ -56,12 +55,11 @@ export function navGroups(o: NavOptions = {}): NavGroup[] {
     { href: "/restocks", label: "Back in stock" },
     { href: "/stores", label: "Stores we track" },
   ];
-  const tools: NavLink[] = TOOLS.filter((t) => t.href !== "/tools/deal-finder").map((t) => ({ href: t.href, label: t.name }));
+  // Three tools and the tools page, not every tool on every page (2026-11-19, "Fewer links on every page").
+  const tools: NavLink[] = [...TOOLS.filter((t) => t.href !== "/tools/deal-finder").slice(0, 3).map((t) => ({ href: t.href, label: t.name })), { href: "/tools", label: "All free tools" }];
   const guides: NavLink[] = [
     { href: "/price-report", label: "Monthly price report" },
-    ...(creatorsOn() ? [{ href: "/creators", label: `${SITE.gameShort} creators` }] : []),
-    { href: "/about", label: "About" },
-    { href: "/feedback", label: "Send feedback" },
+    { href: "/about", label: "Who runs this site" },
   ];
   if (o.shop) {
     // The product types and sets come first (owner, 2026-11-09), so the flat list keeps only what they do not cover.
