@@ -755,3 +755,15 @@ lowest-priced matches, (c) a pasted store link to the "is this a good price" che
 about the visitor; no match says so and offers the search page. It only opens from a tap on the phone bottom nav's Search tab (a plain link
 to /search without it, or with a modifier key): never by itself, no bubble, no pop-up. Events: ask_open, ask_query, ask_result_click,
 ask_route. An AI-answered version needs the owner's OK and the AI budget; it is not built. Ships with the daily release, not urgent.
+
+## 2026-11-18: "Ask our prices", the in-words answer (built dark)
+
+Owner: the Anthropic balance is fine and the AI freeze is lifted within existing ceilings, so the sheet may answer in words. `/api/ask?q=`
+(`lib/ask-ai.ts`): the same rules parse the sentence, `/api/search` finds the rows, then ONE Claude Haiku 5.5 call (no thinking, 220 output
+tokens) picks up to three of those rows and writes one or two sentences. The guard keeps the model to our rows: picks are result numbers,
+an answer that names a figure not printed on the rows, or a link, is dropped (the picks stay). About US$0.00026 a new question (Haiku 5.5
+US$0.10 in / US$0.50 out per MTok, about 1,300 in and 200 out); an identical question is CDN-cached six hours and costs nothing.
+Caps: 300 model calls a day per server instance (`ASK_AI_DAILY_CAP`, about US$0.08), 8 a visitor a day (their browser), a button press never
+a keystroke. The hard ceiling is the owner's Anthropic workspace spend limit; the instance counter is a soft cap (no database).
+OFF until the owner sets `ANTHROPIC_API_KEY` and `ASK_AI=1` on Vercel Production AND `NEXT_PUBLIC_ASK_AI=1` (the button only shows then); off,
+the sheet is the rules-only version. Nothing about the visitor is stored. Roll back: unset `ASK_AI`.
