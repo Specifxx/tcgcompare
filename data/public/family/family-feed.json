@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-19T03:52:25.501Z",
+ "generatedAt": "2026-11-19T19:47:59.875Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -134,9 +134,9 @@
    "region": "US",
    "title": "The Dominance of God Booster Box",
    "url": "https://tcgprices.app/preorders/the-dominance-of-god",
-   "cents": 19999,
+   "cents": 18000,
    "currency": "USD",
-   "store": "Wulf Gaming",
+   "store": "Fabricator's Forge",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/712901_200w.jpg",
    "releaseDate": "2026-11-20"
   },
@@ -144,24 +144,23 @@
    "kind": "preorder",
    "cluster": "cards",
    "region": "US",
-   "title": ".asphodel/cantabile Booster Box",
-   "url": "https://tcgprices.app/preorders/asphodel-cantabile",
-   "cents": 8699,
+   "title": "Starter Deck 25: Rubeusdramon Starter Deck",
+   "url": "https://tcgprices.app/preorders/starter-deck-25-rubeusdramon",
+   "cents": 1999,
    "currency": "USD",
-   "store": "The Arcanum Sanctorum",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723027_200w.jpg",
-   "releaseDate": "2026-12-11"
+   "store": "Many Realms",
+   "releaseDate": "2026-12-04"
   },
   {
    "kind": "preorder",
    "cluster": "cards",
    "region": "US",
-   "title": "Ignition of X Booster Box",
-   "url": "https://tcgprices.app/preorders/ignition-of-x",
-   "cents": 9499,
+   "title": "Starter Deck 26: Yukinamon Starter Deck",
+   "url": "https://tcgprices.app/preorders/starter-deck-26-yukinamon",
+   "cents": 1999,
    "currency": "USD",
    "store": "Many Realms",
-   "releaseDate": "2026-12-11"
+   "releaseDate": "2026-12-04"
   }
  ]
 }

@@ -3,7 +3,7 @@
 // fetch, sleep and clock from the caller, so tests/crawl.test.ts runs them on fixtures.
 import type { Market } from "@/lib/site-types";
 import { CURRENCY } from "@/lib/site-types";
-import { chooseHandles, lineOfCollection, MAX_HANDLES_PER_STORE, storeIdentity, toListing, type CrawlListing, type CrawlRun, type CrawlStore, type CrawlStoreRun, type ShopifyListing } from "./crawl";
+import { chooseHandles, choosePreorderShelf, lineOfCollection, MAX_HANDLES_PER_STORE, storeIdentity, toListing, type CrawlListing, type CrawlRun, type CrawlStore, type CrawlStoreRun, type ShopifyListing } from "./crawl";
 import { eachStore, RequestBudget, StopStore, StoreSession, type PoliteOptions } from "./polite-http";
 import type { GameLine } from "@/lib/site-types";
 
@@ -40,15 +40,22 @@ interface StoreJob {
   market: Market;
   own?: boolean;
   handles: { handle: string; line: string }[];
+  /** Pre-order shelves (CrawlStore.preorder) and the games they are read for. */
+  preorder: { handle: string; lines: string[] }[];
 }
 
 export function groupStores(entries: readonly CrawlStore[]): StoreJob[] {
   const by = new Map<string, StoreJob>();
   for (const e of entries) {
     const id = storeIdentity(e.base, e.market);
-    if (!by.has(id)) by.set(id, { host: e.host, key: e.key, name: e.name, base: e.base.replace(/\/+$/, ""), market: e.market, ...(e.own ? { own: true } : {}), handles: [] });
+    if (!by.has(id)) by.set(id, { host: e.host, key: e.key, name: e.name, base: e.base.replace(/\/+$/, ""), market: e.market, ...(e.own ? { own: true } : {}), handles: [], preorder: [] });
     const job = by.get(id)!;
     for (const h of e.handles) if (!job.handles.some((x) => x.handle === h && x.line === e.line)) job.handles.push({ handle: h, line: e.line });
+    for (const h of e.preorder ?? []) {
+      let shelf = job.preorder.find((x) => x.handle === h);
+      if (!shelf) job.preorder.push((shelf = { handle: h, lines: [] }));
+      if (!shelf.lines.includes(e.line)) shelf.lines.push(e.line);
+    }
   }
   return [...by.values()];
 }
@@ -103,33 +110,46 @@ export async function runCrawl(entries: readonly CrawlStore[], o: RunOptions): P
           if (!cur) run.reason = "currency-unknown";
           else if (cur !== CURRENCY[j.market]) run.reason = `currency-mismatch: charges ${cur}, listed as ${j.market}`;
           else {
-            for (const { handle, line } of j.handles) {
+            // Every page of one collection, or null when it was not read (a 5xx, a timeout, unreadable JSON).
+            const readCollection = async (handle: string): Promise<ShopifyListing[] | null> => {
               const got: ShopifyListing[] = [];
-              let bad = false;
               for (let page = 1; page <= PRODUCT_PAGES; page++) {
                 const f0 = s.failures;
                 const d = await s.getJson<{ products?: ShopifyListing[] }>(`/collections/${encodeURIComponent(handle)}/products.json?limit=${PAGE}&page=${page}&country=${ISO[j.market]}`);
-                if (s.failures > f0 || (d != null && !Array.isArray(d.products))) {
-                  bad = true; // a 5xx, a timeout or unreadable JSON: this collection was not read
-                  break;
-                }
+                if (s.failures > f0 || (d != null && !Array.isArray(d.products))) return null;
                 const list = d ? d.products! : null;
                 if (!list) break; // a 404 or a path robots.txt disallows: honestly nothing here
                 got.push(...list);
                 if (list.length < PAGE) break;
               }
-              if (bad) {
+              return got;
+            };
+            const keep = (p: ShopifyListing) => !!p && typeof p.id === "number" && Array.isArray(p.variants);
+            for (const { handle, line } of j.handles) {
+              const got = await readCollection(handle);
+              if (!got) {
                 failed.push(handle);
                 continue;
               }
               done++;
               for (const p of got) {
-                if (!p || typeof p.id !== "number" || !Array.isArray(p.variants)) continue;
+                if (!keep(p)) continue;
                 if (!byId.has(p.id)) byId.set(p.id, { p, lines: new Set() });
                 byId.get(p.id)!.lines.add(line);
               }
             }
-            if (failed.length) run.reason = `errors: ${failed.length} of ${j.handles.length} collections failed (${failed.join(", ")})`;
+            // The pre-order shelf last: a listing a game's own collection already gave keeps that collection's games.
+            for (const shelf of j.preorder) {
+              const got = await readCollection(shelf.handle);
+              if (!got) {
+                failed.push(shelf.handle);
+                continue;
+              }
+              done++;
+              for (const p of got) if (keep(p) && !byId.has(p.id)) byId.set(p.id, { p, lines: new Set(shelf.lines) });
+            }
+            const total = j.handles.length + j.preorder.length;
+            if (failed.length) run.reason = `errors: ${failed.length} of ${total} collections failed (${failed.join(", ")})`;
             else run.ok = true;
           }
         } catch (e) {
@@ -165,7 +185,7 @@ export interface ProbeResult {
 
 /** Which collections at each store hold a game we crawl (by its line's `crawl` words). A shop listed in two markets
  *  is asked once: its collections are the same in every market. */
-export async function runProbe(stores: readonly ProbeStore[], lines: readonly Pick<GameLine, "id" | "crawl">[], o: RunOptions & { gap?: GapProbe }): Promise<ProbeResult> {
+export async function runProbe(stores: readonly ProbeStore[], lines: readonly Pick<GameLine, "id" | "crawl" | "ownCrawl">[], o: RunOptions & { gap?: GapProbe }): Promise<ProbeResult> {
   const now = o.now ?? Date.now;
   const budget = new RequestBudget(o.budget);
   const crawlLines = lines.filter((l) => l.crawl);
@@ -206,12 +226,15 @@ export async function runProbe(stores: readonly ProbeStore[], lines: readonly Pi
           [...byLine].sort((a, b) => a[0].localeCompare(b[0])).map(([line, list]) => ({ line, handles: chooseHandles(list) })),
           [...byGap].sort((a, b) => a[0].localeCompare(b[0])).map(([line, list]) => ({ line, handles: chooseHandles(list) })),
         );
+        // The store's pre-order shelf, read for the games it is read for (never alone: a shop with none of our games
+        // gives its shelf to nobody).
+        const shelf = chosen.some((x) => x.handles.length) ? choosePreorderShelf(cs, [...lines, ...gapLines]) : null;
         for (const st of group) {
           const b = st.base.replace(/\/+$/, "");
-          for (const { line, handles } of chosen) if (handles.length) entries.push({ host, key: st.key, name: st.name, base: b, market: st.market, line, handles, probedAt: new Date(now()).toISOString() });
+          for (const { line, handles } of chosen) if (handles.length) entries.push({ host, key: st.key, name: st.name, base: b, market: st.market, line, handles, ...(shelf ? { preorder: [shelf] } : {}), probedAt: new Date(now()).toISOString() });
           probed.add(storeIdentity(b, st.market));
         }
-        o.log?.(`[probe] ${label}: ${cs.length} collections, games ${[...byLine.keys(), ...[...byGap.keys()].map((g) => `${g} (gap)`)].join(", ") || "none"}`);
+        o.log?.(`[probe] ${label}: ${cs.length} collections, games ${[...byLine.keys(), ...[...byGap.keys()].map((g) => `${g} (gap)`)].join(", ") || "none"}${shelf ? `, pre-order shelf ${shelf}` : ""}`);
       } catch (e) {
         if (!(e instanceof StopStore)) throw e;
         if (e.reason === "blocked" || e.reason === "challenge") for (const st of group) blocked.add(storeIdentity(st.base, st.market));

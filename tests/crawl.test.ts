@@ -670,3 +670,66 @@ test("sisterHostsByLine: each sister's games map to its listed hosts; a list not
   assert.equal(m.get("mtg"), null, "mtg's list is not checked out");
   fs.rmSync(root, { recursive: true, force: true });
 });
+
+// ── The pre-order shelf (Job A, 2026-11-20: launches sit under "Pre-orders" before the game's own collection) ──
+
+test("choosePreorderShelf: a game-less launch shelf, the largest; never a game's own, a singles shelf or an empty one", async () => {
+  const { choosePreorderShelf } = await import("../src/lib/import/crawl");
+  const lines = SITE.lines ?? [];
+  assert.equal(
+    choosePreorderShelf(
+      [
+        { handle: "pokemon-pre-orders", title: "Pokemon Pre-Orders", products_count: 90 },
+        { handle: "weiss-schwarz-preorders", title: "Weiss Schwarz Preorders", products_count: 40 },
+        { handle: "singles-preorders", title: "Singles Preorders", products_count: 80 },
+        { handle: "pre-orders", title: "Pre-Orders", products_count: 30 },
+        { handle: "new-releases", title: "New Releases", products_count: 12 },
+        { handle: "upcoming", title: "Upcoming", products_count: 0 },
+        { handle: "booster-boxes", title: "Booster Boxes", products_count: 200 },
+      ],
+      lines,
+    ),
+    "pre-orders",
+  );
+  assert.equal(choosePreorderShelf([{ handle: "preorders", title: "Preorders", products_count: 3 }], lines), "preorders");
+  assert.equal(choosePreorderShelf([{ handle: "mtg-preorders", title: "MTG Preorders", products_count: 3 }, { handle: "sale", title: "Sale", products_count: 9 }], lines), null);
+});
+
+test("the probe gives a store's pre-order shelf to the games it is read for, and to nobody at a shop with none", async () => {
+  const net = fakeNet({
+    "https://a.test/collections.json": { body: { collections: [{ handle: "grand-archive", title: "Grand Archive", products_count: 7 }, { handle: "weiss-schwarz", title: "Weiss Schwarz", products_count: 9 }, { handle: "pre-orders", title: "Pre-Orders", products_count: 30 }] } },
+    "https://b.test/collections.json": { body: { collections: [{ handle: "pre-orders", title: "Pre-Orders", products_count: 30 }, { handle: "pokemon", title: "Pokemon", products_count: 99 }] } },
+  });
+  const r = await runProbe(
+    [{ key: "a", name: "A", base: "https://a.test", market: "US" }, { key: "b", name: "B", base: "https://b.test", market: "US" }],
+    SITE.lines ?? [],
+    { fetch: net.f, sleep: net.sleep, now: net.now, budget: 100, perStoreCap: 6 },
+  );
+  assert.deepEqual(r.entries.map((e) => [e.host, e.line, e.handles, e.preorder]), [
+    ["a.test", "ga", ["grand-archive"], ["pre-orders"]],
+    ["a.test", "ws", ["weiss-schwarz"], ["pre-orders"]],
+  ]);
+});
+
+test("the crawl reads a pre-order shelf once; a listing only there carries the shelf's games, one a game's collection gave keeps its own", async () => {
+  const shelf = [listing({ id: 1, handle: "chromatic-ascension-booster-box" }), listing({ id: 2, handle: "in-both" })];
+  const net = fakeNet({
+    "https://s.test/meta.json": { body: { currency: "USD" } },
+    "https://s.test/collections/ws/products.json": { body: { products: [listing({ id: 2, handle: "in-both" })] } },
+    "https://s.test/collections/dbs/products.json": { body: { products: [] } },
+    "https://s.test/collections/pre-orders/products.json": { body: { products: shelf } },
+  });
+  const run = await runCrawl([{ ...entry("s.test", "US", ["ws"], "ws"), preorder: ["pre-orders"] }, { ...entry("s.test", "US", ["dbs"], "dbs"), preorder: ["pre-orders"] }], {
+    fetch: net.f,
+    sleep: net.sleep,
+    now: net.now,
+    budget: 100,
+    perStoreCap: 40,
+  });
+  assert.equal(net.log.filter((x) => x.url.includes("/collections/pre-orders/")).length, 1, "the shelf is read once for both games");
+  const st = run.stores[0];
+  assert.equal(st.ok, true);
+  const lines = new Map(st.listings.map((l) => [l.url.split("?")[0].split("/").pop(), l.lines]));
+  assert.deepEqual(lines.get("chromatic-ascension-booster-box"), ["dbs", "ws"]);
+  assert.deepEqual(lines.get("in-both"), ["ws"]);
+});
