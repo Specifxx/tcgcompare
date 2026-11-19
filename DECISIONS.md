@@ -1135,3 +1135,26 @@ Premium's copy promised "a year of value history and a spreadsheet export" for t
 and this site did not. Ported from YGO Compare: a member's collection keeps 365 days of daily value (`MEMBER_HISTORY_DAYS`, free: 60),
 drawn as a line under each market's total, and "Export to spreadsheet (CSV)" (`collectionCsv`, formula-safe cells). Everything still
 lives in the visitor's browser; nothing is sent anywhere.
+
+## 2026-11-19: Set pages follow their products; fresh data pages in the sitemap; the TCGplayer Black Friday question
+
+Goal (boardroom move G3): Google clicks at 3x by the 8 Dec read. The site went live on 14 Nov, so the 3-9 Nov
+baseline is zero; the working baseline is the first full week, 15-21 Nov. Search Console on 19 Nov (one-off read,
+`scripts/gsc-dump.ts`, run on a working branch by `gsc-dump.yml`): 18 clicks and ~1,260 impressions from 15 to 18 Nov,
+8 of the clicks on `/black-friday` ("tcgplayer black friday 2026", position 5.5). URL Inspection of a sample: products
+7 of 60 indexed and 53 "unknown to Google"; set pages 1 of 15 indexed, 14 unknown; game hubs 9 of 15 indexed. Google has
+not yet found most of the site: the young domain's crawl is the limit, not titles.
+
+- **Set pages follow their products** (`setIndexable`, lib/data.ts). A set page asks to be indexed and goes in the
+  sitemap only when at least one of its sealed products does (`cardIndexable`). 474 of 1,046 set pages listed only
+  noindex products: every set of a game a sister ranks for (the 18 Nov rule, now applied to its set pages too) and sets
+  no store sells. They stay live, linked and `noindex, follow`; the sitemap drops from about 2,250 URLs to about 1,780,
+  so the crawl Google gives a five-day-old domain goes to pages that lead to indexable products. No URL changes.
+- `/hot-100`, `/movers` and `/restocks` join the sitemap: pages that change every day and link many products, which is
+  how Google finds product pages.
+- The Black Friday FAQ answers "Does TCGplayer have a Black Friday sale?" plainly: a marketplace where each seller sets
+  its price, its market price used as our yardstick, and no claim about any promotion it has or has not announced.
+- Not changed, on purpose: titles and templates (the core update rollout runs to about 24 Nov; titles were redone on 18
+  Nov), and the sister-ranked product noindex (about 100 impressions a week of Pokémon product pages go with it).
+- Read on 8 Dec: clicks for 2-8 Dec against 15-21 Nov, and the same URL Inspection sample, with
+  `[gsc-dump]` on a working branch.

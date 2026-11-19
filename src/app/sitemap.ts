@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { historyOf, indexSignals, meta, products, setById } from "@/lib/data";
+import { historyOf, indexSignals, meta, products, setById, setIndexable } from "@/lib/data";
 import { productLastmod } from "@/lib/sitemap-lastmod";
 import { posts } from "@/lib/posts";
 import { preorderSetList, sealedHubs, sealedSets } from "@/lib/hubs";
@@ -23,7 +23,7 @@ const PROSE_PAGES = new Set(["/about", "/methodology", "/list-your-store", "/how
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const at = meta()?.updatedAt ? new Date(meta()!.updatedAt) : new Date();
-  const fixed = ["", "/sealed", "/sets", "/preorders", "/tools/deal-finder", "/tools/is-this-a-good-price", "/price-report", "/black-friday", "/cyber-monday", ...withoutOffSeasonSales(["/boxing-day", "/january-sales"], new Date().toISOString().slice(0, 10)), "/daily", ...(posts().length ? ["/blog"] : []), "/stores", "/about", "/methodology", "/data", "/list-your-store", ...(creatorsOn() ? ["/creators"] : [])];
+  const fixed = ["", "/sealed", "/sets", "/preorders", "/tools/deal-finder", "/tools/is-this-a-good-price", "/price-report", "/black-friday", "/cyber-monday", ...withoutOffSeasonSales(["/boxing-day", "/january-sales"], new Date().toISOString().slice(0, 10)), "/daily", "/hot-100", "/movers", "/restocks", ...(posts().length ? ["/blog"] : []), "/stores", "/about", "/methodology", "/data", "/list-your-store", ...(creatorsOn() ? ["/creators"] : [])];
   return [
     ...fixed.map((p) => ({ url: `${SITE_URL}${p}`, ...(PROSE_PAGES.has(p) ? {} : { lastModified: at }), changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.8 })),
     // Every game with a product today, and each of its product types with enough products to be a page worth finding.
@@ -31,7 +31,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...gameViews().flatMap((v) => gameTypeHubs(v.line).filter((h) => h.items.length >= GAME_TYPE_MIN).map((h) => ({ url: `${SITE_URL}/games/${v.line.slug}/${h.slug}`, lastModified: at, changeFrequency: "daily" as const, priority: 0.8 }))),
     ...sealedHubs().map((h) => ({ url: `${SITE_URL}/sealed/${h.slug}`, lastModified: at, changeFrequency: "daily" as const, priority: 0.8 })),
     ...preorderSetList().map((s) => ({ url: `${SITE_URL}${preorderPath(s)}`, lastModified: at, changeFrequency: "daily" as const, priority: 0.8 })),
-    ...sealedSets().map((s) => ({ url: `${SITE_URL}/sets/${s.slug}`, lastModified: at, priority: 0.7 })),
+    ...sealedSets().filter((s) => setIndexable(s.id)).map((s) => ({ url: `${SITE_URL}/sets/${s.slug}`, lastModified: at, priority: 0.7 })),
     ...posts().map((p) => ({ url: `${SITE_URL}/blog/${p.slug}`, lastModified: new Date(p.updated ?? p.date), priority: 0.6 })),
     ...rankForSitemap(
       products()

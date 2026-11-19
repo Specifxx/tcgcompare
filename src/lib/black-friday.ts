@@ -91,6 +91,14 @@ export function holidayFaq(event: HolidayEvent, year: number, o: { game: string;
       q: `Do ${o.game} stores have ${name} sales?`,
       a: `Some do, some don't, and some sell under the market price all year. That is why this page lists prices, not promises: every row is a real in-stock price from one of the ${o.stores} stores we compare across ${o.regions}, read that day.`,
     },
+    // The page's biggest search query is "tcgplayer black friday" (Search Console, 15-18 Nov 2026): answer it plainly,
+    // without claiming any sale TCGplayer has or has not announced.
+    ...(event === "black-friday"
+      ? [{
+          q: `Does TCGplayer have a Black Friday sale in ${year}?`,
+          a: `TCGplayer is a marketplace: each seller on it sets its own price, so there is no one TCGplayer Black Friday price to wait for, and any promotion it runs is announced on its own site. What this page uses is TCGplayer's market price, the average of recent sales, as the yardstick: every row here is a store selling under it today, and every product page shows TCGplayer's own listing beside the stores.`,
+        }]
+      : []),
     {
       q: "Are these prices shown before or after shipping?",
       a: "Item prices, before shipping. A cheap price at a store with expensive postage can still lose, so open the product page to compare every store side by side, and check the store's own page before you buy.",

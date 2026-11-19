@@ -14,7 +14,7 @@ import { isEbayOffer } from "./price-store";
 import { referenceCents } from "./import/tcgcsv";
 import type { Series } from "./series";
 import type { HotInput } from "./hot100";
-import { INDEX_HISTORY_DAYS, INDEX_MIN_OFFERS, isFresh, type IndexSignals } from "./indexing";
+import { INDEX_HISTORY_DAYS, INDEX_MIN_OFFERS, cardIndexable, isFresh, type IndexSignals } from "./indexing";
 import { SITE } from "@/site.config";
 
 const DIR = path.join(process.cwd(), "data");
@@ -185,6 +185,17 @@ export function indexSignals(p: Product, now = Date.now()): IndexSignals {
   // A page Search Console showed demand for before it was noindexed comes back (scripts/gsc-weekly.ts, data/gsc/restore.json).
   if (restored().has(p.slug) && p.sealedType !== "Insert") return { storeOffers: INDEX_MIN_OFFERS, historyPoints: 0, anyPrice: true, fresh: true };
   return { storeOffers: stores.size, historyPoints, anyPrice: offers.some((o) => o.cents > 0) || refCents(p.id) != null, fresh };
+}
+
+/**
+ * A set page asks to be indexed (and goes in the sitemap) only when at least one of its sealed products does
+ * (lib/indexing.ts cardIndexable). A set whose every product is noindex (a game a sister site ranks for, or one with no
+ * store selling it) is a list of noindex pages: it stays live and followed, out of the index, so a young domain's crawl
+ * goes to the sets that lead somewhere (DECISIONS.md 2026-11-19, "Set pages follow their products").
+ */
+export function setIndexable(setId: number): boolean {
+  const set = setById(setId);
+  return productsInSet(setId).some((p) => p.kind === "sealed" && cardIndexable(p, indexSignals(p), set));
 }
 
 export function productsInSet(setId: number) {

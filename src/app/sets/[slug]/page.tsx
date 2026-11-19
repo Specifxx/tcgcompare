@@ -4,7 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { gameHubOfSet } from "@/lib/data";
 import { SITE } from "@/site.config";
 import { canon } from "@/lib/site";
-import { setBySlug, summaryOf } from "@/lib/data";
+import { setBySlug, setIndexable, summaryOf } from "@/lib/data";
 import { preorderSetList, sealedInSet } from "@/lib/hubs";
 import { isPreorder, preorderPath } from "@/lib/preorders";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -49,6 +49,8 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
     title,
     description: `${setPhrase(s)} ${word}, pack and sealed prices at every store we track: ${count} sealed product${count === 1 ? "" : "s"}, the cheapest in-stock price in the US, UK, Canada and Australia, beside TCGplayer, eBay and Amazon. Updated daily.`,
     ...canon(`/sets/${s.slug}`),
+    // Only a set with an indexable product asks to be indexed (lib/data.ts setIndexable, DECISIONS.md 2026-11-19).
+    ...(setIndexable(s.id) ? {} : { robots: { index: false, follow: true } }),
     openGraph: { ...canon(`/sets/${s.slug}`).openGraph, title: title.absolute },
   };
 }
