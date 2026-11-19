@@ -55,6 +55,10 @@ export interface CrawlStore {
   probedAt: string;
   /** A store of data/crawl/own-stores.json (no sister lists it): every game is read, the sisters' games too. */
   own?: boolean;
+  /** The store's own launch shelf ("Pre-orders", "New releases") that names no game (choosePreorderShelf), read for
+   *  this game too. A listing found only there carries every game the store is read for; one a game's own collection
+   *  also lists keeps that collection's games. */
+  preorder?: string[];
 }
 
 /** A store listing as the crawl hands it to the import: no decision about the product yet, only what the listing says. */
@@ -557,8 +561,38 @@ export function lineOfCollection(c: { handle: string; title?: string | null }, l
 const SINGLES = /\bsingles?\b|\bpromos?\b|\bproxy\b|\bsleeves?\b|\bplaymats?\b|\baccessor|\bsupplies\b/;
 const SEALEDISH = /\bsealed\b|\bbooster\b|\bbox(es)?\b|\bdecks?\b|\bpacks?\b|\bdisplay\b|\bproducts?\b/;
 export const MAX_HANDLES_PER_GAME = 4;
-/** Collections a store, all its games together (crawl-run.ts capHandles): 8 × 4 pages + robots + currency fit under 40. */
+/** Collections a store, all its games together (crawl-run.ts capHandles), plus its one pre-order shelf:
+ *  (8 + 1) × 4 pages + robots + currency (two at most) = 39, under the crawl's per-store cap of 40. */
 export const MAX_HANDLES_PER_STORE = 8;
+
+// A launch shelf: shops file a new set under "Pre-orders" or "New releases" before (or instead of) the game's own
+// collection, so a launch a few weeks out often sits nowhere else (Rift Compare found the same, TCGEmpire #523).
+const PREORDER_SHELF = /\bpre ?orders?\b|\bupcoming\b|\bnew releases?\b|\bcoming soon\b/;
+
+/** Whether a collection's handle or title names any game (its `crawl` or `ownCrawl` words, the `not` words aside). */
+function namesAnyGame(c: { handle: string; title?: string | null }, lines: readonly Pick<GameLine, "id" | "crawl" | "ownCrawl">[]): boolean {
+  const text = `${norm(c.handle)} ${norm(c.title ?? "")}`;
+  return lines.some((l) => [...(l.crawl?.any ?? []), ...(l.ownCrawl?.any ?? [])].some((w) => text.includes(norm(w))));
+}
+
+/**
+ * The store's one pre-order shelf: a collection whose handle or title says pre-order, upcoming, new release or coming
+ * soon and names NO game (a "Pokemon Pre-orders" shelf is that game's, chosen or left by the game's own words), never a
+ * singles or accessories one, never empty; the largest wins. Null when there is none.
+ */
+export function choosePreorderShelf(
+  cs: readonly { handle: string; title?: string | null; products_count?: number | null }[],
+  lines: readonly Pick<GameLine, "id" | "crawl" | "ownCrawl">[],
+): string | null {
+  const hits = cs
+    .filter((c) => c.products_count !== 0)
+    .filter((c) => {
+      const t = `${norm(c.handle)} ${norm(c.title ?? "")}`;
+      return PREORDER_SHELF.test(t) && !(SINGLES.test(t) && !SEALEDISH.test(t)) && !namesAnyGame(c, lines);
+    })
+    .sort((a, b) => (b.products_count ?? 0) - (a.products_count ?? 0) || a.handle.localeCompare(b.handle));
+  return hits[0]?.handle ?? null;
+}
 
 /**
  * The collections worth reading for one game at one store: never a singles or accessories collection, sealed-looking

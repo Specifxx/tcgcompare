@@ -1192,3 +1192,17 @@ and Lorcana. It replaces `scripts/restocks-discord.ts`, which never had its secr
 - A no-op until the repository secret `DISCORD_SNIPER_WEBHOOK` exists. The ops monitor's "Sealed Sniper" check is amber when no
   run has written state for 30 hours, or a run had 5+ candidates and posted none (the store check failing everywhere).
 - Read on 14 Dec: Discord members (pass: 150) and visits with `utm_campaign=sealed-sniper`.
+
+## 2026-11-20: the probe also reads each store's pre-order shelf (Job A)
+
+Thin launches on the games we crawl ourselves (DBS Masters Chromatic Ascension, 27 Nov: 1 store; Weiss Schwarz and
+Vanguard Persona 30th, Dec: 0) showed that many shops file a new set under a game-less "Pre-orders" or "New releases"
+collection before the game's own collection, which the probe never read (Rift Compare fixed the same, TCGEmpire #523).
+The weekly probe now names ONE such shelf per store (`choosePreorderShelf`: the largest collection whose handle or title
+says pre-order, upcoming, new release or coming soon and names no game by any line's `crawl` or `ownCrawl` words; never
+singles, never empty), only at a store already read for at least one game, and gives it to exactly those games
+(`CrawlStore.preorder`). The crawl reads it once, after the games' own collections: a listing only there carries those
+games, one a game's collection also gave keeps that collection's games, so no listing's game set grows where it was
+already read. Every listing still goes through pickId / pickByTitle / pickByAi unchanged: a shelf listing of a game the
+store is not read for is refused as before. Cost: one more collection a store at most, (8 + 1) × 4 pages + robots +
+currency = 39 under the per-store cap of 40; the 19 Nov crawl used 7,068 of 12,000 requests.
