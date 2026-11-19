@@ -1167,3 +1167,28 @@ against the $6 cap: every build rewrites the ISR cache and burns build CPU. `scr
 So one site builds at most three times a day, and the 19 production projects at most 57 a day (normally about 25).
 Batch urgent changes into one release instead of one per merge. Pinned by `tests/deploy-gap.test.ts`. The same change
 went to every Compare site's gate.
+## 2026-11-19 — Sealed Sniper: verified restocks and price drops on Discord (boardroom move N2)
+
+The Compare Empire Discord gets a cross-game "Sealed Sniper" channel: after each import (twice a day), `scripts/sniper.ts`
+posts restocks (an offer sold out in the last commit and in stock now, `lib/restocks.ts`) and price drops (a market's cheapest
+in-stock store price down 10%+ and US$5-equivalent on the last commit) of sealed Pokémon (English), One Piece, Riftbound, Magic
+and Lorcana. It replaces `scripts/restocks-discord.ts`, which never had its secret. Rules (`lib/sniper.ts`,
+`tests/sniper.test.ts`):
+
+- Headline types only (booster boxes, ETBs, bundles, cases, collections, troves, Commander decks), TCGplayer market US$25+, and
+  the price inside a band of that market (restock 60-125%, drop 60-105%, converted for the check only, never shown converted):
+  a price far under market is a wrong match, far over is a scalper, neither is news.
+- **No false in-stock posts.** Each candidate is asked once at the store itself, Shopify's `/products/<handle>.js`, through
+  `lib/import/polite-http.ts` (robots.txt, our User-Agent, a 401/403/429 or challenge stops that store), right before it is
+  posted: the variant must be available and no dearer than our price (2% slack); the post shows the store's live price. No
+  answer, a non-Shopify store or robots.txt saying no means no post. The post carries the check's time as a Discord timestamp
+  (`<t:…:R>`), which every reader sees as "N minutes ago", counting up, plus "the store's page has the final word".
+  This is the one exception to "no store is visited for a game a sister covers": at most 8 posts and about 50 requests a run,
+  one per product page, never a crawl.
+- At most 8 posts a run (5 restocks when drops are waiting), one per product, restocks first, most viewed first. A store's
+  restock of a product once per 3 days; a market's drop once per 7 days unless a further 5% lower (`data/state/sniper.json`).
+- Links: our product page, `utm_source=discord&utm_medium=social&utm_campaign=sealed-sniper`; its eBay and TCGplayer rows carry
+  the affiliate tags. No eBay API call, no eBay price, no mentions (`allowed_mentions` empty).
+- A no-op until the repository secret `DISCORD_SNIPER_WEBHOOK` exists. The ops monitor's "Sealed Sniper" check is amber when no
+  run has written state for 30 hours, or a run had 5+ candidates and posted none (the store check failing everywhere).
+- Read on 14 Dec: Discord members (pass: 150) and visits with `utm_campaign=sealed-sniper`.

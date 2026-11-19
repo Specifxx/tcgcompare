@@ -65,6 +65,22 @@ async function main() {
       const h = (Date.now() - new Date(f.updatedAt).getTime()) / 3_600_000;
       return h < 30 ? { status: "ok", detail: `${f.events.length} restocks kept, ${h.toFixed(1)}h old` } : { status: "warn", detail: `restocks.json is ${h.toFixed(0)}h old: check the Restocks step of the Refresh prices workflow` };
     }),
+    // Sealed Sniper (scripts/sniper.ts): amber when the webhook is set but no run has written its state for 30 hours, or
+    // every candidate of the last run failed the store check (a broken check posts nothing, it never posts wrongly).
+    check("Sealed Sniper", async () => {
+      let st: { lastRun?: { at: string; candidates: number; fresh: number; posted: number; skipped: Record<string, number> } } | null = null;
+      try {
+        st = JSON.parse(fs.readFileSync(path.join(process.cwd(), "data/state/sniper.json"), "utf8"));
+      } catch {
+        st = null;
+      }
+      if (!st?.lastRun) return { status: "warn", detail: "no Sealed Sniper run yet: is DISCORD_SNIPER_WEBHOOK set on the repository?" };
+      const h = (Date.now() - Date.parse(st.lastRun.at)) / 3_600_000;
+      const r = st.lastRun;
+      if (h >= 30) return { status: "warn", detail: `last Sealed Sniper run ${h.toFixed(0)}h ago: check the Sealed Sniper step of Refresh prices` };
+      if (r.fresh >= 5 && r.posted === 0) return { status: "warn", detail: `${r.fresh} new candidates, none passed the store check: ${JSON.stringify(r.skipped)}` };
+      return { status: "ok", detail: `${r.posted} posted of ${r.fresh} new candidates, ${h.toFixed(1)}h ago` };
+    }),
     check("Store imports", async () => {
       const bad = Object.entries(meta.stores).filter(([, s]) => !s.ok || s.matched === 0);
       return bad.length ? { status: bad.length > SITE.stores.length / 3 ? "fail" : "warn", detail: bad.map(([k, s]) => `${k}: ${s.error ?? "0 matched"}`).join("; ") } : { status: "ok", detail: `${SITE.stores.length} stores` };
