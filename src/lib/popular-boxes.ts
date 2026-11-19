@@ -62,9 +62,46 @@ export function mixAcrossGames(list: Candidate[], limit = 8, perGame = 2): Candi
   return out;
 }
 
+/** A release's launch week: the day it comes out and the six after it (merch, 2026-11-19). */
+export const LAUNCH_DAYS = 7;
+/** At most this many launch-week boxes lead the shelf, one a game. */
+export const LAUNCH_SLOTS = 3;
+
+/**
+ * Launch week leads the shelf (merch, 2026-11-19). A box out today has no page views yet, so the visitors' multiplier above ranks it
+ * under any older box a few people opened (on 20 Nov The Dominance of God, Icons 2027 and Diva Fever would score 84-92 against
+ * Homeworlds' 387 and miss the shelf on their release day). In its first LAUNCH_DAYS days a released box is ranked by the
+ * import's own signals alone (stores, recency, market, momentum), the best of each game first, and up to LAUNCH_SLOTS lead.
+ * A pre-order is not a launch (the pre-order tab has it). Same input, same shelf.
+ */
+export function pickLaunches(list: Candidate[], limit = LAUNCH_SLOTS): Candidate[] {
+  const fresh = list
+    .filter((c) => c.ageDays >= 0 && c.ageDays < LAUNCH_DAYS)
+    .map((c) => ({ c, s: demandScore(c) }))
+    .sort((a, b) => b.s - a.s || a.c.id - b.c.id);
+  const out: Candidate[] = [];
+  for (const { c } of fresh) {
+    if (out.length >= limit) break;
+    if (!out.some((o) => o.game === c.game)) out.push(c);
+  }
+  return out;
+}
+
+/** The launch-week boxes first, then the demand ranking without them; no game more than `perGame` times. */
+export function withLaunches(list: Candidate[], limit = 8, perGame = 2): Candidate[] {
+  const lead = pickLaunches(list);
+  const taken = new Set(lead.map((c) => c.id));
+  const out = [...lead];
+  for (const c of mixAcrossGames(list.filter((x) => !taken.has(x.id)), limit + lead.length, perGame)) {
+    if (out.length >= limit) break;
+    if (out.filter((o) => o.game === c.game).length < perGame) out.push(c);
+  }
+  return out;
+}
+
 const DAY = 86_400_000;
 
-/** Booster boxes some store has in stock, ranked by demand and mixed across games. */
+/** Booster boxes some store has in stock: launch week first, then ranked by demand and mixed across games. */
 export function popularBoxes(limit = 8): Product[] {
   const now = Date.parse(`${todayIso()}T00:00:00Z`);
   const byId = new Map<number, Product>();
@@ -83,5 +120,5 @@ export function popularBoxes(limit = 8): Product[] {
     byId.set(p.id, p);
     list.push({ id: p.id, game: set.line, stores: sm.inStockSources, ageDays: Math.round((now - out) / DAY), marketCents: market, change7d: sm.change7d, visits: visitsOf(p) });
   }
-  return mixAcrossGames(list, limit).map((c) => byId.get(c.id)!);
+  return withLaunches(list, limit).map((c) => byId.get(c.id)!);
 }
