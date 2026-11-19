@@ -1,0 +1,32 @@
+# One-off Search Console read on a working branch (claude/**, subject carries [gsc-dump]). Commits data/gsc/dump.json to THAT branch only.
+name: GSC dump
+on:
+  push:
+    branches: ["claude/**"]
+permissions:
+  contents: write
+jobs:
+  dump:
+    if: contains(github.event.head_commit.message, '[gsc-dump]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Read Search Console
+        env:
+          GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+          GSC_PROPERTY: ${{ vars.GSC_PROPERTY }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
+        run: npx tsx scripts/gsc-dump.ts
+      - name: Commit to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/gsc/dump.json
+          git commit -m "data: GSC dump (working branch only)"
+          git push origin HEAD:${GITHUB_REF_NAME}
