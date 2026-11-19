@@ -1111,3 +1111,14 @@ TCGplayer, which kept its own blue button, rose (DexCompare 545 to 779, MTG Comp
 blue again (#3665f3, white ink, fixed in both themes) on every site; nothing else about the rows changes (no outline, tint, order or
 label), and the cheapest row keeps its mark. RiftCompare and OP Compare had started a 50/50 the same morning; it ended for
 everyone. Read: eBay buy clicks per 100 visitors, the week after release vs 12-18 Nov.
+
+## 2026-11-19: The price history chart draws two lines, OP Compare's look (owner)
+
+Owner: "I really really like opcompare's price history where you have the tcgplayer market price as well as the cheapest
+price locally. Can we pls copy it across all our tcg websites?" `components/PriceHistory.tsx` replaces `PriceChart.tsx` on
+the product page and in the quick view: the cheapest in-stock store price in the visitor's market (solid red, from
+`data/store-lows`, its own currency, a day with nothing in stock is a gap) against TCGplayer's market price (dashed gold,
+`data/history`, converted at the import's rate outside the US and labelled "converted"), Now / Low / High / change from the
+store line, 7D / 30D / 90D / All tabs only where the history is longer, and a crosshair tooltip with both lines. Either line
+draws alone where the other has no data. The axis ends on the import's own day (`historyThrough()`), never the clock, so
+the server and browser draw the same chart. Pure maths in `lib/history-chart.ts`, pinned by `tests/history-chart.test.ts`.
