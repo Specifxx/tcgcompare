@@ -1586,3 +1586,21 @@ html[data-adlook="b"] [data-leave-nudge]::before {
   html[data-adlook="b"] aside[aria-label^="Sponsored"] li > a { transition: none; }
   html[data-adlook="b"] aside[aria-label^="Sponsored"] li > a:hover { transform: none; }
 }
+
+/* The home shelf on a phone (2026-11-19, owner: "way too much going on in the mobile version of the home page"): each tab's
+   cards are ONE sideways row instead of a grid four rows deep. Same HTML at every width; from sm up it is the grid. */
+@media (max-width: 639.98px) {
+  .home-shelf .pc-grid {
+    position: relative;
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    scroll-padding-inline: 1rem;
+  }
+  .home-shelf .pc-grid::-webkit-scrollbar { display: none; }
+  .home-shelf .pc-grid > * { flex: 0 0 44%; min-width: 0; scroll-snap-align: start; }
+}

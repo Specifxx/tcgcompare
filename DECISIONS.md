@@ -1067,3 +1067,12 @@ Homeworlds (387, from 44 views) and missed the shelf on their own release day. N
 import's signals alone and up to three lead the shelf, one a game (`pickLaunches`, `withLaunches`); the demand ranking fills the
 rest, no game more than twice. Pre-orders stay in the pre-order tab. Measured as experiment E2 on the merch board: buy clicks per
 home visitor, baseline 11-18 Nov, read 26 Nov.
+## 2026-11-19 — A calmer home page on a phone
+
+Owner, 2026-11-19: "way too much going on in the mobile version of the home page" (KaeYoung first; the same pass on every
+site). Below sm: the hero's region row shows from sm up (the header's region button does the job); each tab of the home
+shelf is ONE sideways row (`.home-shelf .pc-grid` in globals.css) instead of a grid four rows deep; "Pick your game" is two
+columns of game names with their product counts, and each game's product-type chips and newest set show from sm up (the
+game's own page lists every type). Measured on a 390px phone: 9,311 px tall before, 5,053 after. Layout only: URLs,
+titles, headings, links, metadata and JSON-LD are the same, the server HTML is the same at every width, and the desktop
+page is unchanged. Before adding a block to the phone home page, say what it replaces.
