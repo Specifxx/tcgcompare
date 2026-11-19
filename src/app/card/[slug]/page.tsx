@@ -4,7 +4,7 @@ import { Fragment } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { retiredCardTarget } from "@/lib/card-redirects";
 import { culledEntry, culledRedirect } from "@/lib/culled";
-import { gameHubOfLine, gameHubOfSet } from "@/lib/data";
+import { gameHubOfLine, gameHubOfSet, storeLowsOf, historyThrough } from "@/lib/data";
 import { SITE } from "@/site.config";
 import { byValue, historyOf, indexSignals, looseSingleSetId, meta, priceOf, productBySlug, productsInSet, refCents, setById, setBySlug } from "@/lib/data";
 import { imageAt } from "@/lib/image";
@@ -19,7 +19,7 @@ import { WatchPrice } from "@/components/WatchPrice";
 import { SeenPrice } from "@/components/SinceLastVisit";
 import { lowestByMarket } from "@/lib/alert-feed";
 import { CheckedAgo } from "@/components/CardBuy";
-import { PriceChart } from "@/components/PriceChart";
+import { PriceHistory } from "@/components/PriceHistory";
 import { TileGrid } from "@/components/ProductTile";
 import { JsonLd } from "@/components/JsonLd";
 import { AdSlot } from "@/components/AdSlot";
@@ -187,7 +187,7 @@ export default function CardPage({ params }: { params: { slug: string } }) {
           <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CARD} />
           <section className="card-surface p-4">
             <h2 className="mb-2 text-lg font-bold">Price history</h2>
-            <PriceChart series={series} days={365} />
+            <PriceHistory tcg={series} lows={storeLowsOf(p)} fx={m?.fx} through={historyThrough()} days={365} />
           </section>
           <section className="prose-site max-w-none text-sm">
             <h2>Is {name} worth it?</h2>
