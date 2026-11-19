@@ -1045,3 +1045,13 @@ placed ads".
 - **Who runs it**: the about page names the co-founders (Bill and George), says AI tools help build the site and draft
   guides while prices are read by a program, and gives the running cost (about A$790 a month for the group, our books to
   15 Nov 2026). It drops the YGO wording ("structure deck") it was copied with.
+
+## 2026-11-19 — A calmer home page on a phone
+
+Owner, 2026-11-19: "way too much going on in the mobile version of the home page" (KaeYoung first; the same pass on every
+site). Below sm: the hero's region row shows from sm up (the header's region button does the job); each tab of the home
+shelf is ONE sideways row (`.home-shelf .pc-grid` in globals.css) instead of a grid four rows deep; "Pick your game" is two
+columns of game names with their product counts, and each game's product-type chips and newest set show from sm up (the
+game's own page lists every type). Measured on a 390px phone: 9,311 px tall before, 5,053 after. Layout only: URLs,
+titles, headings, links, metadata and JSON-LD are the same, the server HTML is the same at every width, and the desktop
+page is unchanged. Before adding a block to the phone home page, say what it replaces.

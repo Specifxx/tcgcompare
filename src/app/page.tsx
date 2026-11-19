@@ -208,7 +208,9 @@ export default function Home() {
         <div className="hero-search rise" style={riseAt(2)}>
           <SearchBox big />
         </div>
-        <div className="rise mt-6" style={riseAt(3)}>
+        {/* Phone hero, 2026-11-19 (owner: "way too much going on in the mobile version of the home page"): the region row shows
+            from sm up; the header's own region button does the same job on a phone. */}
+        <div className="rise mt-6 hidden sm:block" style={riseAt(3)}>
           <MarketChooser className="justify-center" />
         </div>
         <WaysIn links={ways} label={`Popular ${SITE.gameShort} pages`} />
@@ -240,7 +242,7 @@ export default function Home() {
       <GameMarquee />
 
       {shelfTabs.length > 0 && (
-        <Section title={`${SITE.gameShort} booster boxes and sealed`} className="reveal mt-8 sm:mt-12">
+        <Section title={`${SITE.gameShort} booster boxes and sealed`} className="home-shelf reveal mt-8 sm:mt-12">
           <Tabs tabs={shelfTabs} label={`${SITE.gameShort} sealed products`} />
         </Section>
       )}
