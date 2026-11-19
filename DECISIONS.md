@@ -1122,3 +1122,9 @@ the product page and in the quick view: the cheapest in-stock store price in the
 store line, 7D / 30D / 90D / All tabs only where the history is longer, and a crosshair tooltip with both lines. Either line
 draws alone where the other has no data. The axis ends on the import's own day (`historyThrough()`), never the clock, so
 the server and browser draw the same chart. Pure maths in `lib/history-chart.ts`, pinned by `tests/history-chart.test.ts`.
+## 2026-11-19 — A graded-slab variant never prices the raw card
+
+A store can sell a raw card and its slabs as variants of ONE Shopify product ("Near Mint" A$344, "Graded - Beckett
+9.5" US$115, found on OP Compare). `pickVariant` took the cheapest in-stock variant, so the slab priced the card.
+It now drops every variant `isGradedVariant` reads as a slab (PSA, BGS, CGC, SGC, Beckett, TAG/AGS grades, Graded,
+Slab, ACE grading) before choosing; a product with only slabs gives no offer. `tests/graded-variant.test.ts`.
