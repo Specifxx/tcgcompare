@@ -22,7 +22,8 @@ Game facts live in `src/site.config.ts`; engine code never names a game.
 ## Store prices come from the sister sites, by TCGplayer product id only
 
 `lib/import/sisters.ts` reads each sister's published data from a sparse checkout (`SISTER_DIR`); no store is visited
-for a game a sister covers (our own crawl, below, reads only the games none covers). OP Compare is read from its
+for a game a sister covers (our own crawl, below, reads only the games none covers; the one exception is the Sealed
+Sniper's single live check of a product before it is posted to Discord, `scripts/sniper.ts`, DECISIONS.md 2026-11-19). OP Compare is read from its
 `snapshot` branch (its sealed ids are TCGplayer's), its store list from its `main`. Rift Compare (Riftbound) is read
 from `data/public/sealed-listings.json` on its `main`: a group's TCGplayer id is the one in its own TCGplayer row's
 url, one id per group and one group per id, or nothing. Never match a sister's offer by title. A sister whose data is

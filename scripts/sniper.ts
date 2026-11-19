@@ -1,0 +1,168 @@
+// Sealed Sniper (lib/sniper.ts): after the import and scripts/restocks.ts, before the data commit, post this run's
+// verified restocks and price drops of sealed Pokémon, One Piece, Riftbound, Magic and Lorcana to Discord through an
+// incoming webhook (the DISCORD_SNIPER_WEBHOOK secret). A no-op until the secret exists; never fatal.
+//
+// Every candidate is checked once at the store itself (Shopify /products/<handle>.js through lib/import/polite-http.ts)
+// right before it is posted: sold out, dearer, no answer, robots.txt or a block means no post. At most MAX_POSTS a run,
+// so at most MAX_POSTS + a few store requests a run (DECISIONS.md 2026-11-19, "Sealed Sniper").
+// SNIPER_DRY=1 checks the stores and prints the posts without sending or saving anything.
+import fs from "node:fs";
+import path from "node:path";
+import { execFileSync } from "node:child_process";
+import { SITE } from "../src/site.config";
+import { PRICES_DIR, SUMMARY_FILE } from "../src/lib/price-store";
+import { readRestocks } from "../src/lib/restocks";
+import { SITE_URL } from "../src/lib/site";
+import { RequestBudget, StopStore, StoreSession } from "../src/lib/import/polite-http";
+import {
+  dropEvents,
+  embedFor,
+  emptySniperState,
+  judgeLive,
+  MAX_POSTS,
+  MAX_RESTOCKS,
+  productPath,
+  rankEvents,
+  recordPosted,
+  restockEvents,
+  type ShopifyJs,
+  type SniperEvent,
+  type SniperProduct,
+  type SniperState,
+  type SniperStore,
+  type Tuple,
+} from "../src/lib/sniper";
+
+const STATE_FILE = path.join(process.cwd(), "data", "state", "sniper.json");
+const CATALOG_FILE = path.join(process.cwd(), "data", "public", "catalog.json");
+const META_FILE = path.join(process.cwd(), "data", "public", "meta.json");
+const DEMAND_FILE = path.join(process.cwd(), "data", "demand.json");
+
+const readJson = <T>(f: string): T | null => {
+  try {
+    return JSON.parse(fs.readFileSync(f, "utf8")) as T;
+  } catch {
+    return null;
+  }
+};
+// SNIPER_BASE (a commit) is for a dry run against an older data commit; the workflow compares with HEAD, the last commit.
+const BASE = process.env.SNIPER_BASE || "HEAD";
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function post(hook: string, embed: unknown): Promise<boolean> {
+  const body = JSON.stringify({ username: "Sealed Sniper", embeds: [embed], allowed_mentions: { parse: [] } });
+  for (let i = 0; i < 2; i++) {
+    const r = await fetch(`${hook}?wait=true`, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+    if (r.status === 429) {
+      const j = (await r.json().catch(() => ({}))) as { retry_after?: number };
+      await sleep(Math.min(30, Number(j.retry_after) || 2) * 1000 + 250);
+      continue;
+    }
+    if (!r.ok) console.log(`sniper: Discord answered HTTP ${r.status}`);
+    return r.ok;
+  }
+  return false;
+}
+
+async function main() {
+  const hook = process.env.DISCORD_SNIPER_WEBHOOK?.trim();
+  const dry = process.env.SNIPER_DRY === "1";
+  if (!dry && !hook?.startsWith("https://discord.com/api/webhooks/")) {
+    console.log("sniper: DISCORD_SNIPER_WEBHOOK not set, nothing posted");
+    return;
+  }
+  const catalog = readJson<{ sets: { id: number; line?: string }[]; products: { id: number; slug: string; name: string; setId: number; sealedType?: string | null; image?: string | null; kind: string }[] }>(CATALOG_FILE);
+  const summary = readJson<Record<string, { t?: Record<string, { market?: number | null }> }>>(SUMMARY_FILE);
+  const meta = readJson<{ fx?: Record<string, number> }>(META_FILE);
+  const restocks = readRestocks();
+  if (!catalog || !summary || !meta?.fx) {
+    console.log("sniper: catalog, summary or fx missing, nothing posted");
+    return;
+  }
+  const lineOf = new Map(catalog.sets.map((s) => [s.id, s.line ?? null]));
+  const products = new Map<number, SniperProduct>();
+  for (const p of catalog.products) {
+    if (p.kind !== "sealed") continue;
+    products.set(p.id, { id: p.id, slug: p.slug, name: p.name, sealedType: p.sealedType ?? null, image: p.image ?? null, line: lineOf.get(p.setId) ?? null, marketCents: summary[String(p.id)]?.t?.Normal?.market ?? null });
+  }
+  const stores = new Map<string, SniperStore>(SITE.stores.map((s) => [s.key, { key: s.key, name: s.name, base: s.base, market: s.market }]));
+  const demand = readJson<{ views?: Record<string, [number, number]> }>(DEMAND_FILE)?.views ?? {};
+  const views = (id: number) => {
+    const p = products.get(id);
+    return p ? demand[`/card/${p.slug}`]?.[0] ?? 0 : 0;
+  };
+
+  // this run's shards and the last commit's
+  const events: SniperEvent[] = [];
+  const cur: Record<string, { o: Tuple[] }> = {};
+  for (const f of fs.readdirSync(PRICES_DIR).filter((n) => n.endsWith(".json"))) {
+    const now = readJson<Record<string, { o: Tuple[] }>>(path.join(PRICES_DIR, f));
+    if (!now) continue;
+    Object.assign(cur, now);
+    let prev: Record<string, { o: Tuple[] }> | undefined;
+    try {
+      prev = JSON.parse(execFileSync("git", ["show", `${BASE}:data/public/prices/${f}`], { maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] }).toString());
+    } catch {
+      prev = undefined;
+    }
+    events.push(...dropEvents({ prev, cur: now, products, stores, fx: meta.fx }));
+  }
+  // only this run's restocks: a Restocks step that failed leaves an old file, never re-posted
+  const fresh = restocks && (dry || Date.now() - Date.parse(restocks.updatedAt) < 3 * 3_600_000);
+  if (restocks && fresh) events.push(...restockEvents({ events: restocks.events, at: restocks.updatedAt, products, stores, fx: meta.fx, offers: (id) => cur[String(id)]?.o ?? [] }));
+
+  const state = readJson<SniperState>(STATE_FILE) ?? emptySniperState();
+  const ranked = rankEvents(events, state, Date.now(), views);
+  console.log(`sniper: ${events.length} candidates, ${ranked.length} new`);
+
+  // check at the store, then post, one at a time, until MAX_POSTS are out (at most 3 checks per post slot)
+  const budget = new RequestBudget(MAX_POSTS * 3 * 2 + 10);
+  const sessions = new Map<string, StoreSession>();
+  const posted: SniperEvent[] = [];
+  const why: Record<string, number> = {};
+  // restocks first, but a few slots kept for drops: at most MAX_RESTOCKS restocks, the rest drops (or restocks, when no drop)
+  const drops = ranked.filter((e) => e.kind === "drop").length;
+  const restockCap = Math.max(MAX_RESTOCKS, MAX_POSTS - drops);
+  for (const e of ranked) {
+    if (posted.length >= MAX_POSTS || budget.left < 2) break;
+    if (e.kind === "restock" && posted.filter((x) => x.kind === "restock").length >= restockCap) continue;
+    const at = productPath(e.ref, e.store.base);
+    if (!at) {
+      if (dry) console.log(`[dry] no product path: ${e.store.key} ${e.ref}`);
+      why["not a Shopify product path"] = (why["not a Shopify product path"] ?? 0) + 1;
+      continue;
+    }
+    let s = sessions.get(e.store.base);
+    if (!s) sessions.set(e.store.base, (s = new StoreSession(e.store.base, { budget, perStoreCap: 4, deadline: Date.now() + 10 * 60_000 })));
+    let js: ShopifyJs | null = null;
+    // SNIPER_NOCHECK=1 (dry runs only, where stores cannot be reached): pretend the store agreed, to read the posts
+    if (dry && process.env.SNIPER_NOCHECK === "1") js = { variants: [{ id: Number(at.variant) || 0, available: true, price: e.cents }] };
+    else try {
+      js = await s.getJson<ShopifyJs>(`/products/${encodeURIComponent(at.handle)}.js`);
+    } catch (err) {
+      if (!(err instanceof StopStore)) throw err;
+    }
+    const checkedAt = Date.now();
+    const v = judgeLive(js, at.variant, e.cents);
+    if (!v.ok) {
+      why[v.why.replace(/ \(.*/, "")] = (why[v.why.replace(/ \(.*/, "")] ?? 0) + 1;
+      continue;
+    }
+    const embed = embedFor(e, v.cents, checkedAt, SITE_URL);
+    if (dry) {
+      console.log(`[dry] ${embed.title}\n${embed.description}\n`);
+      posted.push(e);
+      continue;
+    }
+    if (await post(hook!, embed)) posted.push({ ...e, cents: v.cents });
+    await sleep(1500);
+  }
+  console.log(`sniper: ${posted.length} posted${dry ? " (dry run)" : ""}; not posted: ${JSON.stringify(why)}`);
+  if (dry) return;
+  fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
+  const next = recordPosted(state, posted, Date.now());
+  next.lastRun = { at: new Date().toISOString(), candidates: events.length, fresh: ranked.length, posted: posted.length, skipped: why };
+  fs.writeFileSync(STATE_FILE, JSON.stringify(next));
+}
+
+main().catch((e) => console.log(`sniper: ${(e as Error).message}`));
