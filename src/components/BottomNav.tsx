@@ -94,7 +94,9 @@ const tabs = (): Tab[] => [
   { key: "search", label: "Search", href: "/search", icon: <Icon name="search" size={22} /> },
   { key: "deals", label: "Deals", href: "/tools/deal-finder", also: ["/movers", "/restocks"], icon: <Icon name="tag" size={22} /> },
   { key: "cart", label: "Cart", icon: <CartIcon size={22} /> },
-  { key: "menu", label: "Menu", icon: <Icon name="menu" size={22} /> },
+  // My collection (owner, 2026-11-19: "instead of the menu on the navbar, it should be like my collection"); the header keeps its menu
+  // button on phones.
+  { key: "collection", label: "Collection", href: "/collection", icon: <svg aria-hidden viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="3" width="13" height="17" rx="2" /><path d="M4 7v12a2 2 0 0 0 2 2h10" /></svg> },
 ];
 
 function narrowNow(): boolean {
