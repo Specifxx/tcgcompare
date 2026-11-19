@@ -210,6 +210,8 @@ export const SITE: SiteConfig = {
   ],
   adminEmails: [],
   supportEmail: "compareempire@gmail.com",
+  // The Discord hub's invite for this site (lands in #sealed-sniper, the feed this site's prices drive), 2026-11-20.
+  discordInvite: "https://discord.gg/s8YRcSgxRy",
   ownerEmail: "compareempire@gmail.com",
 
   // Registered with RiftCompare's shared alert service (TCGEmpire sites.ts, key tcgprices), 2026-11-16.

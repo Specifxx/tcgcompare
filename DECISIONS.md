@@ -1220,3 +1220,12 @@ games, one a game's collection also gave keeps that collection's games, so no li
 already read. Every listing still goes through pickId / pickByTitle / pickByAi unchanged: a shelf listing of a game the
 store is not read for is refused as before. Cost: one more collection a store at most, (8 + 1) × 4 pages + robots +
 currency = 39 under the per-store cap of 40; the 19 Nov crawl used 7,068 of 12,000 requests.
+
+## 2026-11-20: A "Join the Discord" box with a reason, linking the family's one hub
+
+The owner asked why the Discord had 9 members after five months: the only link anywhere went (from RiftCompare's menu) to
+a server the owner does not run, with two empty channels and no reason to join. The family now has ONE hub, the owner's
+server "TCG Deals & Restocks" (the sealed restock and price-drop feeds on top, a channel per game). This site links its
+own never-expiring invite code, so the server's Invites list counts the members each site brings with no tracking of
+ours. `DiscordCta` ("Restock and price-drop alerts, free on Discord") sits under the price table on the product page and
+in the footer: never above a price, never a pop-up. `tests/discord-cta.test.ts`.
