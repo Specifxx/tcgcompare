@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-18T19:32:42.225Z",
+ "generatedAt": "2026-11-19T03:52:25.501Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -13,43 +13,57 @@
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "Marvel: Darkhold Destiny - Collector Booster Display",
-   "url": "https://tcgprices.app/card/marvel-darkhold-destiny-collector-booster-display",
-   "cents": 45588,
+   "title": "Twilight Masquerade Booster Box Case",
+   "url": "https://tcgprices.app/card/twilight-masquerade-booster-box-case",
+   "cents": 144000,
    "currency": "USD",
-   "store": "Minted TCG",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723266_200w.jpg",
-   "refCents": 66324,
+   "store": "Primepull TCG",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/544384_200w.jpg",
+   "refCents": 236041,
    "refLabel": "TCGplayer market price",
-   "savingPct": 31
+   "savingPct": 39
   },
   {
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "Double Pack Set Volume 6 Display",
-   "url": "https://tcgprices.app/card/double-pack-set-volume-6-display",
-   "cents": 64999,
+   "title": "Ascended Heroes Elite Trainer Box Case",
+   "url": "https://tcgprices.app/card/ascended-heroes-elite-trainer-box-case",
+   "cents": 108000,
    "currency": "USD",
-   "store": "Collector Store",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/563843_200w.jpg",
-   "refCents": 89998,
+   "store": "Primepull TCG",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/679558_200w.jpg",
+   "refCents": 160425,
    "refLabel": "TCGplayer market price",
-   "savingPct": 28
+   "savingPct": 33
   },
   {
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "151 Pokemon Center Elite Trainer Box (Exclusive)",
-   "url": "https://tcgprices.app/card/151-pokemon-center-elite-trainer-box-exclusive",
-   "cents": 84999,
+   "title": "Surging Sparks Booster Box Case",
+   "url": "https://tcgprices.app/card/surging-sparks-booster-box-case",
+   "cents": 134395,
    "currency": "USD",
-   "store": "Collector Store",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/501999_200w.jpg",
-   "refCents": 110526,
+   "store": "Primepull TCG",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/580708_200w.jpg",
+   "refCents": 196466,
    "refLabel": "TCGplayer market price",
-   "savingPct": 23
+   "savingPct": 32
+  },
+  {
+   "kind": "deal",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Paldea Evolved Booster Box Case",
+   "url": "https://tcgprices.app/card/paldea-evolved-booster-box-case",
+   "cents": 201595,
+   "currency": "USD",
+   "store": "Primepull TCG",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/496905_200w.jpg",
+   "refCents": 282739,
+   "refLabel": "TCGplayer market price",
+   "savingPct": 29
   },
   {
    "kind": "deal",
@@ -75,23 +89,9 @@
    "currency": "USD",
    "store": "Fabricator's Forge",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/628353_200w.jpg",
-   "refCents": 582908,
+   "refCents": 578108,
    "refLabel": "TCGplayer market price",
-   "savingPct": 18
-  },
-  {
-   "kind": "deal",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Premium Trainer's XY Collection",
-   "url": "https://tcgprices.app/card/premium-trainers-xy-collection",
-   "cents": 274999,
-   "currency": "USD",
-   "store": "Sweets and Geeks",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/148226_200w.jpg",
-   "refCents": 312500,
-   "refLabel": "TCGplayer market price",
-   "savingPct": 12
+   "savingPct": 17
   },
   {
    "kind": "preorder",
@@ -103,6 +103,17 @@
    "currency": "USD",
    "store": "Double Infinity Gaming",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/709423_200w.jpg",
+   "releaseDate": "2026-11-20"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "BP21: Academy Royale Booster Box",
+   "url": "https://tcgprices.app/preorders/bp21-academy-royale",
+   "cents": 5895,
+   "currency": "USD",
+   "store": "Josh's Cards",
    "releaseDate": "2026-11-20"
   },
   {
@@ -150,17 +161,6 @@
    "cents": 9499,
    "currency": "USD",
    "store": "Many Realms",
-   "releaseDate": "2026-12-11"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Reach the God Booster Box",
-   "url": "https://tcgprices.app/preorders/reach-the-god",
-   "cents": 14499,
-   "currency": "USD",
-   "store": "The Collection Realm",
    "releaseDate": "2026-12-11"
   }
  ]
