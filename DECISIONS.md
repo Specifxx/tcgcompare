@@ -1306,3 +1306,7 @@ to come back: the week's biggest price drops by email (the existing weekly email
 test: it is on for everyone. Measured as `weekly_signup` with placement `hot-100` (an existing event, no new event name) and
 the invite's uses in Discord. The email promises the week's drops, which is what the weekly email sends, not the Hot 100 chart
 itself.
+
+## 2026-11-20: Sealed Sniper posts one drop a run
+
+Each run of the Sealed Sniper now sends ONE Discord message holding all of the run's checked posts (at most `MAX_POSTS`, 8, under Discord's 10 embeds a message), instead of one message per post. The hub's cap is at most 3 drops a day across all feeds (Owned Audience, 20 Nov): this feed runs twice a day, so it is 2 drops, and DexCompare's #pokemon-deals feed gets the third. Every link carries `utm_content=sniper-<YYYYMMDDHH>` so clicks can be read per drop. If Discord refuses the message, nothing is recorded as posted, so the next run tries those deals again.
