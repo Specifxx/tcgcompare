@@ -81,6 +81,11 @@ export interface GameLine {
    *  directory the covering sister does NOT list, in the slots the uncovered games leave (crawl-run.ts runProbe). A
    *  store the sister lists is never read for it, and a sister's own row for a product and store always wins. */
   gapCrawl?: boolean;
+  /** Games whose collections a shop also files this game's products under (2026-11-20: a shop's "Dragon Ball Super"
+   *  collection, claimed by DBS Masters, holds Fusion World boxes too). A listing read there for that game is taken
+   *  for THIS game only by its own TCGplayer id (pickId, every check unchanged), and only at a store this game's
+   *  covering sister does not list (the gap rule): lib/import/crawl.ts `takeCrawl`, `PickContext.alsoTake`. */
+  alsoIn?: string[];
   /** How this game's players name it and its sets in a search (lib/game-seo.ts; Cardmarket's "metadata by game in the
    *  community's own words", DECISIONS.md 2026-11-18). `name` leads every set and product title ("One Piece", "MTG");
    *  `codes` adds the set code players type ("OP18", "GD06", "BT27"); `terms` swaps a product type for the word the
@@ -456,6 +461,8 @@ export interface CrawlMeta {
   titled?: number;
   /** Of `taken`, listings placed by the AI shadow pass (AI_SHADOW_LIVE=1, lib/import/crawl.ts pickByAi). */
   aiTaken?: number;
+  /** Of `taken`, listings of a game read in another game's collection (GameLine.alsoIn). */
+  alsoTaken?: number;
   taken: number;
   /** Listings refused, by pickId's reason. */
   refused: Record<string, number>;

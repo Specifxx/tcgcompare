@@ -23,6 +23,7 @@ import { carryDownSisters, groupsToKeep, heldForDownSisters, updateCulled, type 
 import { OFFER_FLOOR, vetStores, type Refusal } from "@/lib/import/vet";
 import { addCrawlOffers, carryCrawl, crawlStoreKeys, storeIdentity, takeCrawl, type CrawlRun, type CrawlStore } from "@/lib/import/crawl";
 import type { CrawlMeta } from "@/lib/site-types";
+import { sisterHostsByLine } from "./crawl-probe";
 import { buildIndex, type MatchIndex, handleOf, isForeign, isPreorder, isUnfitListing, looksSealed, matchCard, matchSealed, printingOf } from "@/lib/import/match";
 import {
   ebayCredentials,
@@ -549,7 +550,16 @@ function mergeOwnCrawl(a: {
     for (const [k, d] of Object.entries(cache)) if (d.id !== null && d.guard) ai.set(k, { id: d.id, pass: d.guard.pass, reasons: d.guard.reasons });
     console.log(`[crawl] AI shadow placements live: ${ai.size} decisions`);
   }
-  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf, inBand: a.inBand, ai, inBandWide: a.inBandWide }, keyOf) : { offers: new Map<number, Offer[]>(), fresh: new Map<string, Set<number>>(), taken: 0, refused: {}, listings: 0 };
+  // GameLine.alsoIn: a game whose products shops file under another game's collection, taken there by id only, at a
+  // shop its covering sister does not list (a sister whose list is not checked out: nowhere).
+  const hostsByLine = process.env.SISTER_DIR ? sisterHostsByLine(process.env.SISTER_DIR) : new Map<string, Set<string> | null>();
+  const alsoIn = new Map((SITE.lines ?? []).filter((l) => l.alsoIn?.length).map((l) => [l.id, new Set(l.alsoIn)]));
+  const alsoTake = (line: string, lines: readonly string[], host: string): boolean => {
+    const from = alsoIn.get(line);
+    const hosts = hostsByLine.get(line);
+    return !!from && !!hosts && !hosts.has(host) && lines.some((x) => from.has(x));
+  };
+  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf, inBand: a.inBand, ai, inBandWide: a.inBandWide, alsoTake }, keyOf) : { offers: new Map<number, Offer[]>(), fresh: new Map<string, Set<number>>(), taken: 0, refused: {}, listings: 0 };
   const readOk = new Set((run?.stores ?? []).filter((s) => s.ok).map((s) => storeIdentity(s.base, s.market)));
   const seen: Record<string, string> = { ...(prevMeta?.crawl?.seen ?? {}) };
   for (const id of readOk) seen[id] = run!.at;
@@ -604,6 +614,7 @@ function mergeOwnCrawl(a: {
     taken: got.taken,
     titled: got.titled ?? 0,
     ...(got.aiTaken ? { aiTaken: got.aiTaken } : {}),
+    ...(got.alsoTaken ? { alsoTaken: got.alsoTaken } : {}),
     refused: got.refused,
     ...(got.refusedDetail ? { refusedDetail: got.refusedDetail } : {}),
     ...(got.takenByLine ? { takenByLine: got.takenByLine } : {}),

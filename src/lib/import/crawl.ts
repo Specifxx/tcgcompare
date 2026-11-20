@@ -227,6 +227,12 @@ export interface PickContext {
   ai?: ReadonlyMap<string, { id: number; pass: boolean; reasons: string[] }>;
   /** A wide price sanity band for an AI placement: 40-250% of TCGplayer's market price; false when it has none. */
   inBandWide?: (id: number, cents: number, market: Market) => boolean;
+  /**
+   * Whether a listing read for the games `lines` at the shop `host` may also be taken for `line`'s products
+   * (GameLine.alsoIn, and the covering sister does not list the shop). Left out, never: an id of another game is
+   * "other-game".
+   */
+  alsoTake?: (line: string, lines: readonly string[], host: string) => boolean;
 }
 
 export type Refused =
@@ -398,6 +404,8 @@ export interface CrawlTake {
   titled?: number;
   /** Of `taken`, those placed by the AI shadow pass (pickByAi). */
   aiTaken?: number;
+  /** Of `taken`, those of a game whose products the shop files under another game's collection (GameLine.alsoIn). */
+  alsoTaken?: number;
   refused: Record<string, number>;
   /** Refusals by "reason: detail", the 40 commonest. */
   refusedDetail?: Record<string, number>;
@@ -444,6 +452,7 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
   let taken = 0;
   let titled = 0;
   let aiTaken = 0;
+  let alsoTaken = 0;
   let listings = 0;
   for (const s of run.stores) {
     // A partial read still yields the collections it read to the end.
@@ -454,6 +463,12 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
     for (const l of s.listings) {
       listings++;
       let r = pickId(l, ctx);
+      // A product of another game in this game's collection (GameLine.alsoIn): read again as a listing of both games,
+      // so every one of pickId's checks (photo, ids, type, quantity, that game's matcher) still decides.
+      if ("refuse" in r && r.refuse === "other-game" && r.detail && ctx.alsoTake?.(r.detail, l.lines, s.host)) {
+        r = pickId({ ...l, lines: [...l.lines, r.detail] }, ctx);
+        if ("id" in r) alsoTaken++;
+      }
       if ("refuse" in r && r.refuse === "no-id") {
         const byTitle = pickByTitle(l, ctx, s.market);
         if ("id" in byTitle) {
@@ -497,7 +512,7 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
     }
   }
   const refusedDetail = Object.fromEntries(Object.entries(detail).sort((a, b) => b[1] - a[1]).slice(0, 40));
-  return { offers, fresh, taken, refused, refusedDetail, takenByLine: byLine, listings, titled, aiTaken };
+  return { offers, fresh, taken, refused, refusedDetail, takenByLine: byLine, listings, titled, aiTaken, alsoTaken };
 }
 
 /**
