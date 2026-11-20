@@ -26,7 +26,7 @@ export interface QuickBuyItem {
   pack?: { slug: string; best: Offer[] } | null;
 }
 
-export function SealedQuickBuy({ items, title }: { items: QuickBuyItem[]; title: string }) {
+export function SealedQuickBuy({ items, title, from = "set_quickbuy" }: { items: QuickBuyItem[]; title: string; from?: string }) {
   const { market } = useMarket();
   if (!items.length) return null;
   return (
@@ -55,7 +55,7 @@ export function SealedQuickBuy({ items, title }: { items: QuickBuyItem[]; title:
               {o ? (
                 <span className="inline-flex shrink-0 items-center gap-2">
                   <CartAddButton href={tagged(o.url, subId(o.market, "set_quickbuy_cart", p.id), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={p.name} priceCents={o.cents} currency={o.currency} image={p.image} className="text-muted" />
-                  <a href={goHref(o, p.id, "set_quickbuy")} rel="sponsored nofollow noopener" target="_blank" className={`${isPaidRow(o) ? "btn-buy" : "btn-soft"} min-h-10 shrink-0 whitespace-nowrap`}>
+                  <a href={goHref(o, p.id, from)} rel="sponsored nofollow noopener" target="_blank" className={`${isPaidRow(o) ? "btn-buy" : "btn-soft"} min-h-10 shrink-0 whitespace-nowrap`}>
                     Buy now <span aria-hidden="true">↗</span>
                   </a>
                 </span>
