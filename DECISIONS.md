@@ -1296,3 +1296,13 @@ number, not a CSV. The Spread is that report: one frozen edition a month (`lib/s
   generated. A mover the editor finds is a mismatch is removed by hand and the removal said in the notes.
 - Cut by hand after the release holding the period's last day, merged without `[deploy]`/`[urgent]`, riding the next data release.
   /the-spread 404s until the first edition exists, and only editions go in the sitemap.
+## 2026-11-20: A "keep up" strip on the Hot 100 (owned audience)
+
+The Hot 100 is where Reddit posts land, and Reddit visitors rarely buy (about 2.3% click a buy button, against about 19% from
+Google), and a Reddit visitor who does not buy is gone. Under the first buy cards, before the chart, the page now offers two ways
+to come back: the week's biggest price drops by email (the existing weekly email on RiftCompare's shared alert service, kind
+"weekly", double opt-in; this site keeps no address) and the Discord hub through this site's own invite code
+(`components/KeepUpStrip.tsx`). Inline, never a pop-up, no heading, a fixed minimum height so nothing moves. It is not an A/B
+test: it is on for everyone. Measured as `weekly_signup` with placement `hot-100` (an existing event, no new event name) and
+the invite's uses in Discord. The email promises the week's drops, which is what the weekly email sends, not the Hot 100 chart
+itself.
