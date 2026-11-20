@@ -65,10 +65,11 @@ async function post(hook: string, embed: unknown): Promise<boolean> {
 }
 
 async function main() {
-  const hook = process.env.DISCORD_SNIPER_WEBHOOK?.trim();
+  // Discord's "Copy Webhook URL" can give discordapp.com or a ptb./canary. host: all are the same API, so normalise to discord.com.
+  const hook = process.env.DISCORD_SNIPER_WEBHOOK?.trim().replace(/^https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\//, "https://discord.com/api/webhooks/");
   const dry = process.env.SNIPER_DRY === "1";
   if (!dry && !hook?.startsWith("https://discord.com/api/webhooks/")) {
-    console.log("sniper: DISCORD_SNIPER_WEBHOOK not set, nothing posted");
+    console.log(hook ? `sniper: DISCORD_SNIPER_WEBHOOK is set but is not a Discord webhook URL (starts ${JSON.stringify(hook.slice(0, 24))}), nothing posted` : "sniper: DISCORD_SNIPER_WEBHOOK not set, nothing posted");
     return;
   }
   const catalog = readJson<{ sets: { id: number; line?: string }[]; products: { id: number; slug: string; name: string; setId: number; sealedType?: string | null; image?: string | null; kind: string }[] }>(CATALOG_FILE);
