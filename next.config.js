@@ -26,7 +26,7 @@ module.exports = {
   experimental: {
     outputFileTracingIncludes: {
       // data/amazon: ASINs from the daily refresh; data/amazon-live: the prices this build fetched (lib/amazon-live.ts).
-      "/**": ["./data/public/**/*", "./data/history/**/*", "./data/store-lows/**/*", "./data/open/index.json", "./data/amazon/*.json", "./data/amazon-live/*.json", "./data/redirects/*.json"],
+      "/**": ["./data/public/**/*", "./data/history/**/*", "./data/store-lows/**/*", "./data/open/index.json", "./data/spread/*.json", "./data/amazon/*.json", "./data/amazon-live/*.json", "./data/redirects/*.json"],
     },
   },
   async redirects() {

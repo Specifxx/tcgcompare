@@ -1278,3 +1278,21 @@ ordinary form, unchanged; the server HTML is that form. Nothing saves or opens b
 Vercel Web Analytics silently drops a custom event with more than 16 properties (measured on riftcompare.com on 20 Nov: 9 to 16
 arrived, 17 to 19 never did). TCG Prices' buy_click carries exactly 16 and buy_click_geo 9, so none was lost; `tests/vercel-props.test.ts`
 now fails if either passes 16. A new key replaces one or folds into an existing key.
+
+## 2026-11-20: The Spread, a monthly sealed price report at /the-spread/<yyyy-mm> (code red boardroom, Data Editor)
+
+The open data (/data) earns links only if someone writes about it; journalists and forums cite a dated report with a headline
+number, not a CSV. The Spread is that report: one frozen edition a month (`lib/spread.ts`, `lib/spread-store.ts`,
+`scripts/spread-edition.ts`, `data/spread/<id>.json`, `tests/spread.test.ts`), goal earned referring domains.
+- **The headline is the spread itself:** for products 3+ stores have in stock, the median gap between the cheapest store and the
+  middle store (and the dearest), per market, game and product type. It needs no history, so it is solid from edition 1. Price
+  moves over the period and sale days (Black Friday 27 Nov 2026 and Cyber Monday 30 Nov, each against the same weekday a week
+  before) are matched-pair: each product's cheapest in-stock store price (data/store-lows) on both days, as shares that got
+  cheaper or dearer, because most products do not move in a fortnight and a median change of 0.0% says nothing.
+- **Same rules as the open data:** stores only (never a TCGplayer, eBay or Amazon price or a TCGplayer-derived figure, per the
+  18 Nov council), never converted, never estimated, groups under 10 products hidden.
+- **Frozen.** The script refuses to overwrite an edition; the pages read only the edition file. Corrections are dated lines on
+  the page. "Why prices moved" notes are written by the editor after checking (store sell-outs move the cheapest price too), never
+  generated. A mover the editor finds is a mismatch is removed by hand and the removal said in the notes.
+- Cut by hand after the release holding the period's last day, merged without `[deploy]`/`[urgent]`, riding the next data release.
+  /the-spread 404s until the first edition exists, and only editions go in the sitemap.
