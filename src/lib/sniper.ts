@@ -244,12 +244,25 @@ export interface DiscordEmbed {
   footer: { text: string };
 }
 
-export function productUrl(siteUrl: string, slug: string): string {
-  return `${siteUrl}/card/${slug}?${UTM}`;
+export function productUrl(siteUrl: string, slug: string, drop?: string): string {
+  return `${siteUrl}/card/${slug}?${UTM}${drop ? `&utm_content=${drop}` : ""}`;
+}
+
+/** One run is one drop: ONE Discord message holding every checked post (owner's cap: at most 3 drops a day across the
+ * hub; this feed runs twice a day). The id tags each link (utm_content) so clicks can be read per drop. */
+export const dropId = (ms: number): string => `sniper-${new Date(ms).toISOString().slice(0, 13).replace(/[-T]/g, "")}`;
+export function dropMessage(embeds: DiscordEmbed[]): { username: string; content: string; embeds: DiscordEmbed[]; allowed_mentions: { parse: never[] } } {
+  const n = embeds.length;
+  return {
+    username: "Sealed Sniper",
+    content: `**Sealed Sniper drop:** ${n} ${n === 1 ? "deal" : "deals"}, each checked at the store just before posting.`,
+    embeds: embeds.slice(0, 10),
+    allowed_mentions: { parse: [] },
+  };
 }
 
 /** One Discord embed for a checked event. `checkedAt` is the live check's time (ms), shown as a live relative timestamp. */
-export function embedFor(e: SniperEvent, liveCents: number, checkedAt: number, siteUrl: string): DiscordEmbed {
+export function embedFor(e: SniperEvent, liveCents: number, checkedAt: number, siteUrl: string, drop?: string): DiscordEmbed {
   const cur = CURRENCY[e.store.market];
   const game = GAME_LABEL[e.product.line ?? ""] ?? "";
   const ts = Math.floor(checkedAt / 1000);
@@ -258,11 +271,11 @@ export function embedFor(e: SniperEvent, liveCents: number, checkedAt: number, s
     e.kind === "restock" ? "Sold out at our previous check, in stock now." : `Cheapest ${e.store.market} store price was ${money(e.was, cur)} at our previous check (${e.pct}% lower now).`,
     e.product.marketCents ? `TCGplayer market: ${money(e.product.marketCents, "USD")}` : null,
     `In stock at the store when checked <t:${ts}:R>. Stock can sell out fast; the store's page has the final word.`,
-    `[Compare every store](${productUrl(siteUrl, e.product.slug)})`,
+    `[Compare every store](${productUrl(siteUrl, e.product.slug, drop)})`,
   ].filter(Boolean);
   return {
     title: `${e.kind === "restock" ? "Back in stock" : "Price drop"}: ${e.product.name}`.slice(0, 250),
-    url: productUrl(siteUrl, e.product.slug),
+    url: productUrl(siteUrl, e.product.slug, drop),
     description: lines.join("\n"),
     color: e.kind === "restock" ? 0x22c55e : 0x3b82f6,
     ...(e.product.image ? { thumbnail: { url: e.product.image } } : {}),

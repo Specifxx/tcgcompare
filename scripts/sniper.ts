@@ -4,7 +4,7 @@
 //
 // Every candidate is checked once at the store itself (Shopify /products/<handle>.js through lib/import/polite-http.ts)
 // right before it is posted: sold out, dearer, no answer, robots.txt or a block means no post. At most MAX_POSTS a run,
-// so at most MAX_POSTS + a few store requests a run (DECISIONS.md 2026-11-19, "Sealed Sniper").
+// so at most MAX_POSTS + a few store requests a run, all in ONE message (one drop; at most 3 drops a day across the hub) (DECISIONS.md 2026-11-19, "Sealed Sniper").
 // SNIPER_DRY=1 checks the stores and prints the posts without sending or saving anything.
 import fs from "node:fs";
 import path from "node:path";
@@ -16,6 +16,9 @@ import { SITE_URL } from "../src/lib/site";
 import { RequestBudget, StopStore, StoreSession } from "../src/lib/import/polite-http";
 import {
   dropEvents,
+  dropId,
+  dropMessage,
+  type DiscordEmbed,
   embedFor,
   emptySniperState,
   judgeLive,
@@ -49,8 +52,8 @@ const readJson = <T>(f: string): T | null => {
 const BASE = process.env.SNIPER_BASE || "HEAD";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function post(hook: string, embed: unknown): Promise<boolean> {
-  const body = JSON.stringify({ username: "Sealed Sniper", embeds: [embed], allowed_mentions: { parse: [] } });
+async function post(hook: string, embeds: DiscordEmbed[]): Promise<boolean> {
+  const body = JSON.stringify(dropMessage(embeds));
   for (let i = 0; i < 2; i++) {
     const r = await fetch(`${hook}?wait=true`, { method: "POST", headers: { "Content-Type": "application/json" }, body });
     if (r.status === 429) {
@@ -120,6 +123,8 @@ async function main() {
   const budget = new RequestBudget(MAX_POSTS * 3 * 2 + 10);
   const sessions = new Map<string, StoreSession>();
   const posted: SniperEvent[] = [];
+  const embeds: DiscordEmbed[] = [];
+  const drop = dropId(Date.now());
   const why: Record<string, number> = {};
   // restocks first, but a few slots kept for drops: at most MAX_RESTOCKS restocks, the rest drops (or restocks, when no drop)
   const drops = ranked.filter((e) => e.kind === "drop").length;
@@ -149,15 +154,13 @@ async function main() {
       why[v.why.replace(/ \(.*/, "")] = (why[v.why.replace(/ \(.*/, "")] ?? 0) + 1;
       continue;
     }
-    const embed = embedFor(e, v.cents, checkedAt, SITE_URL);
-    if (dry) {
-      console.log(`[dry] ${embed.title}\n${embed.description}\n`);
-      posted.push(e);
-      continue;
-    }
-    if (await post(hook!, embed)) posted.push({ ...e, cents: v.cents });
-    await sleep(1500);
+    const embed = embedFor(e, v.cents, checkedAt, SITE_URL, drop);
+    if (dry) console.log(`[dry] ${embed.title}\n${embed.description}\n`);
+    embeds.push(embed);
+    posted.push({ ...e, cents: v.cents });
   }
+  // one run, one message (one drop): nothing is recorded as posted unless Discord took the message
+  if (!dry && embeds.length && !(await post(hook!, embeds))) posted.length = 0;
   console.log(`sniper: ${posted.length} posted${dry ? " (dry run)" : ""}; not posted: ${JSON.stringify(why)}`);
   if (dry) return;
   fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });

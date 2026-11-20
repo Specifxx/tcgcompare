@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {
   dropEvents,
+  dropId,
+  dropMessage,
+  MAX_POSTS,
   eligible,
   embedFor,
   emptySniperState,
@@ -118,4 +121,19 @@ test("the script checks the store before every post and never calls eBay", () =>
   const wf = fs.readFileSync(".github/workflows/refresh-prices.yml", "utf8");
   assert.match(wf, /scripts\/sniper\.ts/);
   assert.ok(wf.indexOf("scripts/sniper.ts") < wf.indexOf("Commit data"), "runs before the data commit, so HEAD is the previous prices");
+});
+
+test("one run is one drop: one message with every post, each link tagged with the drop", () => {
+  const r = { kind: "restock" as const, product: box, store: au, cents: 15000, ref: "a" };
+  const drop = dropId(Date.UTC(2026, 10, 20, 21, 37));
+  assert.equal(drop, "sniper-2026112021");
+  const em = embedFor(r, 14999, NOW, "https://tcgprices.app", drop);
+  assert.match(em.url, /&utm_content=sniper-2026112021$/);
+  const m = dropMessage([em, em]);
+  assert.equal(m.embeds.length, 2);
+  assert.match(m.content, /2 deals/);
+  assert.deepEqual(m.allowed_mentions, { parse: [] });
+  assert.ok(MAX_POSTS <= 10, "Discord takes at most 10 embeds in one message");
+  const src = fs.readFileSync("scripts/sniper.ts", "utf8");
+  assert.equal((src.match(/await post\(/g) ?? []).length, 1, "the script posts once a run");
 });
