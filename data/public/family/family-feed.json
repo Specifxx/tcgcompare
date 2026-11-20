@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-19T19:47:59.875Z",
+ "generatedAt": "2026-11-20T03:37:23.182Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -89,56 +89,9 @@
    "currency": "USD",
    "store": "Fabricator's Forge",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/628353_200w.jpg",
-   "refCents": 578108,
+   "refCents": 573308,
    "refLabel": "TCGplayer market price",
-   "savingPct": 17
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Diva Fever Booster Box",
-   "url": "https://tcgprices.app/preorders/diva-fever",
-   "cents": 4299,
-   "currency": "USD",
-   "store": "Double Infinity Gaming",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/709423_200w.jpg",
-   "releaseDate": "2026-11-20"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "BP21: Academy Royale Booster Box",
-   "url": "https://tcgprices.app/preorders/bp21-academy-royale",
-   "cents": 5895,
-   "currency": "USD",
-   "store": "Josh's Cards",
-   "releaseDate": "2026-11-20"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Icons 2027 Edition Booster Box",
-   "url": "https://tcgprices.app/preorders/icons-2027-edition",
-   "cents": 7999,
-   "currency": "USD",
-   "store": "Gaming Giant",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/719671_200w.jpg",
-   "releaseDate": "2026-11-20"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "The Dominance of God Booster Box",
-   "url": "https://tcgprices.app/preorders/the-dominance-of-god",
-   "cents": 18000,
-   "currency": "USD",
-   "store": "Fabricator's Forge",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/712901_200w.jpg",
-   "releaseDate": "2026-11-20"
+   "savingPct": 16
   },
   {
    "kind": "preorder",
@@ -161,6 +114,52 @@
    "currency": "USD",
    "store": "Many Realms",
    "releaseDate": "2026-12-04"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Gift of the Rift Bundle Bundle",
+   "url": "https://tcgprices.app/preorders/gift-of-the-rift-bundle",
+   "cents": 20000,
+   "currency": "USD",
+   "store": "Many Realms",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/714486_200w.jpg",
+   "releaseDate": "2026-12-04"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": ".asphodel/cantabile Booster Box",
+   "url": "https://tcgprices.app/preorders/asphodel-cantabile",
+   "cents": 8699,
+   "currency": "USD",
+   "store": "The Arcanum Sanctorum",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/723027_200w.jpg",
+   "releaseDate": "2026-12-11"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Ignition of X Booster Box",
+   "url": "https://tcgprices.app/preorders/ignition-of-x",
+   "cents": 9499,
+   "currency": "USD",
+   "store": "Many Realms",
+   "releaseDate": "2026-12-11"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Reach the God Booster Box",
+   "url": "https://tcgprices.app/preorders/reach-the-god",
+   "cents": 14499,
+   "currency": "USD",
+   "store": "The Collection Realm",
+   "releaseDate": "2026-12-11"
   }
  ]
 }
