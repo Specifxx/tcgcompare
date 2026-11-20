@@ -46,7 +46,7 @@ For the games no sister prices (the `crawl` words in `site.config.ts`; never a g
   slots the uncovered games leave (`capWithGap`), never stealing their collections. A store the sister lists is never read
   for its game, and a sister's row for the same store and product always wins in the import (`addCrawlOffers`).
   Fusion World also sits in a shop's plain "Dragon Ball Super" collection, which DBS Masters' words claim (`GameLine.alsoIn`,
-  2026-11-21): a listing there is taken for Fusion World ONLY by its own TCGplayer id with every `pickId` check, and only at a
+  2026-11-20): a listing there is taken for Fusion World ONLY by its own TCGplayer id with every `pickId` check, and only at a
   store BandaiCompare does not list (`alsoTake` in `scripts/import-all.ts`). Never by title, never another pair without a test.
 - `scripts/crawl-uncovered.ts` runs before the import in `refresh-prices.yml` and `trial-import.yml` (never fatal, a
   no-op while the list is empty), reads those collections' `products.json` (4 pages each) and leaves the listings in

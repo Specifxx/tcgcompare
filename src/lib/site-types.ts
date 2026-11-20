@@ -81,7 +81,7 @@ export interface GameLine {
    *  directory the covering sister does NOT list, in the slots the uncovered games leave (crawl-run.ts runProbe). A
    *  store the sister lists is never read for it, and a sister's own row for a product and store always wins. */
   gapCrawl?: boolean;
-  /** Games whose collections a shop also files this game's products under (2026-11-21: a shop's "Dragon Ball Super"
+  /** Games whose collections a shop also files this game's products under (2026-11-20: a shop's "Dragon Ball Super"
    *  collection, claimed by DBS Masters, holds Fusion World boxes too). A listing read there for that game is taken
    *  for THIS game only by its own TCGplayer id (pickId, every check unchanged), and only at a store this game's
    *  covering sister does not list (the gap rule): lib/import/crawl.ts `takeCrawl`, `PickContext.alsoTake`. */

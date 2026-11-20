@@ -1311,7 +1311,7 @@ itself.
 
 Each run of the Sealed Sniper now sends ONE Discord message holding all of the run's checked posts (at most `MAX_POSTS`, 8, under Discord's 10 embeds a message), instead of one message per post. The hub's cap is at most 3 drops a day across all feeds (Owned Audience, 20 Nov): this feed runs twice a day, so it is 2 drops, and DexCompare's #pokemon-deals feed gets the third. Every link carries `utm_content=sniper-<YYYYMMDDHH>` so clicks can be read per drop. If Discord refuses the message, nothing is recorded as posted, so the next run tries those deals again.
 
-## 2026-11-21: Fusion World listings in a shop's "Dragon Ball Super" collection
+## 2026-11-20: Fusion World listings in a shop's "Dragon Ball Super" collection
 
 The 20 Nov crawl refused 88 Fusion World listings as "other-game" (and took only 19 Fusion World listings in all): shops file
 Fusion World boxes under a plain "Dragon Ball Super" collection, which DBS Masters' crawl words claim, so the listing carried
