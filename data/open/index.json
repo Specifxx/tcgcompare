@@ -636,7 +636,7 @@
   {
    "d": "2026-11-20",
    "all": {
-    "n": 3157,
+    "n": 3163,
     "median": 4997,
     "level": 100
    },
@@ -652,7 +652,7 @@
      "level": 100
     },
     "cardfight-vanguard": {
-     "n": 70,
+     "n": 71,
      "median": 4499,
      "level": 100
     },
@@ -672,8 +672,8 @@
      "level": 100
     },
     "disney-lorcana": {
-     "n": 110,
-     "median": 2450,
+     "n": 109,
+     "median": 2500,
      "level": 100
     },
     "dragon-ball-super-fusion-world": {
@@ -722,13 +722,13 @@
      "level": 100
     },
     "magic-the-gathering": {
-     "n": 1080,
-     "median": 6197,
+     "n": 1081,
+     "median": 6199,
      "level": 100
     },
     "one-piece": {
      "n": 123,
-     "median": 4500,
+     "median": 4200,
      "level": 100
     },
     "palworld": {
@@ -737,7 +737,7 @@
      "level": 100
     },
     "pokemon": {
-     "n": 694,
+     "n": 691,
      "median": 5000,
      "level": 100
     },
@@ -748,7 +748,7 @@
     },
     "riftbound": {
      "n": 31,
-     "median": 3648,
+     "median": 3727,
      "level": 100
     },
     "shadowverse-evolve": {
@@ -762,13 +762,13 @@
      "level": 100
     },
     "star-wars-unlimited": {
-     "n": 67,
+     "n": 68,
      "median": 2299,
      "level": 95.59
     },
     "union-arena": {
-     "n": 48,
-     "median": 5500,
+     "n": 49,
+     "median": 4999,
      "level": 100
     },
     "universus": {
@@ -777,8 +777,8 @@
      "level": 100
     },
     "weiss-schwarz": {
-     "n": 134,
-     "median": 2498,
+     "n": 140,
+     "median": 2200,
      "level": 100
     },
     "wixoss": {
