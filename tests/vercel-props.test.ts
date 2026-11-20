@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 test("buy_click and buy_click_geo carry at most 16 properties", () => {
   const tracker = readFileSync("src/components/BuyClickTracker.tsx", "utf8");
   const call = tracker.slice(tracker.indexOf('track("buy_click", {'), tracker.indexOf("});", tracker.indexOf('track("buy_click", {')));
-  const keys = [...call.matchAll(/(?:\{|,|\n)\s*([a-z_]+):/g)].map((m) => m[1]);
+  const keys = [...call.matchAll(/(?:\{|,|\n)\s*([a-z_]+)(?=:|,\s*\n)/g)].map((m) => m[1]);
   assert.ok(keys.length > 0 && keys.length <= 16, `buy_click has ${keys.length} properties: ${keys.join(", ")}`);
   const route = readFileSync("src/app/go/route.ts", "utf8");
   const evt = route.slice(route.indexOf("const evt = {"), route.indexOf("};", route.indexOf("const evt = {")));
