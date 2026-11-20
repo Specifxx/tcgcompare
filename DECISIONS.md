@@ -1310,3 +1310,14 @@ itself.
 ## 2026-11-20: Sealed Sniper posts one drop a run
 
 Each run of the Sealed Sniper now sends ONE Discord message holding all of the run's checked posts (at most `MAX_POSTS`, 8, under Discord's 10 embeds a message), instead of one message per post. The hub's cap is at most 3 drops a day across all feeds (Owned Audience, 20 Nov): this feed runs twice a day, so it is 2 drops, and DexCompare's #pokemon-deals feed gets the third. Every link carries `utm_content=sniper-<YYYYMMDDHH>` so clicks can be read per drop. If Discord refuses the message, nothing is recorded as posted, so the next run tries those deals again.
+
+## 2026-11-21: Fusion World listings in a shop's "Dragon Ball Super" collection
+
+The 20 Nov crawl refused 88 Fusion World listings as "other-game" (and took only 19 Fusion World listings in all): shops file
+Fusion World boxes under a plain "Dragon Ball Super" collection, which DBS Masters' crawl words claim, so the listing carried
+only the DBS Masters game and its Fusion World id was refused. Reach the God (11 Dec) had 2 stores. `GameLine.alsoIn`
+(`fw: ["dbs"]`): a listing read for DBS Masters whose one TCGplayer id is a Fusion World product is read again as a listing of
+both games, so every `pickId` check still decides (photo and id conflicts, product type, quantity, Fusion World's matcher). It
+applies only at a store BandaiCompare does not list, the same rule as the gap crawl, and a sister's own row still wins
+(`addCrawlOffers`). No title placement, no extra request: the collection was already read. `meta.json` `crawl.alsoTaken`
+counts it. Read after the next import: `takenByLine.fw` (baseline 19) and the "other-game: fw" refusals (baseline 88).

@@ -102,6 +102,33 @@ test("an id of another game, or of a game the listing was not crawled for: refus
   assert.deepEqual(pickId(crawled(listing({ title: "Flesh and Blood Rosetta Booster Box", handle: "rosetta-booster-box-523456" }), ["fab"]), ctx), { id: 523456 });
 });
 
+test("GameLine.alsoIn: another game's product in this game's collection is taken by its own id, only where alsoTake allows", () => {
+  const keyOf = new Map([["cards.test|US", "cards"]]);
+  const fab = crawled(listing({ title: "Flesh and Blood Rosetta Booster Box", handle: "rosetta-booster-box-523456" }), ["swu"]);
+  const wrongType = crawled(listing({ id: 2, title: "Flesh and Blood Rosetta Booster Pack", handle: "rosetta-booster-pack-523456" }), ["swu"]);
+  const run = { at: "", budget: 0, requests: 0, stores: [{ host: "cards.test", key: "cards", name: "Cards", base: "https://cards.test", market: "US" as const, ok: true, requests: 3, listings: [fab, wrongType] }] };
+  const asked: string[] = [];
+  const allow: PickContext = { ...ctx, alsoTake: (line, lines, host) => (asked.push(`${line}|${lines.join(",")}|${host}`), line === "fab" && lines.includes("swu") && host === "cards.test") };
+  const got = takeCrawl(run, allow, keyOf);
+  assert.deepEqual([...got.offers.keys()], [523456]);
+  assert.equal(got.alsoTaken, 1);
+  assert.equal(got.takenByLine?.fab, 1);
+  // Every pickId check still applies once the game is added: a pack title on a box id is refused.
+  assert.deepEqual(got.refused, { "type-differs": 1 });
+  assert.ok(asked.includes("fab|swu|cards.test"));
+  // Without alsoTake, or where it says no (the covering sister lists the shop), another game's id stays refused.
+  assert.deepEqual(takeCrawl(run, ctx, keyOf).refused, { "other-game": 2 });
+  assert.deepEqual(takeCrawl(run, { ...ctx, alsoTake: () => false }, keyOf).refused, { "other-game": 2 });
+});
+
+test("Fusion World is the one game read in another game's collection: DBS Masters' plain 'Dragon Ball Super' shelf", () => {
+  const also = (SITE.lines ?? []).filter((l) => l.alsoIn?.length).map((l) => [l.id, l.alsoIn]);
+  assert.deepEqual(also, [["fw", ["dbs"]]]);
+  const fw = SITE.lines!.find((l) => l.id === "fw")!;
+  assert.ok(fw.gapCrawl, "only a gap game: the gap rule (never at a store its sister lists) is what alsoTake applies");
+  assert.equal(lineOfCollection({ handle: "dragon-ball-super", title: "Dragon Ball Super" }, SITE.lines!), "dbs");
+});
+
 test("no id, or one the catalogue does not hold: refused (the matcher never supplies an id)", () => {
   assert.equal((pickId(crawled(listing()), ctx) as { refuse: string }).refuse, "no-id");
   assert.equal((pickId(crawled(listing({ handle: "lof-box-999999" })), ctx) as { refuse: string }).refuse, "no-id");
