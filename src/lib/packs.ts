@@ -3,19 +3,31 @@
 // "Homeworlds - Booster Pack" share the stem "Homeworlds", while "Homeworlds Carbonite Edition - Booster Pack" has another
 // (an edition is never mixed). A promo pack ("Promo Pack: Black") ends differently and pairs with nothing. No pack count
 // is claimed: this only shows what one pack costs.
+//
+// A trailing printing tag ("Booster Box [1st Edition]", "Booster Pack [1st Edition]", "[Second Edition]", "[2nd Print]",
+// as TCGplayer names every Yu-Gi-Oh! set) is part of the stem, so a 1st Edition box pairs with its 1st Edition pack and
+// never with an Unlimited one. Any other bracket ("Sleeved Booster Pack [Cell]") is not a printing and pairs with nothing.
 import type { Product } from "@/lib/site-types";
 
 const BOX = /\s*[-–:]?\s*booster (?:display|box)\s*$/i;
 const PACK = /\s*[-–:]?\s*booster pack\s*$/i;
+const PRINTING = /\s*\[([^\]]*\b(?:edition|print|printing))\]\s*$/i;
 
-/** The name without its trailing "Booster Display / Box / Pack", lower-cased, or null for any other product. */
+function stem(name: string, kind: RegExp): string | null {
+  const tag = PRINTING.exec(name);
+  const base = tag ? name.slice(0, tag.index) : name;
+  if (!kind.test(base)) return null;
+  const s = base.replace(kind, "").trim().toLowerCase();
+  if (!s) return null;
+  return tag ? `${s} [${tag[1].trim().toLowerCase()}]` : s;
+}
+
+/** The name without its trailing "Booster Display / Box / Pack" (printing tag kept), lower-cased, or null for any other product. */
 export function boxStem(p: Pick<Product, "name" | "sealedType">): string | null {
-  if (p.sealedType !== "Booster Box" || !BOX.test(p.name)) return null;
-  return p.name.replace(BOX, "").trim().toLowerCase();
+  return p.sealedType === "Booster Box" ? stem(p.name, BOX) : null;
 }
 export function packStem(p: Pick<Product, "name" | "sealedType">): string | null {
-  if (p.sealedType !== "Booster Pack" || !PACK.test(p.name)) return null;
-  return p.name.replace(PACK, "").trim().toLowerCase();
+  return p.sealedType === "Booster Pack" ? stem(p.name, PACK) : null;
 }
 
 /** The one single pack of a booster box among `inSet` (the same set's products), or null when none or two fit. */
