@@ -1272,3 +1272,9 @@ account (free or Premium), the card page's alert (`components/PriceAlert.tsx`) i
 lowest in-stock price in the visitor's market>", with "Pick my price" beside it, or, sold out there, "Tell me when it's back in
 stock". The account's token names the address (no email field; no confirmation when the address is verified). Signed out, the
 ordinary form, unchanged; the server HTML is that form. Nothing saves or opens by itself.
+
+## 2026-11-20 — buy_click stays at 16 properties or fewer
+
+Vercel Web Analytics silently drops a custom event with more than 16 properties (measured on riftcompare.com on 20 Nov: 9 to 16
+arrived, 17 to 19 never did). TCG Prices' buy_click carries exactly 16 and buy_click_geo 9, so none was lost; `tests/vercel-props.test.ts`
+now fails if either passes 16. A new key replaces one or folds into an existing key.
