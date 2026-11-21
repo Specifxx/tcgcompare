@@ -7,6 +7,7 @@ import { readRestocks } from "@/lib/restocks";
 import { CURRENCY } from "@/lib/site-types";
 import { money } from "@/lib/format";
 import { shortName } from "@/lib/names";
+import { TELEGRAM_URL } from "@/components/DiscordCta";
 
 export const revalidate = 86400;
 export const metadata: Metadata = {
@@ -44,6 +45,16 @@ export default function Restocks() {
         <h1 className="font-display text-3xl font-black">Back in stock</h1>
         <p className="mt-2 max-w-3xl text-muted">Sealed product an independent store had sold out and now lists in stock again. A row is a store, not a ranking: open the product to compare every store and the TCGplayer price. Stock can sell out between checks.</p>
       </header>
+      <section aria-label="Restock alerts" className="card-surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-base font-bold">Get restock alerts on Discord or Telegram</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted">Our Sealed Sniper posts restocks and price drops of 10% or more as they show up, each checked at the store just before it is posted. At most three drops a day, free, no ads.</p>
+        </div>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {SITE.discordInvite && <a href={SITE.discordInvite} target="_blank" rel="noopener noreferrer" className="inline-flex items-center rounded-lg bg-[#5865F2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#4752C4]">Join the Discord</a>}
+          <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center rounded-lg bg-[#229ED9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1C8BC0]">Telegram</a>
+        </div>
+      </section>
       {rows.length === 0 && <p className="card-surface p-4 text-sm text-muted">No restocks recorded yet. They appear after the next price check.</p>}
       {recent.length > 0 && <section><h2 className="mb-2 text-xl font-bold">Last 2 days</h2>{list(recent)}</section>}
       {earlier.length > 0 && <section><h2 className="mb-2 text-xl font-bold">Earlier this week</h2>{list(earlier)}</section>}
