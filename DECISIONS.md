@@ -1330,3 +1330,11 @@ not one tap from the home page. `lib/hero-games.ts` now moves a game whose hub h
 visit cannot reshuffle the hero) ahead of the fixed order, most viewed first; the rest keep `LINES` order. Still words and links only,
 never a product; the home-rank off switch (`NEXT_PUBLIC_HOME_RANK=off`) restores the fixed five. Read 28 Nov: Star Wars hub views
 and buy clicks per home visitor against 14-20 Nov.
+
+
+## 2026-11-21: A Cyber Weekend sign-up under the real drops (owned audience)
+
+The Black Friday and Cyber Monday pages carry one sign-up directly under the real-drops block: the weekly drops email (KeepUpStrip,
+placement `black-friday`, email only because the Discord box sits lower on the page) on the sister-alert sites, a free-account
+prompt on the account sites. The weekly email has its own Black Friday (27 Nov) and Cyber Monday (30 Nov) editions on RiftCompare's
+service (TCGEmpire DECISIONS, same day), so a sign-up before 26 Nov gets the Black Friday one. Inline, never a pop-up; real drops only.
