@@ -16,6 +16,10 @@ export default function Privacy() {
           Price alerts are the one exception. If you ask to be emailed when a price drops, the form sends your email address, the product, your market and your price to our shared alert service, which keeps them only for that alert, emails you once to confirm, and deletes them when you stop the alert or after six months. {SITE.name} itself never stores them.
         </p>
       )}
+      <p>
+        Our Chrome extension collects nothing either: it downloads one public price file from this site without cookies, keeps it and your market choice in your
+        browser, runs only on TCGplayer product pages, and sends nothing about you or the pages you visit anywhere. Details on <a href="/extension">the extension page</a>.
+      </p>
       <p>Buy links are affiliate links: eBay, TCGplayer and Amazon may set their own cookies when you follow one, under their own privacy policies.</p>
       <p>Questions: <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>.</p>
     </StaticPage>
