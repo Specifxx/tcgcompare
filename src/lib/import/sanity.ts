@@ -40,3 +40,18 @@ export function storePriceTrusted(usd: number, ref: number | null | undefined, f
   if (ref >= 300) return usd >= ref * floorShare && usd <= ref * 4;
   return usd <= Math.max(ref * 5, CHEAP_HIGH_CENTS);
 }
+
+/** Before release TCGplayer's "market" is a handful of early pre-order sales, often far above what stores ask: Riftbound's
+ *  Legacy Vault Bundle read US$94.65 on 2026-11-20 while ten shops in six markets asked US$31-50, so the 50% floor
+ *  left 9 of its 10 store rows out. For a product of an upcoming set, the band is judged against the lower of TCGplayer's
+ *  market and the median of the cheapest in-stock price of at least LAUNCH_MIN_STORES distinct stores (USD). Fewer stores
+ *  than that, or a released set, and TCGplayer's market stands alone. One store, or two, cannot move it. */
+export const LAUNCH_MIN_STORES = 3;
+
+export function launchReferenceCents(ref: number | null | undefined, storeUsd: number[]): number | null {
+  if (ref == null) return null;
+  if (storeUsd.length < LAUNCH_MIN_STORES) return ref;
+  const s = [...storeUsd].sort((a, b) => a - b);
+  const mid = s.length % 2 ? s[s.length >> 1] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+  return Math.min(ref, mid);
+}
