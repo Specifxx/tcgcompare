@@ -184,12 +184,13 @@ jobs:
         run: npx tsx scripts/restocks.ts
       # Sealed Sniper (scripts/sniper.ts, lib/sniper.ts, DECISIONS.md 2026-11-19): this run's restocks and price drops of
       # sealed Pokémon, One Piece, Riftbound, Magic and Lorcana, each checked once at the store right before it is posted to
-      # Discord. A no-op until the DISCORD_SNIPER_WEBHOOK secret exists. Before the data commit: HEAD is the last prices.
+      # Discord and to t.me/tcgdealsrestocks (one message each a run). A no-op until DISCORD_SNIPER_WEBHOOK or TELEGRAM_BOT_TOKEN exists. Before the data commit: HEAD is the last prices.
       - name: Sealed Sniper
         continue-on-error: true
         timeout-minutes: 15
         env:
           DISCORD_SNIPER_WEBHOOK: ${{ secrets.DISCORD_SNIPER_WEBHOOK }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
         run: npx tsx scripts/sniper.ts
       # The home pages' ranking input (src/lib/home-rank.ts, DECISIONS.md 2026-11-18): product page views and buy clicks per

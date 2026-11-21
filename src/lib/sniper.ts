@@ -261,6 +261,30 @@ export function dropMessage(embeds: DiscordEmbed[]): { username: string; content
   };
 }
 
+/** Telegram's channel name for the drops (t.me/tcgdealsrestocks, created 2026-11-21). */
+export const TELEGRAM_CHANNEL = "@tcgdealsrestocks";
+
+/**
+ * The same drop as one plain-text Telegram message: Discord's bold, links and relative timestamps turned into plain text
+ * ("HH:MM UTC"), every link tagged utm_source=telegram, kept under Telegram's 4,096 characters (whole deals only).
+ */
+export function telegramText(embeds: DiscordEmbed[]): string {
+  const plain = (t: string) =>
+    t
+      .replace(/<t:(\d+):R>/g, (_, s: string) => `at ${new Date(Number(s) * 1000).toISOString().slice(11, 16)} UTC`)
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1: $2")
+      .replace(/\*\*/g, "")
+      .replace(/utm_source=discord/g, "utm_source=telegram");
+  const parts: string[] = [];
+  const head = (n: number) => `Sealed Sniper drop: ${n} ${n === 1 ? "deal" : "deals"}, each checked at the store just before posting.`;
+  for (const e of embeds.slice(0, 10)) {
+    const part = `${plain(e.title)}\n${plain(e.description)}`;
+    if ([head(parts.length + 1), ...parts, part].join("\n\n").length > 4096) break;
+    parts.push(part);
+  }
+  return parts.length ? [head(parts.length), ...parts].join("\n\n") : "";
+}
+
 /** One Discord embed for a checked event. `checkedAt` is the live check's time (ms), shown as a live relative timestamp. */
 export function embedFor(e: SniperEvent, liveCents: number, checkedAt: number, siteUrl: string, drop?: string): DiscordEmbed {
   const cur = CURRENCY[e.store.market];
