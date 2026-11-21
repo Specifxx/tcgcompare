@@ -1379,3 +1379,26 @@ bottom and still 250% of the market at the top. Every other check of the pick ha
 stores, or a median at or above the market: the refusal stands. Then the offer band applies as before. `crawl.launchTaken` in
 `meta.json` counts what it kept. Read after the next import: `launchTaken`, store rows on the Chromatic Ascension box (baseline 2)
 and the other upcoming crawled products, then their buy clicks.
+
+## 2026-11-21: A Chrome buying assistant
+
+Bill bought a Chrome Web Store developer account (2026-11-21) and asked for Chrome extensions that act as a buying
+assistant and send people to our sites' buy links. `extension/` is one Manifest V3 engine, built per site from
+`extension/sites/<id>.json`; TCG Prices ships first.
+
+- **What it does:** on a TCGplayer product page it reads the TCGplayer product id from the URL and, only when
+  `/extension.json` has that exact id, shows the cheapest in-stock STORE price in the visitor's market (never eBay,
+  Amazon or TCGplayer itself, never converted) beside TCGplayer's market price, with one link to our product page and
+  a search link to the game's sister site. The popup searches the same file; "Find the product on this page" fills the
+  box from the tab title only when pressed. A right-click search. Never a title match claimed as the product.
+- **Why TCGplayer pages:** our sealed product ids ARE TCGplayer's, so the match is exact, and it is where buyers
+  already compare. eBay and store pages get the popup's search, not a claimed match ("a wrong match is worse than none").
+- **No affiliate injection.** It changes no link on any other site and adds no affiliate code (Chrome Web Store's
+  affiliate policy: disclosed, user-initiated only). It earns only through our own pages, which it links with
+  `utm_source=chrome-extension` (so its traffic and buy clicks show in analytics).
+- **Cost:** `/extension.json` is force-static (built with each release, ~770 KB, ~160 KB gzipped), the extension
+  fetches it at most every 12 hours per browser without cookies. No function runs for it.
+- **One extension per game site, not 15 copies at once.** Chrome Web Store's spam policy forbids publishing several
+  extensions with duplicate functionality, and a strike is account-wide. The TCG Prices extension covers every game
+  and links each product's sister site; a sister gets its own extension only where it does something the TCG Prices
+  one cannot (e.g. singles on Rift or OP Compare), staggered after the first is approved.
