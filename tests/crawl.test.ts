@@ -585,6 +585,31 @@ test("pickByTitle: one product, its own type, in stock, in the price band; anyth
   assert.equal(takeCrawl(run(false), c, keyOf).taken, 1);
 });
 
+test("upcoming product: a title pick refused only by TCGplayer's pre-order market is kept against 3+ stores' median", () => {
+  // Market US$414 (a few early pre-order sales); three shops ask US$150-160: under 40% of the market, inside the band of
+  // their own median. A fourth at US$40 is under 40% of that median too and stays out.
+  const MARKET = 41422;
+  const band = (id: number, cents: number) => id === 612345 && cents >= MARKET * 0.4 && cents <= MARKET * 2.5;
+  const launch = { upcoming: (id: number) => id === 612345, marketCents: () => MARKET, usd: (cents: number) => cents };
+  const shop = (host: string, price: string) => ({ host, key: host.split(".")[0], name: host, base: `https://${host}`, market: "US" as const, ok: true, requests: 1, listings: [crawled(listing({ variants: [{ id: 11, title: "Default Title", price, available: true }] }))] });
+  const stores = [shop("a.test", "149.99"), shop("b.test", "159.99"), shop("c.test", "155.99"), shop("d.test", "40.00")];
+  const keyOf = new Map(stores.map((s) => [`${s.host}|US`, s.key]));
+  const run = (ss: typeof stores) => ({ at: "", budget: 0, requests: 0, stores: ss });
+  const c: PickContext = { ...ctx, inBand: band, launch };
+  const got = takeCrawl(run(stores), c, keyOf);
+  assert.deepEqual(got.offers.get(612345)!.map((o) => o.source).sort(), ["a", "b", "c"]);
+  assert.equal(got.launchTaken, 3);
+  assert.equal(got.refused.unconfirmed, 1);
+  assert.deepEqual([...got.fresh.keys()].sort(), ["a", "b", "c"]);
+  // Two shops cannot move the market; a released product (not upcoming) or no launch callback keeps the old band.
+  assert.equal(takeCrawl(run(stores.slice(0, 2)), c, keyOf).taken, 0);
+  assert.equal(takeCrawl(run(stores), { ...c, launch: { ...launch, upcoming: () => false } }, keyOf).taken, 0);
+  assert.equal(takeCrawl(run(stores), { ...ctx, inBand: band }, keyOf).taken, 0);
+  // Never above 250% of the market, whatever the stores say.
+  const high = [shop("a.test", "1100.00"), shop("b.test", "1100.00"), shop("c.test", "1100.00")];
+  assert.equal(takeCrawl(run(high), c, keyOf).taken, 0);
+});
+
 // ── AI placements (owner, 2026-11-16: as many listings as possible, light filtering) ─────────────────────────────────
 
 const aiCtx = (over: Partial<PickContext> = {}, d = { id: 612345, pass: true, reasons: [] as string[] }): PickContext => ({

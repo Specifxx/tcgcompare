@@ -1363,3 +1363,19 @@ sends the same drop to both places, as ONE message each. On Telegram that is pla
 markup is removed, "checked" becomes an `HH:MM UTC` time, links are tagged `utm_source=telegram` with the drop's `utm_content`,
 and the message stays under 4,096 characters. The cap is the same as Discord's (two drops a day from the sniper). A drop counts
 as posted when either channel took it. Without the secret, the Telegram step is a no-op.
+
+## 2026-11-21: The launch reference reaches the crawl's title and AI picks too
+
+The 2026-11-21 launch reference (above) judges sister and crawl rows of an upcoming product against the stores' own median, but
+only once they are offers. A crawl listing with no id is taken by its title (or an AI placement) only within 40-250% of
+TCGplayer's market, and that check runs first, so on our own crawled games the pre-order "market" still refused them before the
+median could be read. DBS Masters' Chromatic Ascension box (27 Nov) reads US$414.22 on TCGplayer; its two store rows ask
+US$245 and US$333, and any shop asking under US$166 is refused there.
+
+`takeCrawl` now holds a title or AI pick of an upcoming product that only its price band refused (`IdPick.held`), and, once every
+store is read, judges it again against `launchReferenceCents` of the cheapest in-stock price of each distinct store for that
+product (the held picks and the rows already taken): at least three stores, a median under the market, 40% of that median at the
+bottom and still 250% of the market at the top. Every other check of the pick has already passed. Released sets, fewer than three
+stores, or a median at or above the market: the refusal stands. Then the offer band applies as before. `crawl.launchTaken` in
+`meta.json` counts what it kept. Read after the next import: `launchTaken`, store rows on the Chromatic Ascension box (baseline 2)
+and the other upcoming crawled products, then their buy clicks.

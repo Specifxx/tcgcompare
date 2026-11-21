@@ -18,6 +18,7 @@ import type { GameLine, Market, Meta, Offer, Product, StoreConfig } from "@/lib/
 import { CURRENCY } from "@/lib/site-types";
 import { handleOf, isForeign, isMulti, isPreorder, isUnfitListing, matchSealed, type MatchIndex } from "./match";
 import { sealedTypeOf } from "./tcgcsv";
+import { launchReferenceCents } from "./sanity";
 import { tokens } from "@/lib/slug";
 
 // ── What the crawl reads ────────────────────────────────────────────────────
@@ -233,6 +234,18 @@ export interface PickContext {
    * "other-game".
    */
   alsoTake?: (line: string, lines: readonly string[], host: string) => boolean;
+  /**
+   * An upcoming set's product (lib/import/sanity.ts launchReferenceCents): TCGplayer's pre-order "market" is a few early
+   * sales, so a title or AI pick refused only by its price band is held and judged again against the lower of that market
+   * and the median of 3+ distinct stores' cheapest in-stock price for it (takeCrawl). Left out, never.
+   */
+  launch?: {
+    upcoming: (id: number) => boolean;
+    /** TCGplayer's market price (USD cents), or null. */
+    marketCents: (id: number) => number | null;
+    /** A price in `market`'s currency, in USD cents. */
+    usd: (cents: number, market: Market) => number;
+  };
 }
 
 export type Refused =
@@ -250,7 +263,8 @@ export type Refused =
   | "type-differs"
   | "matcher-disagrees";
 
-export type IdPick = { id: number } | { refuse: Refused; detail?: string };
+// `held`: the product a title or AI pick landed on when only its price band refused it (takeCrawl judges an upcoming one again).
+export type IdPick = { id: number } | { refuse: Refused; detail?: string; held?: number };
 
 // Not a sealed product as the catalogue means one, though the shared isUnfitListing (used, damaged, graded) lets it
 // by: an opened or resealed box, an empty one, a break spot, a repack or mystery box, one missing its packs.
@@ -332,7 +346,7 @@ export function pickByTitle(l: CrawlListing, ctx: PickContext, market: Market): 
   if (isMulti(l.title) !== isMulti(p.name)) return { refuse: "multiple" };
   if (said !== sealedTypeOf(p.name)) return { refuse: "type-differs", detail: `${said} / ${sealedTypeOf(p.name)}` };
   if (l.variantKind && l.variantKind !== sealedTypeOf(p.name)) return { refuse: "type-differs", detail: l.variantKind };
-  if (!ctx.inBand(p.id, l.cents, market)) return { refuse: "unconfirmed", detail: "price outside 40-250% of market" };
+  if (!ctx.inBand(p.id, l.cents, market)) return { refuse: "unconfirmed", detail: "price outside 40-250% of market", held: p.id };
   return { id: p.id };
 }
 
@@ -355,7 +369,7 @@ export function pickByAi(l: CrawlListing, host: string, ctx: PickContext, market
   if (!p || p.kind !== "sealed" || p.sealedType === "Insert") return { refuse: "not-sealed" };
   const line = ctx.lineOf(p);
   if (!line || !l.lines.includes(line)) return { refuse: "other-game" };
-  if (!ctx.inBandWide?.(p.id, l.cents, market)) return { refuse: "unconfirmed", detail: "ai: price outside 40-250% of market" };
+  if (!ctx.inBandWide?.(p.id, l.cents, market)) return { refuse: "unconfirmed", detail: "ai: price outside 40-250% of market", held: p.id };
   return { id: p.id };
 }
 
@@ -406,6 +420,8 @@ export interface CrawlTake {
   aiTaken?: number;
   /** Of `taken`, those of a game whose products the shop files under another game's collection (GameLine.alsoIn). */
   alsoTaken?: number;
+  /** Of `taken`, title or AI picks of an upcoming product kept by the stores' launch reference (PickContext.launch). */
+  launchTaken?: number;
   refused: Record<string, number>;
   /** Refusals by "reason: detail", the 40 commonest. */
   refusedDetail?: Record<string, number>;
@@ -454,6 +470,13 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
   let aiTaken = 0;
   let alsoTaken = 0;
   let listings = 0;
+  let launchTaken = 0;
+  const refuse = (why: string, d?: string) => {
+    refused[why] = (refused[why] ?? 0) + 1;
+    const dk = `${why}: ${(d ?? "").slice(0, 40)}`;
+    detail[dk] = (detail[dk] ?? 0) + 1;
+  };
+  const held: { key: string; market: Market; id: number; l: CrawlListing; refuse: Refused; detail?: string }[] = [];
   for (const s of run.stores) {
     // A partial read still yields the collections it read to the end.
     if (!s.ok && !s.partial) continue;
@@ -481,14 +504,17 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
           if (byAi && "id" in byAi) {
             r = byAi;
             aiTaken++;
-          } else if (byTitle.refuse !== "no-id") r = { refuse: byTitle.refuse, detail: byTitle.detail };
-          else if (byAi && byAi.refuse !== "no-id") r = { refuse: byAi.refuse, detail: byAi.detail };
+          } else if (byTitle.refuse !== "no-id") r = byTitle;
+          else if (byAi && byAi.refuse !== "no-id") r = byAi;
         }
       }
       if ("refuse" in r) {
-        refused[r.refuse] = (refused[r.refuse] ?? 0) + 1;
-        const dk = `${r.refuse}: ${(r.detail ?? "").slice(0, 40)}`;
-        detail[dk] = (detail[dk] ?? 0) + 1;
+        // Refused by its price band alone, on an upcoming product: judged again once every store's price is known.
+        if (r.held != null && ctx.launch?.upcoming(r.held) && l.inStock && !PLACEHOLDER_CENTS.test(String(l.cents))) {
+          held.push({ key, market: s.market, id: r.held, l, refuse: r.refuse, detail: r.detail });
+          continue;
+        }
+        refuse(r.refuse, r.detail);
         continue;
       }
       // A placeholder price ($999.99, $9,999) is no price: never shown, whoever sells it.
@@ -511,8 +537,44 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
       fresh.get(key)!.add(id);
     }
   }
+  // Upcoming products: the band is judged again against the lower of TCGplayer's pre-order market and the median of the
+  // cheapest in-stock price of 3+ distinct stores (the held listings and the rows already taken), never above 250% of
+  // the market. Under three stores, or a median at or above the market, the refusal stands.
+  const launch = ctx.launch;
+  const heldBy = new Map<number, typeof held>();
+  for (const h of held) heldBy.set(h.id, [...(heldBy.get(h.id) ?? []), h]);
+  for (const [id, hs] of heldBy) {
+    const market = launch!.marketCents(id);
+    const cheapest = new Map<string, number>();
+    const note = (src: string, usd: number) => {
+      if (!(cheapest.get(src)! <= usd)) cheapest.set(src, usd);
+    };
+    for (const o of offers.get(id) ?? []) if (o.inStock) note(o.source, launch!.usd(o.cents, o.market));
+    for (const h of hs) note(h.key, launch!.usd(h.l.cents, h.market));
+    const ref = launchReferenceCents(market, [...cheapest.values()]);
+    for (const h of hs) {
+      const usd = launch!.usd(h.l.cents, h.market);
+      if (market == null || ref == null || ref >= market || usd < ref * 0.4 || usd > market * 2.5) {
+        refuse(h.refuse, h.detail);
+        continue;
+      }
+      taken++;
+      launchTaken++;
+      const tp = ctx.products.get(id);
+      const tl = tp ? ctx.lineOf(tp) : null;
+      if (tl) byLine[tl] = (byLine[tl] ?? 0) + 1;
+      const o: Offer = { source: h.key, market: h.market, currency: CURRENCY[h.market], cents: h.l.cents, inStock: h.l.inStock, url: h.l.url, title: h.l.title, ...(h.l.preorder ? { preorder: true } : {}) };
+      if (!offers.has(id)) offers.set(id, []);
+      const list = offers.get(id)!;
+      const i = list.findIndex((x) => x.source === h.key && x.market === h.market);
+      if (i < 0) list.push(o);
+      else if ((o.inStock && !list[i].inStock) || (o.inStock === list[i].inStock && o.cents < list[i].cents)) list[i] = o;
+      if (!fresh.has(h.key)) fresh.set(h.key, new Set());
+      fresh.get(h.key)!.add(id);
+    }
+  }
   const refusedDetail = Object.fromEntries(Object.entries(detail).sort((a, b) => b[1] - a[1]).slice(0, 40));
-  return { offers, fresh, taken, refused, refusedDetail, takenByLine: byLine, listings, titled, aiTaken, alsoTaken };
+  return { offers, fresh, taken, refused, refusedDetail, takenByLine: byLine, listings, titled, aiTaken, alsoTaken, launchTaken };
 }
 
 /**
