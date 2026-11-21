@@ -34,6 +34,8 @@ import {
   type SniperState,
   type SniperStore,
   type Tuple,
+  telegramText,
+  TELEGRAM_CHANNEL,
 } from "../src/lib/sniper";
 
 const STATE_FILE = path.join(process.cwd(), "data", "state", "sniper.json");
@@ -67,12 +69,33 @@ async function post(hook: string, embeds: DiscordEmbed[]): Promise<boolean> {
   return false;
 }
 
+/** One message to the Telegram channel (TELEGRAM_BOT_TOKEN; the bot is an admin of t.me/tcgdealsrestocks). */
+async function postTelegram(token: string, chat: string, text: string): Promise<boolean> {
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chat, text, disable_web_page_preview: true }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!r.ok) console.log(`sniper: Telegram answered HTTP ${r.status}`);
+    return r.ok;
+  } catch (e) {
+    console.log(`sniper: Telegram ${(e as Error).message}`);
+    return false;
+  }
+}
+
 async function main() {
   // Discord's "Copy Webhook URL" can give discordapp.com or a ptb./canary. host: all are the same API, so normalise to discord.com.
   const hook = process.env.DISCORD_SNIPER_WEBHOOK?.trim().replace(/^https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\//, "https://discord.com/api/webhooks/");
   const dry = process.env.SNIPER_DRY === "1";
-  if (!dry && !hook?.startsWith("https://discord.com/api/webhooks/")) {
-    console.log(hook ? `sniper: DISCORD_SNIPER_WEBHOOK is set but is not a Discord webhook URL (starts ${JSON.stringify(hook.slice(0, 24))}), nothing posted` : "sniper: DISCORD_SNIPER_WEBHOOK not set, nothing posted");
+  const tgToken = process.env.TELEGRAM_BOT_TOKEN?.trim() || null;
+  const tgChat = process.env.TELEGRAM_CHAT_ID?.trim() || TELEGRAM_CHANNEL;
+  const discordOk = !!hook?.startsWith("https://discord.com/api/webhooks/");
+  if (hook && !discordOk) console.log(`sniper: DISCORD_SNIPER_WEBHOOK is set but is not a Discord webhook URL (starts ${JSON.stringify(hook.slice(0, 24))})`);
+  if (!dry && !discordOk && !tgToken) {
+    console.log("sniper: no Discord webhook and no Telegram bot, nothing posted");
     return;
   }
   const catalog = readJson<{ sets: { id: number; line?: string }[]; products: { id: number; slug: string; name: string; setId: number; sealedType?: string | null; image?: string | null; kind: string }[] }>(CATALOG_FILE);
@@ -159,8 +182,13 @@ async function main() {
     embeds.push(embed);
     posted.push({ ...e, cents: v.cents });
   }
-  // one run, one message (one drop): nothing is recorded as posted unless Discord took the message
-  if (!dry && embeds.length && !(await post(hook!, embeds))) posted.length = 0;
+  // one run, one message (one drop) to each channel: nothing is recorded as posted unless one of them took it
+  if (dry && embeds.length) console.log(`[dry] telegram:\n${telegramText(embeds)}\n`);
+  if (!dry && embeds.length) {
+    const sentDiscord = discordOk ? await post(hook!, embeds) : false;
+    const sentTelegram = tgToken ? await postTelegram(tgToken, tgChat, telegramText(embeds)) : false;
+    if (!sentDiscord && !sentTelegram) posted.length = 0;
+  }
   console.log(`sniper: ${posted.length} posted${dry ? " (dry run)" : ""}; not posted: ${JSON.stringify(why)}`);
   if (dry) return;
   fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });

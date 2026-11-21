@@ -1354,3 +1354,12 @@ only fall, never rise above the market; one or two cheap shops cannot move it; t
 refuses more at the top, not less. Store vetting (the too-cheap median) still judges against TCGplayer's market. The import logs
 how many rows the launch reference kept. Read after the next import: store rows on the Legacy Vault Bundle (baseline 1) and
 Pre-Rift Kit (baseline 1), then their buy clicks.
+
+## 2026-11-21: The Sealed Sniper posts to Telegram too
+
+The owner asked for a Telegram channel next to the Discord hub (2026-11-21). It is t.me/tcgdealsrestocks. Its bot,
+@tcgdealsrestocks_bot, is an admin there, and its key is the `TELEGRAM_BOT_TOKEN` secret, set by the owner's script. Each run
+sends the same drop to both places, as ONE message each. On Telegram that is plain text from `telegramText`: Discord's
+markup is removed, "checked" becomes an `HH:MM UTC` time, links are tagged `utm_source=telegram` with the drop's `utm_content`,
+and the message stays under 4,096 characters. The cap is the same as Discord's (two drops a day from the sniper). A drop counts
+as posted when either channel took it. Without the secret, the Telegram step is a no-op.

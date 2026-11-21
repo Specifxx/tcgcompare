@@ -14,6 +14,7 @@ import {
   rankEvents,
   recordPosted,
   restockEvents,
+  telegramText,
   type SniperProduct,
   type SniperStore,
   type Tuple,
@@ -136,4 +137,20 @@ test("one run is one drop: one message with every post, each link tagged with th
   assert.ok(MAX_POSTS <= 10, "Discord takes at most 10 embeds in one message");
   const src = fs.readFileSync("scripts/sniper.ts", "utf8");
   assert.equal((src.match(/await post\(/g) ?? []).length, 1, "the script posts once a run");
+});
+
+test("Telegram gets the same drop as one plain message: no Discord markup, links tagged telegram, under 4,096 characters", () => {
+  const r = { kind: "restock" as const, product: box, store: au, cents: 15000, ref: "a" };
+  const em = embedFor(r, 14999, NOW, "https://tcgprices.app", "sniper-2026112021");
+  const t = telegramText([em, em]);
+  assert.match(t, /^Sealed Sniper drop: 2 deals/);
+  assert.doesNotMatch(t, /\*\*|<t:|\]\(/);
+  assert.match(t, /at 09:47 UTC/);
+  assert.match(t, /utm_source=telegram&.*utm_content=sniper-2026112021/);
+  assert.doesNotMatch(t, /utm_source=discord/);
+  assert.ok(telegramText(Array.from({ length: 10 }, () => ({ ...em, description: em.description + "x".repeat(900) }))).length <= 4096);
+  const src = fs.readFileSync("scripts/sniper.ts", "utf8");
+  assert.equal((src.match(/await postTelegram\(/g) ?? []).length, 1, "one Telegram message a run");
+  const wf = fs.readFileSync(".github/workflows/refresh-prices.yml", "utf8");
+  assert.match(wf, /TELEGRAM_BOT_TOKEN: \$\{\{ secrets\.TELEGRAM_BOT_TOKEN \}\}/);
 });
