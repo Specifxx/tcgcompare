@@ -21,7 +21,7 @@ import { focusCatalog, marketCents } from "@/lib/import/focus";
 import { loadSisterOffers, MAX_AGE_H as SISTER_MAX_AGE_H } from "@/lib/import/sisters";
 import { carryDownSisters, groupsToKeep, heldForDownSisters, updateCulled, type CulledMap, type SisterMemo } from "@/lib/import/continuity";
 import { OFFER_FLOOR, vetStores, type Refusal } from "@/lib/import/vet";
-import { addCrawlOffers, carryCrawl, crawlStoreKeys, storeIdentity, takeCrawl, type CrawlRun, type CrawlStore } from "@/lib/import/crawl";
+import { addCrawlOffers, carryCrawl, crawlStoreKeys, storeIdentity, takeCrawl, type CrawlRun, type CrawlStore, type PickContext } from "@/lib/import/crawl";
 import type { CrawlMeta } from "@/lib/site-types";
 import { sisterHostsByLine } from "./crawl-probe";
 import { buildIndex, type MatchIndex, handleOf, isForeign, isPreorder, isUnfitListing, looksSealed, matchCard, matchSealed, printingOf } from "@/lib/import/match";
@@ -166,6 +166,13 @@ async function main() {
         if (ref == null || ref <= 0) return false;
         const usd = cents / (fx[CURRENCY[market]] ?? 1);
         return usd >= ref * 0.4 && usd <= ref * 2.5;
+      },
+      // An upcoming set's title or AI pick refused only by that band is judged again against the stores' own median
+      // (lib/import/crawl.ts takeCrawl), as the sister rows are below (launchReferenceCents).
+      launch: {
+        upcoming: (id) => byId.has(id) && upcomingIds.has(byId.get(id)!.setId),
+        marketCents: (id) => (byId.has(id) ? referenceCents(tcg[id]) : null),
+        usd: (cents, market) => cents / (fx[CURRENCY[market]] ?? 1),
       },
     });
     sisterStores = res.stores;
@@ -526,6 +533,7 @@ function mergeOwnCrawl(a: {
   crawlOffers: WeakSet<Offer>;
   inBand: (id: number, cents: number, market: Market) => boolean;
   inBandWide: (id: number, cents: number, market: Market) => boolean;
+  launch?: PickContext["launch"];
 }): CrawlMeta {
   const { res, products, sets, prevMeta, now } = a;
   const entries = readJson<CrawlStore[]>(path.join(process.cwd(), "data", "crawl", "stores.json"), []);
@@ -573,7 +581,7 @@ function mergeOwnCrawl(a: {
     const hosts = hostsByLine.get(line);
     return !!from && !!hosts && !hosts.has(host) && lines.some((x) => from.has(x));
   };
-  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf, inBand: a.inBand, ai, inBandWide: a.inBandWide, alsoTake }, keyOf) : { offers: new Map<number, Offer[]>(), fresh: new Map<string, Set<number>>(), taken: 0, refused: {}, listings: 0 };
+  const got = run ? takeCrawl(run, { products: all, lineOf, indexOf, inBand: a.inBand, ai, inBandWide: a.inBandWide, alsoTake, launch: a.launch }, keyOf) : { offers: new Map<number, Offer[]>(), fresh: new Map<string, Set<number>>(), taken: 0, refused: {}, listings: 0 };
   const readOk = new Set((run?.stores ?? []).filter((s) => s.ok).map((s) => storeIdentity(s.base, s.market)));
   const seen: Record<string, string> = { ...(prevMeta?.crawl?.seen ?? {}) };
   for (const id of readOk) seen[id] = run!.at;
@@ -629,6 +637,7 @@ function mergeOwnCrawl(a: {
     titled: got.titled ?? 0,
     ...(got.aiTaken ? { aiTaken: got.aiTaken } : {}),
     ...(got.alsoTaken ? { alsoTaken: got.alsoTaken } : {}),
+    ...(got.launchTaken ? { launchTaken: got.launchTaken } : {}),
     refused: got.refused,
     ...(got.refusedDetail ? { refusedDetail: got.refusedDetail } : {}),
     ...(got.takenByLine ? { takenByLine: got.takenByLine } : {}),

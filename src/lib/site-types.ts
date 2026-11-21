@@ -463,6 +463,8 @@ export interface CrawlMeta {
   aiTaken?: number;
   /** Of `taken`, listings of a game read in another game's collection (GameLine.alsoIn). */
   alsoTaken?: number;
+  /** Of `taken`, title or AI picks of an upcoming product kept by the stores' launch reference (lib/import/crawl.ts takeCrawl). */
+  launchTaken?: number;
   taken: number;
   /** Listings refused, by pickId's reason. */
   refused: Record<string, number>;
