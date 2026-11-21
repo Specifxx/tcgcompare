@@ -30,7 +30,8 @@ import { GameRows } from "@/components/GameRows";
 import { GameMarquee } from "@/components/GameMarquee";
 import { gameViews } from "@/lib/game-hubs";
 import { homeDescription } from "@/lib/site-copy";
-import { rankBy, rankProducts } from "@/lib/home-demand";
+import { HOME_DEMAND, rankBy, rankProducts } from "@/lib/home-demand";
+import { heroGames } from "@/lib/hero-games";
 
 // The homepage leads with "<game> Booster Box Prices" (sealed only since 2026-11-06) and the number of stores compared.
 export function generateMetadata(): Metadata {
@@ -112,10 +113,11 @@ export default function Home() {
   ];
 
   // The hero's ways in: the six pages most visitors want next. Never products.
-  // On this site a visitor's first question is "which game": the five biggest, then all of them.
+  // On this site a visitor's first question is "which game": the five biggest, then all of them. A game hub visitors open this week
+  // (30+ views in 7 days, lib/hero-games.ts) moves ahead of the fixed order: links only, never a product.
   const games = gameViews();
   const ways: Way[] = games.length
-    ? [...games.slice(0, 5).map((v): Way => ({ href: `/games/${v.line.slug}`, label: v.line.short, icon: "box", color: v.line.color, logo: v.line.logo })), { href: "/games", label: "All games", icon: "sets" }]
+    ? [...heroGames(games, HOME_DEMAND).map((v): Way => ({ href: `/games/${v.line.slug}`, label: v.line.short, icon: "box", color: v.line.color, logo: v.line.logo })), { href: "/games", label: "All games", icon: "sets" }]
     : [
         ...TYPE_WAYS.flatMap(([slug, icon]): Way[] => {
           const h = hubs.find((x) => x.slug === slug);

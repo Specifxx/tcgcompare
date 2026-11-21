@@ -1321,3 +1321,12 @@ both games, so every `pickId` check still decides (photo and id conflicts, produ
 applies only at a store BandaiCompare does not list, the same rule as the gap crawl, and a sister's own row still wins
 (`addCrawlOffers`). No title placement, no extra request: the collection was already read. `meta.json` `crawl.alsoTaken`
 counts it. Read after the next import: `takenByLine.fw` (baseline 19) and the "other-game: fw" refusals (baseline 88).
+
+## 2026-11-21: the hero's five game links follow this week's hub views (merch M12)
+
+The hero linked the first five games of `LINES` (Magic, Pokémon, One Piece, Yu-Gi-Oh!, Riftbound). In the week to 20 Nov,
+`/games/star-wars-unlimited` drew 106 views (all in 7 days) while those five hubs drew 0-4 each, so the most-opened game hub was
+not one tap from the home page. `lib/hero-games.ts` now moves a game whose hub has 30+ views in 7 days (`HUB_FLOOR`, so one stray
+visit cannot reshuffle the hero) ahead of the fixed order, most viewed first; the rest keep `LINES` order. Still words and links only,
+never a product; the home-rank off switch (`NEXT_PUBLIC_HOME_RANK=off`) restores the fixed five. Read 28 Nov: Star Wars hub views
+and buy clicks per home visitor against 14-20 Nov.
