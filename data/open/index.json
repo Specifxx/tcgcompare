@@ -796,7 +796,7 @@
   {
    "d": "2026-11-21",
    "all": {
-    "n": 3161,
+    "n": 3156,
     "median": 4997,
     "level": 100
    },
@@ -827,18 +827,18 @@
      "level": 100
     },
     "digimon-card-game": {
-     "n": 67,
-     "median": 1495,
+     "n": 64,
+     "median": 1442,
      "level": 100
     },
     "disney-lorcana": {
-     "n": 109,
-     "median": 2500,
+     "n": 110,
+     "median": 2450,
      "level": 100
     },
     "dragon-ball-super-fusion-world": {
      "n": 29,
-     "median": 4499,
+     "median": 4500,
      "level": 100
     },
     "dragon-ball-super-masters": {
@@ -882,8 +882,8 @@
      "level": 100
     },
     "magic-the-gathering": {
-     "n": 1080,
-     "median": 6197,
+     "n": 1079,
+     "median": 6195,
      "level": 100
     },
     "one-piece": {
@@ -907,8 +907,8 @@
      "level": 100
     },
     "riftbound": {
-     "n": 31,
-     "median": 3727,
+     "n": 30,
+     "median": 3468,
      "level": 100
     },
     "shadowverse-evolve": {
@@ -927,8 +927,8 @@
      "level": 95.59
     },
     "union-arena": {
-     "n": 49,
-     "median": 4999,
+     "n": 48,
+     "median": 3100,
      "level": 100
     },
     "universus": {
