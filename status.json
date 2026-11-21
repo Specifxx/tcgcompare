@@ -1,0 +1,73 @@
+{
+ "v": 1,
+ "site": "tcgprices.app",
+ "at": "2026-11-21T19:45:38.497Z",
+ "overall": "warn",
+ "checks": [
+  {
+   "name": "Live site",
+   "status": "warn",
+   "detail": "SITE_URL repository variable not set — live checks skipped"
+  },
+  {
+   "name": "The sealed hub",
+   "status": "warn",
+   "detail": "SITE_URL repository variable not set — live checks skipped"
+  },
+  {
+   "name": "Retired card URLs redirect",
+   "status": "warn",
+   "detail": "SITE_URL repository variable not set — live checks skipped"
+  },
+  {
+   "name": "Daily price import",
+   "status": "ok",
+   "detail": "1.7h old"
+  },
+  {
+   "name": "Restock tracker",
+   "status": "ok",
+   "detail": "800 restocks kept, 1.7h old"
+  },
+  {
+   "name": "Sealed Sniper",
+   "status": "ok",
+   "detail": "7 posted of 15 new candidates, 1.7h ago"
+  },
+  {
+   "name": "Store imports",
+   "status": "ok",
+   "detail": "1355 stores"
+  },
+  {
+   "name": "No eBay prices",
+   "status": "ok",
+   "detail": "no eBay price in the published data"
+  },
+  {
+   "name": "Own store crawl",
+   "status": "ok",
+   "detail": "1001 of 1019 stores read, 7055/12000 requests, 10966 of 214071 listings taken, 10824 offers, 167 carried, stopped {\"currency-unknown\":9,\"currency-mismatch\":5,\"robots-unreachable\":1,\"blocked\":3}, 1.7h old"
+  },
+  {
+   "name": "Search Console weekly",
+   "status": "ok",
+   "detail": "last week recorded 2026-11-17, 145 impressions in 28 days"
+  },
+  {
+   "name": "Index gate",
+   "status": "ok",
+   "detail": "982 of 4526 sealed product pages qualify for the index and sitemap"
+  },
+  {
+   "name": "Family feed",
+   "status": "ok",
+   "detail": "12 items, 1.7h old; 9 sister feeds (rift, op, dex, mtg, gundam, lorcana, ygo, cyberpunk, bandai)"
+  },
+  {
+   "name": "Amazon ASIN finder",
+   "status": "ok",
+   "detail": "AU: off, 2h ago; CA: off, 2h ago; EU: off, 2h ago; UK: off, 2h ago; US: off, 2h ago"
+  }
+ ]
+}
