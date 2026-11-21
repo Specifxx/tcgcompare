@@ -1338,3 +1338,19 @@ The Black Friday and Cyber Monday pages carry one sign-up directly under the rea
 placement `black-friday`, email only because the Discord box sits lower on the page) on the sister-alert sites, a free-account
 prompt on the account sites. The weekly email has its own Black Friday (27 Nov) and Cyber Monday (30 Nov) editions on RiftCompare's
 service (TCGEmpire DECISIONS, same day), so a sign-up before 26 Nov gets the Black Friday one. Inline, never a pop-up; real drops only.
+
+## 2026-11-21: an upcoming product's price band uses the stores' median when TCGplayer's pre-order market is higher
+
+Every sister and crawled row must sit at 50% to 4x of TCGplayer's market (`OFFER_FLOOR`, `storePriceTrusted`). Before release
+that "market" is a few early pre-order sales, not a price: Riftbound's Legacy Vault Bundle (29 Jan) read US$94.65 on the 20 Nov
+data while Rift Compare's ten in-stock shops in six markets asked US$31-50, so 9 of the 10 were dropped and the page showed one
+store against Rift Compare's ten (the Legacy Pre-Rift Kit lost 2 of 3 the same way). On the same data the floor dropped 11 of 39
+in-stock Riftbound rows of upcoming products and 24 of 1,126 of released ones (those are real mismatches: a single Champion Deck
+filed under its display, a Proving Grounds box at a pack's price), so the floor stays as it is for released sets.
+
+For a product of an upcoming set only, the band is now judged against the lower of TCGplayer's market and the median of the
+cheapest in-stock USD price of at least three distinct, unrefused stores (`launchReferenceCents`, `lib/import/sanity.ts`). It can
+only fall, never rise above the market; one or two cheap shops cannot move it; the 4x top is then 4x the lower reference, so it
+refuses more at the top, not less. Store vetting (the too-cheap median) still judges against TCGplayer's market. The import logs
+how many rows the launch reference kept. Read after the next import: store rows on the Legacy Vault Bundle (baseline 1) and
+Pre-Rift Kit (baseline 1), then their buy clicks.

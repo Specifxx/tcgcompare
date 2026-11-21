@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { storePriceTrusted, ebayReferenceUsd, ebayTrusted, tcgplayerOfferCents } from "@/lib/import/sanity";
+import { storePriceTrusted, ebayReferenceUsd, ebayTrusted, tcgplayerOfferCents, launchReferenceCents } from "@/lib/import/sanity";
 
 test("a TCGplayer low under half the market shows the market price", () => {
   // Hyperia City booster box, 2026-10-27: low $1.00, market $150.67.
@@ -32,4 +32,23 @@ test("a cheap product's store price far above it is another product (a pack at t
   assert.equal(storePriceTrusted(13000, 3000, 0.5), false);
   assert.equal(storePriceTrusted(1000, 3000, 0.5), false);
   assert.equal(storePriceTrusted(99999, null, 0.5), true);
+});
+
+test("an upcoming product is judged against the stores' median when TCGplayer's pre-order market is above it", () => {
+  // Riftbound Legacy Vault Bundle, 2026-11-20 data: TCGplayer market US$94.65; Rift Compare's in-stock shops in USD.
+  const shops = [4999, 4587, 4396, 4396, 3145, 4190, 4543, 4543, 4333, 4657];
+  const ref = launchReferenceCents(9465, shops);
+  assert.equal(ref, 4469.5);
+  // Against the market every shop but one fell under the 50% floor; against the median all ten stand.
+  assert.equal(shops.filter((u) => storePriceTrusted(u, 9465, 0.5)).length, 1);
+  assert.equal(shops.filter((u) => storePriceTrusted(u, ref, 0.5)).length, 10);
+  // A box priced like a pack is still another product.
+  assert.equal(storePriceTrusted(1500, ref, 0.5), false);
+});
+
+test("the launch reference never rises above TCGplayer's market and needs three stores", () => {
+  assert.equal(launchReferenceCents(5000, [9000, 9500, 9900]), 5000);
+  assert.equal(launchReferenceCents(9465, [3000, 3100]), 9465); // two cheap shops cannot move it
+  assert.equal(launchReferenceCents(null, [3000, 3100, 3200]), null);
+  assert.equal(launchReferenceCents(9465, [3000, 3100, 3200, 3300]), 3150);
 });

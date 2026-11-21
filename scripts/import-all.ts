@@ -35,7 +35,7 @@ import {
   useSetEditions,
   type EbayState,
 } from "@/lib/import/ebay";
-import { storePriceTrusted, tcgplayerOfferCents } from "@/lib/import/sanity";
+import { launchReferenceCents, storePriceTrusted, tcgplayerOfferCents } from "@/lib/import/sanity";
 import { appendPoint, dayNumber, pctChange, readSetHistory, writeSetHistory } from "@/lib/import/history";
 import { readSetLows, recordLows, storeLowsByMarket, writeSetLows } from "@/lib/import/store-lows";
 import { fetchJson } from "@/lib/import/http";
@@ -180,15 +180,29 @@ async function main() {
     const out = new Set(refused.map((r) => r.key));
     for (const r of refused) console.log(`[vet] ${r.key} (${r.host}) refused: ${r.why}`);
     let dropped = 0;
+    let launchKept = 0;
     for (const [id, list] of res.offers) {
       if (!byId.has(id)) continue;
-      const ref = referenceCents(tcg[id]);
+      const market = referenceCents(tcg[id]);
+      // An upcoming set's product is judged against the stores' own median when it is lower (lib/import/sanity.ts
+      // launchReferenceCents): TCGplayer's pre-order "market" is a few early sales, not a price.
+      let ref = market;
+      if (upcomingIds.has(byId.get(id)!.setId)) {
+        const cheapest = new Map<string, number>();
+        for (const o of list) {
+          if (out.has(o.source) || !o.inStock) continue;
+          const usd = o.cents / (fx[o.currency] ?? 1);
+          if (!(cheapest.get(o.source)! <= usd)) cheapest.set(o.source, usd);
+        }
+        ref = launchReferenceCents(market, [...cheapest.values()]);
+      }
       for (const o of list) {
         if (out.has(o.source)) continue;
         // The same sanity band as a store pass: under half or over four times TCGplayer's market price is
         // likelier another product than a deal.
         const usd = o.cents / (fx[o.currency] ?? 1);
         if (!storePriceTrusted(usd, ref, OFFER_FLOOR)) { dropped++; continue; }
+        if (ref !== market && !storePriceTrusted(usd, market, OFFER_FLOOR)) launchKept++;
         addOffer(id, o);
         if (crawlMeta && crawlOffers.has(o)) crawlMeta.offers++;
         const st = (storeStatus[o.source] ??= { ok: true, products: 0, matched: 0, at: now.toISOString() });
@@ -196,7 +210,7 @@ async function main() {
         st.matched++;
       }
     }
-    console.log(`[sister] ${[...storeOffers.values()].reduce((a, l) => a + l.length, 0)} offers kept on ${storeOffers.size} products, ${dropped} outside the price band`);
+    console.log(`[sister] ${[...storeOffers.values()].reduce((a, l) => a + l.length, 0)} offers kept on ${storeOffers.size} products, ${dropped} outside the price band, ${launchKept} kept by the launch reference`);
   } else if (process.env.IMPORT_SKIP_STORES !== "1") {
     // Stores in parallel (each one still paginates politely, one page at a
     // time): ~200 stores one after another would not fit the Actions timeout.
