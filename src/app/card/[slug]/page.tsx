@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DiscordCta } from "@/components/DiscordCta";
+import { ExtensionCta } from "@/components/ExtensionCta";
 import Link from "@/components/Link";
 import { Fragment } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -196,6 +197,7 @@ export default function CardPage({ params }: { params: { slug: string } }) {
               className="mt-4"
             />
             <DiscordCta href={SITE.discordInvite} className="mt-4" />
+            <ExtensionCta className="mt-4" from="card" />
           </section>
           <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CARD} />
           <section className="card-surface p-4">

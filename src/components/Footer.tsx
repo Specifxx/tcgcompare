@@ -30,6 +30,7 @@ export function footerColumns(history: boolean): { title: string; links: FooterL
         { href: "/methodology", label: "How prices work" },
         { href: "/contact", label: "Contact" },
         { href: "/how-we-pick-stores", label: "How we pick stores" },
+        { href: "/extension", label: "Chrome extension" },
         { href: "/privacy", label: "Privacy" },
         { href: "/terms", label: "Terms" },
       ],
