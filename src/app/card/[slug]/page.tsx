@@ -29,6 +29,7 @@ import { InlineAds } from "@/components/InlineAds";
 import { adSearch, cardAds } from "@/lib/card-ads";
 import { amazonSearchUrls, goHref } from "@/lib/affiliate";
 import { TcgplayerCyberBanner } from "@/components/TcgplayerCyberBanner";
+import { cyberBannerState } from "@/lib/tcgplayer-cyber";
 import { amazonCarries, amazonCells } from "@/lib/amazon-live";
 import { abs } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -199,7 +200,8 @@ export default function CardPage({ params }: { params: { slug: string } }) {
               className="mt-4"
             />
             <DiscordCta href={SITE.discordInvite} className="mt-4" />
-            <ExtensionCta className="mt-4" from="card" />
+            {/* Page budget rule 4 (one promo per page; Noor, 22 Nov): the extension card waits until the Cyber banner has gone. */}
+            {cyberBannerState(Date.now()) === "off" && <ExtensionCta className="mt-4" from="card" />}
           </section>
           <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CARD} />
           <section className="card-surface p-4">
