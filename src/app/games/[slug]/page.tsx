@@ -14,6 +14,9 @@ import { TileGrid } from "@/components/ProductTile";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd } from "@/components/JsonLd";
 
+/** RiftCompare's giveaway closes 14 Dec 2026, 23:59 Sydney (its lib/giveaway.ts). */
+const RB_GIVEAWAY_CLOSES = "2026-12-14T12:59:59Z";
+
 export const dynamic = "force-dynamic"; // one CDN copy per URL (next.config.js CDN_PAGES), never ISR
 
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
@@ -50,6 +53,15 @@ export default function GamePage({ params }: { params: { slug: string } }) {
           {v.newest && <p className="mt-3"><Link className="btn-primary" href={`/sets/${v.newest.slug}`}>Newest set: {v.newest.name} →</Link></p>}
         </header>
       </div>
+
+      {/* RiftCompare's Riftbound giveaway, on the Riftbound page only and only until it closes (owner, 2026-11-22: "we need
+          more people to sign up to our giveaway"). One natural contextual link to the Riftbound sister, per the network rules. */}
+      {line.id === "rb" && Date.now() < Date.parse(RB_GIVEAWAY_CLOSES) && (
+        <p className="-mt-4 rounded-xl border border-line p-3 text-sm">
+          <b>Free Riftbound giveaway:</b> win a Miss Fortune, Captain alt art (worldwide, closes 14 Dec).{" "}
+          <a className="font-semibold text-brand underline-offset-2 hover:underline" href="https://riftcompare.com/giveaway?utm_source=tcgprices&utm_medium=referral&utm_campaign=giveaway">Enter free on RiftCompare →</a>
+        </p>
+      )}
 
       <nav aria-label={`${line.name} product types`} className="-mt-4 flex flex-wrap gap-2">
         {gameTypeHubs(line).filter((h) => h.items.length >= GAME_TYPE_MIN).map((h) => (
