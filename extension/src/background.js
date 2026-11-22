@@ -44,7 +44,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
       if (msg?.type === "lookup") {
         const feed = await loadFeed();
         const item = feed.items[String(msg.id)] ?? null;
-        reply({ ok: true, item, line: item?.g ? feed.lines[item.g] ?? null : null, currency: feed.currency, home: feed.home, generatedAt: feed.generatedAt });
+        const buy = item?.b ? Object.values(item.b).map((x) => x[0]) : [];
+        const stores = Object.fromEntries(buy.map((k) => [k, feed.stores?.[k] ?? k]));
+        reply({ ok: true, item, line: item?.g ? feed.lines[item.g] ?? null : null, stores, currency: feed.currency, home: feed.home, generatedAt: feed.generatedAt });
       } else if (msg?.type === "feed") {
         reply({ ok: true, feed: await loadFeed(!!msg.force) });
       } else reply({ ok: false });

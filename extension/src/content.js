@@ -93,19 +93,33 @@
     }
     if (item.s > 0) rows.append(el("div", { class: "row muted" }, el("span", { text: `In stock at ${item.s} ${item.s === 1 ? "store" : "stores"} worldwide` })));
 
-    const cta = el("a", { class: "cta", href: pageUrl, target: "_blank", rel: "noopener" });
-    cta.textContent = "Compare every store →";
-
-    const extra = [];
-    if (line?.sister?.search) {
+    const btns = [];
+    const buy = item.b?.[market];
+    if (buy && store != null) {
+      // The cheapest store's own listing, through our /go link (logs the click, adds the store's affiliate tag if it has one).
+      const a = el("a", { class: "cta", href: goUrl(res.home, buy[1], buy[0], market, id, "panel-buy"), target: "_blank", rel: "noopener sponsored" });
+      a.textContent = `Buy at ${res.stores?.[buy[0]] ?? "the store"} · ${money(store, cur)}`;
+      btns.push(a);
+    }
+    const cmp = el("a", { class: buy ? "cta2" : "cta", href: pageUrl, target: "_blank", rel: "noopener" });
+    cmp.textContent = item.s > 1 ? `Compare all ${item.s} stores →` : "Compare stores on " + CONFIG.short + " →";
+    btns.push(cmp);
+    if (line?.sister) {
       const name = item.n.replace(/\s+/g, " ").slice(0, 100);
-      const a = el("a", { class: "sis", href: tagged(line.sister.search.replace("{q}", encodeURIComponent(name)), "panel-sister"), target: "_blank", rel: "noopener" });
-      a.textContent = `Also search ${line.sister.name}`;
-      extra.push(a);
+      const href = line.sister.search ? line.sister.search.replace("{q}", encodeURIComponent(name)) : line.sister.url;
+      const a = el("a", { class: "cta2", href: tagged(href, "panel-sister"), target: "_blank", rel: "noopener" });
+      a.textContent = `See it on ${line.sister.name} →`;
+      btns.push(a);
+    }
+    const eb = ebaySearch(market, `${line?.ebay ?? ""} ${item.n}`.trim());
+    if (eb) {
+      const a = el("a", { class: "sis", href: goUrl(res.home, eb, "ebay", market, id, "panel-ebay"), target: "_blank", rel: "noopener sponsored" });
+      a.textContent = "Check eBay listings (Ad)";
+      btns.push(a);
     }
 
-    const foot = el("div", { class: "foot", text: "Store prices from our last daily update. Our site may earn a commission on some store links." });
-    root.append(el("div", { class: "card", role: "complementary", "aria-label": `${CONFIG.short} price check` }, head, rows, cta, ...extra, foot));
+    const foot = el("div", { class: "foot", text: "Prices from our last daily update. Buy and eBay buttons are affiliate links: we may earn a commission, at no cost to you." });
+    root.append(el("div", { class: "card", role: "complementary", "aria-label": `${CONFIG.short} price check` }, head, rows, ...btns, foot));
     document.documentElement.append(host);
   }
 
@@ -126,6 +140,8 @@
     .save{display:inline-block;margin:4px 0;padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-weight:600;font-size:12px}
     .cta{display:block;margin-top:10px;text-align:center;background:${CONFIG.brand};color:#fff;text-decoration:none;font-weight:600;padding:9px 10px;border-radius:10px}
     .cta:hover{background:${CONFIG.brandDark}}
+    .cta2{display:block;margin-top:6px;text-align:center;background:#fff;color:${CONFIG.brand};border:1.5px solid ${CONFIG.brand};text-decoration:none;font-weight:600;padding:7px 10px;border-radius:10px}
+    .cta2:hover{background:#eef2ff}
     .sis{display:block;margin-top:6px;text-align:center;color:${CONFIG.brand};text-decoration:none;font-size:12px}
     .sis:hover{text-decoration:underline}
     .foot{margin-top:8px;font-size:10.5px;color:#94a3b8}

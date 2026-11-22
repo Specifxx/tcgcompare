@@ -25,7 +25,8 @@ export function manifestFor(site) {
     permissions: ["storage", "contextMenus", "activeTab"],
     host_permissions: [hostOf(site.feed)],
     content_scripts: [{ matches: site.matches, js: ["config.js", "shared.js", "content.js"], run_at: "document_idle" }],
-    web_accessible_resources: [{ resources: ["icons/32.png"], matches: site.matches }],
+    // Chrome only accepts origin patterns ending in "/*" here (a /product/* path failed Chrome Web Store install testing).
+    web_accessible_resources: [{ resources: ["icons/32.png"], matches: [...new Set(site.matches.map(hostOf))] }],
   };
 }
 

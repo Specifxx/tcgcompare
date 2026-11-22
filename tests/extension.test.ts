@@ -36,11 +36,15 @@ test("the extension asks for the narrowest permissions and never touches another
   assert.deepEqual(m.host_permissions, ["https://tcgprices.app/*"]);
   assert.ok(site.matches.every((u: string) => /^https:\/\/(www\.)?tcgplayer\.com\/product\/\*$/.test(u)));
   assert.ok(site.description.length <= 132);
+  // Chrome refuses a web_accessible_resources pattern with a path (it failed the store's install test, 2026-11-22).
+  for (const w of m.web_accessible_resources) for (const u of w.matches) assert.match(u, /^https:\/\/[^/]+\/\*$/);
   const content = fs.readFileSync("extension/src/content.js", "utf8");
   // No affiliate injection: it never rewrites or reads the page's links, and never builds an eBay/Amazon/TCGplayer link.
   assert.doesNotMatch(content, /querySelectorAll\(["']a/);
   assert.doesNotMatch(content, /\.href\s*=/);
   assert.doesNotMatch(content, /campid|ascsubtag|partner\.tcgplayer|tag=/);
+  // Its own buy buttons go through our /go route (affiliate tag added there, click counted), never straight out.
+  assert.match(fs.readFileSync("extension/src/shared.js", "utf8"), /\$\{home\}\/go\?/);
   // No remote code (Chrome Web Store policy): no eval, no injected script tags.
   for (const f of fs.readdirSync("extension/src")) {
     const s = fs.readFileSync(`extension/src/${f}`, "utf8");

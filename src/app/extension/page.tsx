@@ -17,7 +17,7 @@ export default function ExtensionPage() {
     <StaticPage title="The TCG Prices Chrome extension">
       <p>
         Open a sealed product on TCGplayer and a small panel shows the cheapest in-stock price we track at independent stores in your market, beside TCGplayer&apos;s
-        market price, with one link to compare every store on {SITE.name}. It covers booster boxes, Elite Trainer Boxes, bundles, cases and decks for every game we list.
+        market price, with a button to buy at that store, one to compare every store on {SITE.name}, and one to the game&apos;s own price site (DexCompare, Rift Compare, MTG Compare and the rest). It covers booster boxes, Elite Trainer Boxes, bundles, cases and decks for every game we list.
       </p>
       {install ? (
         <p>
@@ -45,9 +45,9 @@ export default function ExtensionPage() {
       </p>
       <h2>How it earns</h2>
       <p>
-        The extension changes no links on TCGplayer or any other site and adds no affiliate code to them. Its links open our own product pages, marked as coming from the
-        extension. Some store, eBay, TCGplayer and Amazon links on our site are affiliate links that may earn us a commission when you buy, at no cost to you; they never
-        change the order of prices.
+        The extension changes no links on TCGplayer or any other site and adds no code to them. Its own &quot;Buy at&quot; and &quot;Check eBay&quot; buttons go
+        through our site, which adds the store&apos;s or eBay&apos;s affiliate tag where one exists: we may earn a commission when you buy, at no cost to you. The
+        buttons are labelled, and commission never changes which price is shown as cheapest.
       </p>
       <h2>Permissions</h2>
       <ul>

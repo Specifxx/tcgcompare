@@ -39,9 +39,11 @@ const panel = `
   <div class="row"><span>TCGplayer market price</span><span>${usd(it.m)}</span></div>
   ${pct >= 3 ? `<div class="save">${pct}% under TCGplayer market</div>` : ""}
   <div class="row muted"><span>In stock at ${it.s} stores worldwide</span></div>
-  <a class="cta">Compare every store →</a>
-  ${sample.line?.sister ? `<a class="sis">Also search ${sample.line.sister.name}</a>` : ""}
-  <div class="foot">Store prices from our last daily update. Our site may earn a commission on some store links.</div>
+  ${sample.store ? `<a class="cta">Buy at ${sample.store} · ${usd(it.p.US)}</a>` : ""}
+  <a class="cta2">Compare all ${it.s} stores →</a>
+  ${sample.line?.sister ? `<a class="cta2">See it on ${sample.line.sister.name} →</a>` : ""}
+  <a class="sis">Check eBay listings (Ad)</a>
+  <div class="foot">Prices from our last daily update. Buy and eBay buttons are affiliate links: we may earn a commission, at no cost to you.</div>
 </div>`;
 const css = `
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -51,6 +53,7 @@ const css = `
 .price{font-size:24px;font-weight:700;color:${site.brand}}.row{display:flex;justify-content:space-between;padding:2px 0}.muted{color:#64748b}
 .save{display:inline-block;margin:4px 0;padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-weight:600;font-size:12px}
 .cta{display:block;margin-top:10px;text-align:center;background:${site.brand};color:#fff;font-weight:600;padding:9px 10px;border-radius:10px}
+.cta2{display:block;margin-top:6px;text-align:center;color:${site.brand};border:1.5px solid ${site.brand};font-weight:600;padding:7px 10px;border-radius:10px}
 .sis{display:block;margin-top:6px;text-align:center;color:${site.brand};font-size:12px}.foot{margin-top:8px;font-size:10.5px;color:#94a3b8}
 .bg{position:relative;overflow:hidden;background:radial-gradient(circle at 20% 10%,#1e2350,#07080d 70%);color:#fff}
 .glow{position:absolute;inset:auto -20% -40% auto;width:900px;height:900px;border-radius:50%;background:radial-gradient(circle,${site.brand}55,transparent 60%)}
@@ -68,7 +71,7 @@ async function shot(file, w, h, body) {
 }
 
 const productFrame = (panelHtml) => `
-<div class="frame" style="width:700px;height:520px;position:relative">
+<div class="frame" style="width:700px;height:600px;position:relative">
   <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">tcgplayer.com/product/${sample.id}/…</span></div>
   <div style="display:flex;gap:24px;padding:28px">
     <div class="ghost" style="width:230px;height:300px"></div>

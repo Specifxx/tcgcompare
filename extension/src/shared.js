@@ -36,3 +36,16 @@ function money(cents, currency) {
     return `${(cents / 100).toFixed(2)} ${currency}`;
   }
 }
+
+/** A buy link through our own /go route: it checks the host, adds the affiliate tag where one exists, and counts the click. */
+function goUrl(home, url, source, market, productId, content) {
+  const q = new URLSearchParams({ u: url, s: source, m: market, from: `ext-${content}` });
+  if (productId) q.set("p", String(productId));
+  return `${home}/go?${q}`;
+}
+
+/** eBay's own search for a product, sorted cheapest first; null in a market with no eBay site we link. */
+function ebaySearch(market, query) {
+  const host = { US: "www.ebay.com", UK: "www.ebay.co.uk", AU: "www.ebay.com.au", CA: "www.ebay.ca" }[market];
+  return host ? `https://${host}/sch/i.html?_nkw=${encodeURIComponent(query.replace(/\s+/g, " ").slice(0, 120))}&_sop=15` : null;
+}
