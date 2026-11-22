@@ -5,6 +5,8 @@ import {
   dropEvents,
   dropId,
   dropMessage,
+  EXTENSION_PROMO_UNTIL,
+  extensionPromo,
   MAX_POSTS,
   eligible,
   embedFor,
@@ -153,4 +155,17 @@ test("Telegram gets the same drop as one plain message: no Discord markup, links
   assert.equal((src.match(/await postTelegram\(/g) ?? []).length, 1, "one Telegram message a run");
   const wf = fs.readFileSync(".github/workflows/refresh-prices.yml", "utf8");
   assert.match(wf, /TELEGRAM_BOT_TOKEN: \$\{\{ secrets\.TELEGRAM_BOT_TOKEN \}\}/);
+});
+
+test("the Chrome extension line rides every drop for 7 days, tagged per channel, then disappears by itself", () => {
+  const r = { kind: "restock" as const, product: box, store: au, cents: 15000, ref: "a" };
+  const em = embedFor(r, 14999, NOW, "https://tcgprices.app", "sniper-2026112221");
+  const during = Date.UTC(2026, 10, 23, 9, 47);
+  assert.match(dropMessage([em], during).content, /Chrome extension.*<https:\/\/chromewebstore\.google\.com\/\S+utm_source=discord\S+>/s);
+  assert.match(telegramText([em], during), /Chrome extension.*utm_source=telegram&utm_medium=social&utm_campaign=extension/s);
+  assert.doesNotMatch(telegramText([em], during), /utm_source=discord/);
+  assert.equal(extensionPromo("discord", EXTENSION_PROMO_UNTIL), null);
+  assert.doesNotMatch(dropMessage([em], EXTENSION_PROMO_UNTIL).content, /Chrome/);
+  assert.doesNotMatch(telegramText([em], EXTENSION_PROMO_UNTIL), /Chrome/);
+  assert.ok(EXTENSION_PROMO_UNTIL - Date.UTC(2026, 10, 22, 11, 46) <= 7 * 86400e3 + 3600e3);
 });
