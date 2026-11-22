@@ -22,7 +22,7 @@ export function manifestFor(site) {
     icons: { 16: "icons/16.png", 32: "icons/32.png", 48: "icons/48.png", 128: "icons/128.png" },
     action: { default_popup: "popup.html", default_title: `${site.short} price check`, default_icon: { 16: "icons/16.png", 32: "icons/32.png" } },
     background: { service_worker: "background.js" },
-    permissions: ["storage", "contextMenus", "activeTab"],
+    permissions: ["storage", "contextMenus", "activeTab", "scripting"],
     host_permissions: [hostOf(site.feed)],
     content_scripts: [{ matches: site.matches, js: ["config.js", "shared.js", "content.js"], run_at: "document_idle" }],
     // Chrome only accepts origin patterns ending in "/*" here (a /product/* path failed Chrome Web Store install testing).

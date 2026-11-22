@@ -30,6 +30,13 @@ export interface ExtensionItem {
   b?: Partial<Record<Market, [string, string]>>;
   /** 1 when the set is not out yet (every store price is a pre-order) */
   pre?: 1;
+  /** TCGplayer's sealed type ("Booster Box", "Case", "Elite Trainer Box"…), for telling a box from its case */
+  k?: string;
+  /** the set's name and code ("Destined Rivals", "SV10"), which store titles often carry and our name may not */
+  t?: string;
+  c?: string;
+  /** TCGplayer's barcode for it, when it has one: a store page that shows the same barcode is this product */
+  e?: string;
 }
 
 export interface ExtensionFeed {
@@ -76,6 +83,12 @@ export function cheapestStoreOffers(best: Offer[]): Partial<Record<Market, Offer
   return out;
 }
 
+/** What the popup's page matcher reads besides the name (extension/src/match.js). */
+function matchHints(p: { sealedType: string | null; upc?: string }, set: { name: string; code: string } | null | undefined): Pick<ExtensionItem, "k" | "t" | "c" | "e"> {
+  const code = set?.code && /^[A-Za-z0-9.-]{2,10}$/.test(set.code) && /\d/.test(set.code) ? set.code : undefined;
+  return { ...(p.sealedType ? { k: p.sealedType } : {}), ...(set?.name ? { t: set.name } : {}), ...(code ? { c: code } : {}), ...(p.upc ? { e: p.upc } : {}) };
+}
+
 export function buildExtensionFeed(now = new Date()): ExtensionFeed {
   const items: ExtensionFeed["items"] = {};
   const used = new Set<string>();
@@ -90,7 +103,7 @@ export function buildExtensionFeed(now = new Date()): ExtensionFeed {
     const g = set?.line ?? null;
     if (g) used.add(g);
     const upcoming = !!set?.releasedOn && set.releasedOn > now.toISOString().slice(0, 10);
-    items[p.id] = { n: p.number ? `${p.name} ${p.number}` : p.name, u: `/card/${p.slug}`, g, s: sum.inStockSources, m: ref, p: prices, ...(Object.keys(buy).length ? { b: buy } : {}), ...(upcoming ? { pre: 1 as const } : {}) };
+    items[p.id] = { n: p.number ? `${p.name} ${p.number}` : p.name, u: `/card/${p.slug}`, g, s: sum.inStockSources, m: ref, p: prices, ...(Object.keys(buy).length ? { b: buy } : {}), ...(upcoming ? { pre: 1 as const } : {}), ...matchHints(p, set) };
   }
   const lines: ExtensionFeed["lines"] = {};
   for (const l of SITE.lines ?? []) {
