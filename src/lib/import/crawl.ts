@@ -652,10 +652,28 @@ function namesAnyGame(c: { handle: string; title?: string | null }, lines: reado
   return lines.some((l) => [...(l.crawl?.any ?? []), ...(l.ownCrawl?.any ?? [])].some((w) => text.includes(norm(w))));
 }
 
+// Not a launch shelf of card games (22 Nov probe: about one shelf in seven was one of these): a shelf that says it
+// leaves pre-orders out ("No pre-order", "All products excluding pre-orders", "ohne", "behalve"), another hobby's
+// (Games Workshop, board games, Funko, comics, statues, model kits, LEGO, events), or an old year's ("2024 Preorders").
+const NOT_A_SHELF = /\b(?:no|non|not|excluding|except|without|ohne|behalve|sans)\b/;
+const OTHER_HOBBY =
+  /\b(?:games? workshop|gw|warhammer|40k|sigmar|board ?games?|boardgames?|funkos?|pop vinyls?|comics?|statues?|diecast|lego|model kits?|models?|rpg|miniatures?|d d|books?|toys?|action figures?|figures?|re ment|good smile|starcraft|shatterpoint|x wing|events?|tickets?|plush)\b/;
+const OLD_YEAR = /\b20(?:1\d|2[0-5])\b/;
+// A shelf that names card games outright ranks first; then one that says nothing but "pre-orders" / "new releases";
+// then the rest (a shelf named after one old set, "Destined Rivals Pre-order", ranks last).
+const TCG_SHELF = /\b(?:tcgs?|ccgs?|card games?|trading cards?|trading card games?)\b/;
+const PLAIN_SHELF =
+  /^(?:\s|\b(?:all|the|and|our|current|latest|new|hot|items?|products?|pre ?orders?|preorder|upcoming|releases?|coming|soon|\d)\b)*$/;
+function shelfRank(t: string): number {
+  if (TCG_SHELF.test(t)) return 0;
+  return PLAIN_SHELF.test(t) ? 1 : 2;
+}
+
 /**
  * The store's one pre-order shelf: a collection whose handle or title says pre-order, upcoming, new release or coming
  * soon and names NO game (a "Pokemon Pre-orders" shelf is that game's, chosen or left by the game's own words), never a
- * singles or accessories one, never empty; the largest wins. Null when there is none.
+ * singles or accessories one, never one that leaves pre-orders out, another hobby's or an old year's, never empty. A
+ * card-games shelf wins, then a plain one, then the largest. Null when there is none.
  */
 export function choosePreorderShelf(
   cs: readonly { handle: string; title?: string | null; products_count?: number | null }[],
@@ -663,12 +681,11 @@ export function choosePreorderShelf(
 ): string | null {
   const hits = cs
     .filter((c) => c.products_count !== 0)
-    .filter((c) => {
-      const t = `${norm(c.handle)} ${norm(c.title ?? "")}`;
-      return PREORDER_SHELF.test(t) && !(SINGLES.test(t) && !SEALEDISH.test(t)) && !namesAnyGame(c, lines);
-    })
-    .sort((a, b) => (b.products_count ?? 0) - (a.products_count ?? 0) || a.handle.localeCompare(b.handle));
-  return hits[0]?.handle ?? null;
+    .map((c) => ({ c, h: norm(c.handle), t: `${norm(c.handle)} ${norm(c.title ?? "")}` }))
+    .filter(({ c, t }) => PREORDER_SHELF.test(t) && !(SINGLES.test(t) && !SEALEDISH.test(t)) && !NOT_A_SHELF.test(t) && !OTHER_HOBBY.test(t) && !OLD_YEAR.test(t) && !namesAnyGame(c, lines))
+    .map((x) => ({ ...x, r: x.c.title?.trim() ? Math.min(shelfRank(x.h), shelfRank(norm(x.c.title))) : shelfRank(x.h) }))
+    .sort((a, b) => a.r - b.r || (b.c.products_count ?? 0) - (a.c.products_count ?? 0) || a.c.handle.localeCompare(b.c.handle));
+  return hits[0]?.c.handle ?? null;
 }
 
 /**
