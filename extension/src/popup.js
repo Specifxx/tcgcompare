@@ -45,37 +45,85 @@
     return scored.sort((a, b) => b.s - a.s).slice(0, 25).map((x) => x.row);
   }
 
-  function show(rows, emptyText) {
+  function show(rows, emptyText, title = "") {
     const ul = $("results");
     ul.textContent = "";
+    $("listTitle").textContent = title;
     const market = $("market").value;
     const cur = feed?.currency?.[market] ?? "USD";
-    for (const { it } of rows) {
+    for (const { id, it } of rows) {
       const a = document.createElement("a");
-      a.href = tagged(feed.home + it.u, "popup-search");
+      a.className = "row";
+      a.href = tagged(feed.home + it.u, title ? "popup-deals" : "popup-search");
       a.target = "_blank";
       a.rel = "noopener";
       const n = document.createElement("span");
       n.className = "n";
       n.textContent = it.n;
       const sm = document.createElement("small");
+      const c = it.p[market];
+      const pct = market === "US" && c != null && it.m ? Math.round((1 - c / it.m) * 100) : 0;
       sm.textContent = [feed.lines[it.g]?.name, it.s ? `${it.s} stores in stock` : null, it.pre ? "pre-order" : null].filter(Boolean).join(" · ");
+      if (pct >= 5) {
+        const sv = document.createElement("span");
+        sv.className = "save";
+        sv.textContent = ` · ${pct}% under TCGplayer`;
+        sm.append(sv);
+      }
       n.append(sm);
       const p = document.createElement("span");
-      const c = it.p[market];
       p.className = c != null ? "p" : "p none";
       p.textContent = c != null ? money(c, cur) : `none in ${MARKET_LABEL[market]}`;
       a.append(n, p);
       const li = document.createElement("li");
       li.append(a);
+      const b = it.b?.[market];
+      if (b && c != null) {
+        const buy = document.createElement("a");
+        buy.className = "buy";
+        buy.href = goUrl(feed.home, b[1], b[0], market, id, title ? "popup-deals-buy" : "popup-buy");
+        buy.target = "_blank";
+        buy.rel = "noopener sponsored";
+        buy.textContent = "Buy";
+        buy.title = `Buy at ${feed.stores?.[b[0]] ?? "the store"}`;
+        li.append(buy);
+      }
       ul.append(li);
     }
     if (!rows.length && emptyText) status(emptyText);
   }
 
+  /** With the search box empty: today's best store prices under TCGplayer's market (US), else the most stocked products. */
+  function deals() {
+    if (!index) return;
+    const market = $("market").value;
+    let rows;
+    if (market === "US") {
+      rows = index
+        .filter(({ it }) => it.p.US != null && it.m && it.m >= 2000 && it.s >= 3 && !it.pre && it.p.US < it.m * 0.9 && it.p.US > it.m * 0.4)
+        .sort((a, b) => a.it.p.US / a.it.m - b.it.p.US / b.it.m)
+        .slice(0, 12);
+      show(rows, "", "Today's deals under TCGplayer market");
+    } else {
+      rows = index.filter(({ it }) => it.p[market] != null && !it.pre).sort((a, b) => b.it.s - a.it.s).slice(0, 12);
+      show(rows, "", `Most stocked in ${MARKET_LABEL[market]}`);
+    }
+  }
+
+  for (const s of feed?.sites ?? []) {
+    const a = document.createElement("a");
+    a.href = tagged(s.url, "popup-sites");
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = s.name;
+    a.title = s.game;
+    $("sites").append(a);
+  }
+
   let t = 0;
   const run = () => {
     const q = $("q").value;
+    if (!q.trim()) return deals();
     const rows = search(q);
     show(rows, q.trim() ? `No match for “${q.trim()}”. Try fewer words.` : "");
     if (rows.length) status(`${rows.length} match${rows.length === 1 ? "" : "es"} · tap one to compare every store`);
@@ -103,5 +151,6 @@
     $("q").value = title.trim();
     run();
   });
+  deals();
   $("q").focus();
 })();

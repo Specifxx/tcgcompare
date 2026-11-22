@@ -1402,3 +1402,14 @@ assistant and send people to our sites' buy links. `extension/` is one Manifest 
   extensions with duplicate functionality, and a strike is account-wide. The TCG Prices extension covers every game
   and links each product's sister site; a sister gets its own extension only where it does something the TCG Prices
   one cannot (e.g. singles on Rift or OP Compare), staggered after the first is approved.
+
+## 2026-11-22: The extension asks for the click
+
+Bill (2026-11-22): the first build was too passive, and should link our flagship game sites. v1.1.0: the panel leads with
+"Buy at <cheapest store> · $X", then "Compare all N stores", then "See it on <the game's site>" (DexCompare, Rift Compare,
+MTG Compare…), then "Check eBay listings (Ad)". The popup opens on today's deals (US: in-stock store prices 10-60% under
+TCGplayer's market, 3+ stores) with a Buy button per row, and lists our TCG sites. Every buy and eBay button goes through
+`/go` (host allow-list, affiliate tag where one exists, `from=ext-…` in the click log), never straight to a shop, and is
+disclosed on the panel, the popup and the store listing. Still no link on another site is changed (Chrome policy).
+`/extension.json` grows to ~2.1 MB (~440 KB gzipped) for the cheapest store's URL per market.
+v1.0.0 failed the store's install test: `web_accessible_resources` matches must be `https://host/*`, not a path.
