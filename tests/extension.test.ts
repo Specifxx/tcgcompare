@@ -89,3 +89,8 @@ test("the extension recognises store pages by their words, and refuses a guess",
   assert.equal(m("Black Lotus (233) - 2ED", "UK").single, true);
   assert.equal(m("Order a Booster Box & Folder - Save £10", "UK").sure, null);
 });
+
+test("page budget: the product page's extension card waits for the Cyber banner to end", () => {
+  const src = fs.readFileSync("src/app/card/[slug]/page.tsx", "utf8");
+  assert.match(src, /cyberBannerState\(Date\.now\(\)\) === "off" && <ExtensionCta/);
+});
