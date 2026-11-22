@@ -1441,3 +1441,14 @@ product data, share title and heading (activeTab + scripting, only the tab it wa
 names the product only when sure; otherwise it lists the closest. Result on the same set: 87% right first time, 98% in the
 top 3, wrong claims 2% (most of those are the test labels' own errors, e.g. "Play Booster" labelled as the sleeved one),
 singles 98% left alone. The feed carries each product's sealed type, set name, set code and barcode for it.
+
+## 2026-11-22: The pre-order shelf is a card-games shelf, never another hobby's or one that leaves pre-orders out
+
+The 22 Nov probe (the first with the pre-order shelf, #118) gave 551 stores a shelf, and about one in seven was not a
+launch shelf of card games: "No pre-order", "All products excluding pre-orders", "Preorder ohne TCG" (a shelf that leaves
+pre-orders out), Games Workshop, Warhammer, board games, Funko, comics, statues, model kits, LEGO and event tickets
+(another hobby's, often the store's largest, so it beat the real "Pre-orders" shelf on size), and "2024 Preorders". Each
+cost a store one of its 40 requests for listings no game could take. `choosePreorderShelf` now refuses those three
+kinds, and ranks a shelf that names card games ("TCG Pre-orders") first, then a plain "Pre-orders" / "New releases",
+then the rest (one named after an old set), size breaking ties. It only changes which one collection the probe names;
+the pick rules are unchanged. `tests/crawl.test.ts` holds the real handles.

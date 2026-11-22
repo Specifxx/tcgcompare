@@ -747,6 +747,38 @@ test("choosePreorderShelf: a game-less launch shelf, the largest; never a game's
   assert.equal(choosePreorderShelf([{ handle: "mtg-preorders", title: "MTG Preorders", products_count: 3 }, { handle: "sale", title: "Sale", products_count: 9 }], lines), null);
 });
 
+test("choosePreorderShelf: never a shelf that leaves pre-orders out, another hobby's or an old year's; a card-games shelf, then a plain one, first", async () => {
+  // Real shelves the 22 Nov probe chose (crawl-probe 2026-11-22).
+  const { choosePreorderShelf } = await import("../src/lib/import/crawl");
+  const lines = SITE.lines ?? [];
+  const one = (handle: string, title = "", products_count = 50) => choosePreorderShelf([{ handle, title, products_count }], lines);
+  for (const h of ["no-pre-order", "sale-items-non-pre-order", "excluding-tcg-and-preorder", "all-products-excluding-pre-orders", "all-products-in-stock-items-without-pre-order", "preorder-ohne-tcg", "alles-behalve-preorder", "games-workshop-pre-orders", "warhammer-preorders", "gw-preorders", "board-game-preorders", "pre-order-funkos", "comic-books-pre-orders", "good-smile-statue-pre-orders", "pre-order-model-kit", "lego-new-release", "rpg-preorder", "d-d-books-preorders", "upcoming-events", "2024-preorders", "new-releases-april-2021"])
+    assert.equal(one(h), null, h);
+  for (const h of ["pre-orders", "preorders", "new-releases", "coming-soon", "tcg-pre-orders", "pre-orders-q3-2026-copy", "upcoming-tcg-releases"]) assert.equal(one(h), h, h);
+  // The store's TCG shelf, not the bigger Warhammer one; a plain shelf over one named after an old set.
+  assert.equal(
+    choosePreorderShelf(
+      [
+        { handle: "games-workshop-pre-orders", title: "Games Workshop Pre-orders", products_count: 120 },
+        { handle: "destined-rivals-preorders", title: "Destined Rivals Preorders", products_count: 60 },
+        { handle: "pre-orders", title: "Pre-orders", products_count: 30 },
+      ],
+      lines,
+    ),
+    "pre-orders",
+  );
+  assert.equal(
+    choosePreorderShelf(
+      [
+        { handle: "pre-orders", title: "Pre-orders", products_count: 90 },
+        { handle: "tcg-pre-orders", title: "TCG Pre-orders", products_count: 20 },
+      ],
+      lines,
+    ),
+    "tcg-pre-orders",
+  );
+});
+
 test("the probe gives a store's pre-order shelf to the games it is read for, and to nobody at a shop with none", async () => {
   const net = fakeNet({
     "https://a.test/collections.json": { body: { collections: [{ handle: "grand-archive", title: "Grand Archive", products_count: 7 }, { handle: "weiss-schwarz", title: "Weiss Schwarz", products_count: 9 }, { handle: "pre-orders", title: "Pre-Orders", products_count: 30 }] } },
