@@ -62,7 +62,7 @@ for (const demo of demos) {
       } else if (s.wait) await page.waitForTimeout(s.wait);
       else if (s.scroll) await smoothScroll(page, s.scroll, s.ms ?? 2000);
       else if (s.scrollTo) {
-        const loc = page.locator(s.scrollTo).first();
+        const loc = page.locator(s.scrollTo).locator("visible=true").first();
         const box = await loc.boundingBox({ timeout: 5000 });
         if (!box) throw new Error("not found");
         await smoothScroll(page, box.y - 160, s.ms ?? 1500);
@@ -72,7 +72,7 @@ for (const demo of demos) {
       else if (s.press) await page.keyboard.press(s.press);
       else if (s.expect) {
         // A text the page must show, so a caption never claims something the page does not have.
-        await page.getByText(s.expect, { exact: false }).first().waitFor({ timeout: 6000 });
+        await page.getByText(s.expect, { exact: false }).locator("visible=true").first().waitFor({ timeout: 6000 });
       }
       log.push({ i, ok: true });
     } catch (e) {
