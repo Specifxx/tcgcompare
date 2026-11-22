@@ -16,6 +16,7 @@ import { SITE_URL } from "../src/lib/site";
 import { RequestBudget, StopStore, StoreSession } from "../src/lib/import/polite-http";
 import {
   dropEvents,
+  preorderEvents,
   dropId,
   dropMessage,
   type DiscordEmbed,
@@ -133,6 +134,7 @@ async function main() {
       prev = undefined;
     }
     events.push(...dropEvents({ prev, cur: now, products, stores, fx: meta.fx }));
+    events.push(...preorderEvents({ prev, cur: now, products, stores, fx: meta.fx }));
   }
   // only this run's restocks: a Restocks step that failed leaves an old file, never re-posted
   const fresh = restocks && (dry || Date.now() - Date.parse(restocks.updatedAt) < 3 * 3_600_000);

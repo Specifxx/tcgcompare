@@ -1452,3 +1452,12 @@ cost a store one of its 40 requests for listings no game could take. `choosePreo
 kinds, and ranks a shelf that names card games ("TCG Pre-orders") first, then a plain "Pre-orders" / "New releases",
 then the rest (one named after an old set), size breaking ties. It only changes which one collection the probe names;
 the pick rules are unchanged. `tests/crawl.test.ts` holds the real handles.
+
+## 2026-11-22 — Sealed Sniper posts a market's first pre-order
+
+On 22 Nov a Canadian store's Delta Reign ETB pre-order (CA$89.99, the cheapest in Canada) took 10 orders in 41 minutes,
+most of them not through our tracked links: the link spread in a restock chat. The Sniper now has a third kind,
+`preorder`: in a market where no tracked store listed the product on the previous commit (in stock, pre-order or sold out),
+the cheapest store now taking pre-orders, inside the restock price band. It ranks above restocks, is posted once per
+product and market, and is live-checked like the rest (Shopify reports a pre-order as available). A market with no
+offer at all in the previous shard was not read then, so nothing there counts as "first". It is still one drop a run.
