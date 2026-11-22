@@ -16,7 +16,7 @@
   );
   // Words that only say what kind of thing it is; the kind is read separately (kindOf), so they never count as name words.
   const KIND_WORDS = new Set(
-    "booster boosters box boxes display displays pack packs case cases bundle bundles deck decks tin tins collection collections kit kits etb blister blisters trainer elite set sets".split(" "),
+    "booster boosters box boxes display displays pack packs case cases bundle bundles deck decks tin tins collection collections kit kits etb trainer elite set sets".split(" "),
   );
   const LANG_FOREIGN = /\b(japanese|japan|jp|jpn|japonais|japanisch|japans|japones|giapponese|korean|kr|kor|chinese|simplified|traditional|chn|french|francais|fr|german|deutsch|de|italian|italiano|spanish|espanol|portuguese|portugues|thai|indonesian)\b/;
   const JAPANESE = /\b(japanese|japan|jp|jpn|japonais|japanisch|japans|japones|giapponese)\b/;
@@ -114,7 +114,8 @@
     if (/ tins? /.test(s)) return "tin";
     if (/ (prerelease|prerift|kit) /.test(s)) return "kit";
     if (/ collections? | trove /.test(s)) return "collection";
-    if (/ (pack|packs|booster|boosters|sleeved|blister) /.test(s)) return "pack";
+    if (/ blisters? /.test(s)) return "blister";
+    if (/ (pack|packs|booster|boosters|sleeved) /.test(s)) return "pack";
     if (/ box /.test(s)) return "obox";
     return null;
   }
@@ -141,13 +142,18 @@
     const ids = Object.keys(feed.items);
     const gameRe = {};
     for (const [g, words] of Object.entries(GAME_WORDS)) gameRe[g] = new RegExp(`(^| )(${words.map((w) => fold(w).replace(/\s+/g, " ")).join("|")})( |$)`);
-    const gameTokens = new Set(Object.values(GAME_WORDS).flatMap((w) => w.flatMap((x) => fold(x).split(" "))));
-    for (const l of Object.values(feed.lines ?? {})) for (const w of fold(l.name).split(" ")) gameTokens.add(w);
+    // A game's own words ("Disney Lorcana", "Magic: The Gathering") say nothing about which of its products it is. Only
+    // that game's words are dropped: "Final Fantasy" is a game of its own and also a Magic set, where it is the name.
+    const gameTok = {};
+    for (const g of new Set([...Object.keys(GAME_WORDS), ...Object.keys(feed.lines ?? {})])) {
+      gameTok[g] = new Set([...(GAME_WORDS[g] ?? []), feed.lines?.[g]?.name ?? ""].flatMap((x) => fold(x).split(" ")).filter(Boolean));
+    }
+    const dropOf = (games) => new Set(games.flatMap((g) => [...(gameTok[g] ?? [])]));
 
     const toks = (s, drop) => {
       const out = [];
       for (const w of stripCounts(canon(fold(s))).trim().split(" ")) {
-        if (!w || STOP.has(w) || KIND_WORDS.has(w) || (drop && gameTokens.has(w))) continue;
+        if (!w || STOP.has(w) || KIND_WORDS.has(w) || drop?.has(w)) continue;
         if (w.length < 2 && !/\d/.test(w)) continue;
         if (!out.includes(w)) out.push(w);
       }
@@ -159,8 +165,8 @@
     for (const id of ids) {
       const it = feed.items[id];
       const nameF = canon(fold(it.n));
-      const req = toks(it.n, true);
-      const opt = toks(`${it.t ?? ""} ${it.c ?? ""}`, true).filter((w) => !req.includes(w));
+      const req = toks(it.n, gameTok[it.g]);
+      const opt = toks(`${it.t ?? ""} ${it.c ?? ""}`, gameTok[it.g]).filter((w) => !req.includes(w));
       const kind = kindOf(nameF) ?? kindOf(canon(fold(it.k ?? ""))) ?? null;
       const jp = it.g === "pkj" || /\bjapanese\b/.test(nameF);
       const foreign = jp || LANG_FOREIGN.test(nameF);
@@ -185,12 +191,12 @@
      * @param {string} text the page's product words (tab title, heading or product name)
      * @param {string} market the visitor's market, to rank in-stock products first among equals
      * @param {string[]} [gtins] barcodes the page shows
-     * @returns {{ sure: string|null, top: string[], single: boolean, foreign: boolean }}
+     * @returns {{ sure: string|null, top: string[], single: boolean, foreign: boolean, kind: string|null, by?: string }}
      */
     return function match(text, market, gtins = []) {
       for (const g of gtins) {
         const r = byCode.get(String(g).replace(/\D/g, "").replace(/^0+/, ""));
-        if (r) return { sure: r.id, top: [r.id], single: false, foreign: false, by: "barcode" };
+        if (r) return { sure: r.id, top: [r.id], single: false, foreign: false, by: "barcode", kind: r.kind };
       }
       const clean = cleanTitle(text);
       const f = canon(fold(clean));
@@ -200,9 +206,12 @@
       const qJp = JAPANESE.test(f);
       const qForeign = LANG_FOREIGN.test(f);
       const qKind = kindOf(f);
-      const single = !qKind && SINGLE.test(f);
-      const q = toks(clean, true);
-      if (!q.length) return { sure: null, top: [], single, foreign: qForeign };
+      // "Black Lotus (233) - 2ED", "Elsa - Snow Queen (41)": a card's collector number, as singles stores list them.
+      const single = /\b\d{1,3}\s?\/\s?\d{2,3}\b/.test(clean) || (!qKind && (SINGLE.test(f) || /\(\s*#?\d{1,4}[a-z]?\s*\)\s*(-\s*[A-Za-z0-9]{2,6}\s*)?$/.test(clean.trim())));
+      // Several products, or part of one, are never one product of ours: "lot of 5", "x3", "half booster box".
+      const many = /(^| )(lot|lots|bundle of \d+|half|bulk|mixed|random|assorted|mystery|repack|repacks|break)( |$)|(^| )x ?\d+( |$)|(^| )\d+ ?x( |$)/.test(f);
+      const q = toks(clean, dropOf(named));
+      if (!q.length) return { sure: null, top: [], single, foreign: qForeign, kind: qKind };
 
       const qj = q.slice(1).map((w, i) => [q[i] + w, q[i], w]);
       const scored = [];
@@ -239,13 +248,13 @@
       const top = scored.slice(0, 25).map((x) => x.r.id);
       const best = scored[0];
       let sure = null;
-      if (best && !single && best.kd === 0 && !best.langBad && best.cover >= W.cover && (qKind || !best.r.kind) && (best.gotN >= 1 || best.r.req.length === 0)) {
+      if (best && !single && !many && best.kd === 0 && !best.langBad && best.cover >= W.cover && (qKind || !best.r.kind) && (best.gotN >= 1 || best.r.req.length === 0)) {
         const second = scored[1];
         // Another product that fits about as well means the words do not decide it.
         if (!second || best.s - second.s >= W.margin) sure = best.r.id;
       }
       if (W.debug) console.log(JSON.stringify({ q, qKind, top: scored.slice(0, 3).map((x) => [x.r.it.n, x.r.req, x.r.kind, +x.s.toFixed(2), +x.got.toFixed(2), +x.miss.toFixed(2), +x.extra.toFixed(2), x.kd]) }));
-      return { sure, top, single, foreign: qForeign && !best?.r.foreign };
+      return { sure, top, single, foreign: qForeign && !best?.r.foreign, kind: qKind };
     };
   }
 

@@ -85,4 +85,7 @@ test("the extension recognises store pages by their words, and refuses a guess",
   assert.equal(single.sure, null);
   assert.equal(single.single, true);
   assert.equal(m("Pokemon Perfect Order Booster Box Japanese – Shop", "US").sure, null);
+  // A singles store's own style, and a store bundle that names no set, are never a sealed product.
+  assert.equal(m("Black Lotus (233) - 2ED", "UK").single, true);
+  assert.equal(m("Order a Booster Box & Folder - Save £10", "UK").sure, null);
 });

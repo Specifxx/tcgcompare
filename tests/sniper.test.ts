@@ -10,6 +10,8 @@ import {
   MAX_POSTS,
   eligible,
   embedFor,
+  preorderEvents,
+  isNew,
   emptySniperState,
   judgeLive,
   productPath,
@@ -168,4 +170,27 @@ test("the Chrome extension line rides every drop for 7 days, tagged per channel,
   assert.doesNotMatch(dropMessage([em], EXTENSION_PROMO_UNTIL).content, /Chrome/);
   assert.doesNotMatch(telegramText([em], EXTENSION_PROMO_UNTIL), /Chrome/);
   assert.ok(EXTENSION_PROMO_UNTIL - Date.UTC(2026, 10, 22, 11, 46) <= 7 * 86400e3 + 3600e3);
+});
+
+test("a first pre-order in a market is posted once, before restocks, and only where that market was read before", () => {
+  const ca: SniperStore = { key: "shopca", name: "Shop CA", base: "https://shop-ca.example", market: "CA" };
+  const st = new Map([us, au, ca].map((x) => [x.key, x]));
+  const other: Tuple = ["shopca", 20000, 1, "other-box"]; // CA was read: another product listed there
+  const prev = { "2": { o: [other] }, "1": { o: [["shopus", 9000, 1, "box"] as Tuple] } };
+  const cur = { "1": { o: [["shopus", 9000, 1, "box"] as Tuple, ["shopca", 13999, 2, "box-pre?variant=7"] as Tuple] } };
+  const ev = preorderEvents({ prev, cur, products, stores: st, fx });
+  assert.equal(ev.length, 1);
+  assert.equal(ev[0].kind, "preorder");
+  assert.equal(ev[0].store.market, "CA");
+  assert.equal(preorderEvents({ prev: { "1": prev["1"] }, cur, products, stores: st, fx }).length, 0, "CA not read before: not first");
+  assert.equal(preorderEvents({ prev: { ...prev, "1": { o: [...prev["1"].o, ["shopca", 15000, 0, "box"] as Tuple] } }, cur, products, stores: st, fx }).length, 0, "a CA store listed it before, even sold out");
+  assert.equal(preorderEvents({ prev, cur: { "1": { o: [["shopca", 13999, 1, "box"] as Tuple] } }, products, stores: st, fx }).length, 0, "in stock is a restock, not a pre-order");
+  const em = embedFor(ev[0], 13999, NOW, "https://tcgprices.app");
+  assert.match(em.title, /^🇨🇦 First pre-order: Some Booster Box/);
+  assert.match(em.description, /first Canadian store we track to take pre-orders/);
+  assert.match(em.description, /Open for pre-order at the store/);
+  const restock = { kind: "restock" as const, product: pack, store: au, cents: 15000, ref: "a" };
+  assert.equal(rankEvents([restock, ev[0]], emptySniperState(), NOW)[0].kind, "preorder");
+  const posted = recordPosted(emptySniperState(), ev, NOW);
+  assert.equal(isNew(ev[0], posted, NOW + 40 * 86400e3), false, "news once");
 });

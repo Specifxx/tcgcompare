@@ -41,6 +41,7 @@ export const LIVE_PRICE_TOLERANCE = 0.02;
 export const UTM = "utm_source=discord&utm_medium=social&utm_campaign=sealed-sniper";
 
 export const FLAG: Record<Market, string> = { US: "🇺🇸", UK: "🇬🇧", CA: "🇨🇦", AU: "🇦🇺", EU: "🇪🇺", SG: "🇸🇬" };
+export const MARKET_NAME: Record<Market, string> = { US: "US", UK: "UK", CA: "Canadian", AU: "Australian", EU: "European", SG: "Singapore" };
 
 export interface SniperProduct {
   id: number;
@@ -63,7 +64,9 @@ export type Tuple = [string, number, number, string, ...unknown[]];
 
 export type SniperEvent =
   | { kind: "restock"; product: SniperProduct; store: SniperStore; cents: number; ref: string }
-  | { kind: "drop"; product: SniperProduct; store: SniperStore; cents: number; ref: string; was: number; pct: number };
+  | { kind: "drop"; product: SniperProduct; store: SniperStore; cents: number; ref: string; was: number; pct: number }
+  /** the first pre-order in a market: no store we track there listed the product at all on the previous commit */
+  | { kind: "preorder"; product: SniperProduct; store: SniperStore; cents: number; ref: string };
 
 /** USD cents of a price in a market's own currency (fx: units per USD), for the sanity band only. */
 export const toUsd = (cents: number, market: Market, fx: Record<string, number>): number | null => {
@@ -149,6 +152,50 @@ export function dropEvents(o: {
   return out;
 }
 
+/**
+ * New pre-orders (2026-11-22: a Canadian store's ETB pre-order sold 10 in 41 minutes through a restock chat): in each market,
+ * a product that no tracked store listed on the previous commit (in stock, pre-order or sold out) and that a store now takes
+ * pre-orders for. The cheapest such offer; the same price band as a restock.
+ */
+export function preorderEvents(o: {
+  prev: Record<string, { o: Tuple[] }> | undefined;
+  cur: Record<string, { o: Tuple[] }>;
+  products: ReadonlyMap<number, SniperProduct>;
+  stores: ReadonlyMap<string, SniperStore>;
+  fx: Record<string, number>;
+}): SniperEvent[] {
+  const out: SniperEvent[] = [];
+  if (!o.prev) return out;
+  // a market with no offer at all in the previous shard was not read then (a stale sister): nothing there is "first"
+  const read = new Set<Market>();
+  for (const e of Object.values(o.prev)) for (const t of e.o) {
+    const st = o.stores.get(t[0]);
+    if (st) read.add(st.market);
+  }
+  for (const [pid, entry] of Object.entries(o.cur)) {
+    const product = o.products.get(Number(pid));
+    if (!eligible(product)) continue;
+    const before = new Set<Market>();
+    for (const t of o.prev[pid]?.o ?? []) {
+      const st = o.stores.get(t[0]);
+      if (st) before.add(st.market);
+    }
+    const best = new Map<Market, { t: Tuple; store: SniperStore }>();
+    for (const t of entry.o) {
+      if (t[2] !== 2 || !(t[1] > 0)) continue;
+      const store = o.stores.get(t[0]);
+      if (!store || before.has(store.market) || !read.has(store.market)) continue;
+      const cur = best.get(store.market);
+      if (!cur || t[1] < cur.t[1]) best.set(store.market, { t, store });
+    }
+    for (const [market, b] of best) {
+      if (!inBand(b.t[1], market, product, RESTOCK_BAND, o.fx)) continue;
+      out.push({ kind: "preorder", product, store: b.store, cents: b.t[1], ref: plainRef(String(b.t[3])) });
+    }
+  }
+  return out;
+}
+
 // ── dedupe ─────────────────────────────────────────────────────────────────
 
 export interface SniperState {
@@ -160,7 +207,7 @@ export interface SniperState {
 }
 export const emptySniperState = (): SniperState => ({ v: 1, posted: {} });
 export const sniperKey = (e: SniperEvent): string =>
-  e.kind === "restock" ? `restock|${e.product.id}|${e.store.key}` : `drop|${e.product.id}|${e.store.market}`;
+  e.kind === "restock" ? `restock|${e.product.id}|${e.store.key}` : `${e.kind}|${e.product.id}|${e.store.market}`;
 
 const DAY = 86_400_000;
 
@@ -170,12 +217,13 @@ export function isNew(e: SniperEvent, state: SniperState, now: number): boolean 
   if (!last) return true;
   const age = now - Date.parse(last.at);
   if (e.kind === "restock") return age >= RESTOCK_COOLDOWN_DAYS * DAY;
+  if (e.kind === "preorder") return false; // the first pre-order in a market is news once
   return age >= DROP_COOLDOWN_DAYS * DAY || e.cents <= last.cents * (1 - DROP_REPOST_PCT / 100);
 }
 
-/** One post per product a run (its best event), restocks before drops, the most viewed and valued first; new events only. */
+/** One post per product a run (its best event), new pre-orders first, then restocks, then drops, the most viewed and valued first; new events only. */
 export function rankEvents(events: readonly SniperEvent[], state: SniperState, now: number, demand: (id: number) => number = () => 0): SniperEvent[] {
-  const score = (e: SniperEvent) => (e.kind === "restock" ? 1e9 : 0) + demand(e.product.id) * 1e4 + (e.kind === "drop" ? e.pct * 100 : 0) + (e.product.marketCents ?? 0) / 100;
+  const score = (e: SniperEvent) => (e.kind === "preorder" ? 2e9 : e.kind === "restock" ? 1e9 : 0) + demand(e.product.id) * 1e4 + (e.kind === "drop" ? e.pct * 100 : 0) + (e.product.marketCents ?? 0) / 100;
   const seen = new Set<string>();
   return events
     .filter((e) => isNew(e, state, now))
@@ -302,16 +350,18 @@ export function embedFor(e: SniperEvent, liveCents: number, checkedAt: number, s
   const ts = Math.floor(checkedAt / 1000);
   const lines = [
     `${FLAG[e.store.market]} **${money(liveCents, cur)}** at **${e.store.name}**`,
-    e.kind === "restock" ? "Sold out at our previous check, in stock now." : `Cheapest ${e.store.market} store price was ${money(e.was, cur)} at our previous check (${e.pct}% lower now).`,
+    e.kind === "preorder"
+      ? `The first ${MARKET_NAME[e.store.market]} store we track to take pre-orders for it.`
+      : e.kind === "restock" ? "Sold out at our previous check, in stock now." : `Cheapest ${e.store.market} store price was ${money(e.was, cur)} at our previous check (${e.pct}% lower now).`,
     e.product.marketCents ? `TCGplayer market: ${money(e.product.marketCents, "USD")}` : null,
-    `In stock at the store when checked <t:${ts}:R>. Stock can sell out fast; the store's page has the final word.`,
+    `${e.kind === "preorder" ? "Open for pre-order" : "In stock"} at the store when checked <t:${ts}:R>. Stock can sell out fast; the store's page has the final word.`,
     `[Compare every store](${productUrl(siteUrl, e.product.slug, drop)})`,
   ].filter(Boolean);
   return {
-    title: `${e.kind === "restock" ? "Back in stock" : "Price drop"}: ${e.product.name}`.slice(0, 250),
+    title: `${e.kind === "preorder" ? `${FLAG[e.store.market]} First pre-order` : e.kind === "restock" ? "Back in stock" : "Price drop"}: ${e.product.name}`.slice(0, 250),
     url: productUrl(siteUrl, e.product.slug, drop),
     description: lines.join("\n"),
-    color: e.kind === "restock" ? 0x22c55e : 0x3b82f6,
+    color: e.kind === "preorder" ? 0xf59e0b : e.kind === "restock" ? 0x22c55e : 0x3b82f6,
     ...(e.product.image ? { thumbnail: { url: e.product.image } } : {}),
     footer: { text: `Sealed Sniper · ${game}${e.product.sealedType ? ` · ${e.product.sealedType}` : ""} · tcgprices.app` },
   };
