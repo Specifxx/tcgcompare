@@ -207,9 +207,10 @@
       show([], "");
       return status("This looks like a single card. We compare sealed product only: boxes, packs, bundles, decks and tins.");
     }
-    const rows = (res?.top ?? []).slice(0, 6).map((i) => ({ id: i, it: feed.items[i] }));
-    if (!rows.length) return fromButton && status("We couldn't tell which product this page is. Try searching for it above.");
-    if (!fromButton && rows.length === 0) return;
+    // Closest matches only when the page names a kind of sealed product (a box, a pack, a deck…): a card, an
+    // accessory or an event has no near match worth showing.
+    const rows = res?.kind ? (res.top ?? []).slice(0, 6).map((i) => ({ id: i, it: feed.items[i] })) : [];
+    if (!rows.length) return fromButton && status("We couldn't tell which sealed product this page is. We compare sealed product only; try searching for it above.");
     show(rows, "", res.foreign ? "Closest English products" : "Closest matches");
     status(res.foreign ? "This page looks like a foreign-language product; we price English product. Pick the one you mean." : "Not sure which one this page is. Pick the one you mean.");
   }
