@@ -207,7 +207,9 @@
       const qForeign = LANG_FOREIGN.test(f);
       const qKind = kindOf(f);
       // "Black Lotus (233) - 2ED", "Elsa - Snow Queen (41)": a card's collector number, as singles stores list them.
-      const single = !qKind && (SINGLE.test(f) || /\(\s*#?\d{1,4}[a-z]?\s*\)\s*(-\s*[A-Za-z0-9]{2,6}\s*)?$/.test(clean.trim()));
+      const single = /\b\d{1,3}\s?\/\s?\d{2,3}\b/.test(clean) || (!qKind && (SINGLE.test(f) || /\(\s*#?\d{1,4}[a-z]?\s*\)\s*(-\s*[A-Za-z0-9]{2,6}\s*)?$/.test(clean.trim())));
+      // Several products, or part of one, are never one product of ours: "lot of 5", "x3", "half booster box".
+      const many = /(^| )(lot|lots|bundle of \d+|half|bulk|mixed|random|assorted|mystery|repack|repacks|break)( |$)|(^| )x ?\d+( |$)|(^| )\d+ ?x( |$)/.test(f);
       const q = toks(clean, dropOf(named));
       if (!q.length) return { sure: null, top: [], single, foreign: qForeign, kind: qKind };
 
@@ -246,7 +248,7 @@
       const top = scored.slice(0, 25).map((x) => x.r.id);
       const best = scored[0];
       let sure = null;
-      if (best && !single && best.kd === 0 && !best.langBad && best.cover >= W.cover && (qKind || !best.r.kind) && (best.gotN >= 1 || best.r.req.length === 0)) {
+      if (best && !single && !many && best.kd === 0 && !best.langBad && best.cover >= W.cover && (qKind || !best.r.kind) && (best.gotN >= 1 || best.r.req.length === 0)) {
         const second = scored[1];
         // Another product that fits about as well means the words do not decide it.
         if (!second || best.s - second.s >= W.margin) sure = best.r.id;
