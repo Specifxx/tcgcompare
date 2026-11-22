@@ -33,6 +33,7 @@ import { amazonCarries, amazonCells } from "@/lib/amazon-live";
 import { abs } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ShareButton } from "@/components/ShareButton";
+import { DropShare } from "@/components/DropShare";
 import { ToolInterest } from "@/components/ToolInterest";
 import { attrHref, rarityHref, sealedHref } from "@/lib/hubs";
 import { packOfBox } from "@/lib/packs";
@@ -169,6 +170,7 @@ export default function CardPage({ params }: { params: { slug: string } }) {
               <p className="mt-2 text-sm text-muted">Single pack: <b className="tabular text-ink">{money(packCents)}</b> TCGplayer market · <Link className="link" href={`/card/${pack.slug}`}>compare single pack prices</Link></p>
             )}
             <VaultOwn id={p.id} name={`${name}${p.number ? ` ${p.number}` : ""}`} href={`/card/${p.slug}`} image={p.image ? imageAt(p.image, "200w") : null} prices={lowestByMarket(e.offers)} className="mt-3" />
+            <DropShare path={`/card/${p.slug}`} name={`${name}${p.number ? ` ${p.number}` : ""}`} offers={e.offers} className="mt-2" />
             {Object.keys(e.tcg).length > 1 && (
               <p className="mt-2 flex flex-wrap gap-2 text-xs">
                 {Object.entries(e.tcg).map(([k, v]) => (
