@@ -956,7 +956,7 @@
   {
    "d": "2026-11-22",
    "all": {
-    "n": 3160,
+    "n": 3156,
     "median": 4997,
     "level": 100
    },
@@ -972,38 +972,38 @@
      "level": 100
     },
     "cardfight-vanguard": {
-     "n": 71,
+     "n": 73,
      "median": 4499,
      "level": 100
     },
     "cookierun-braverse": {
      "n": 20,
-     "median": 1247,
+     "median": 1374,
      "level": 100
     },
     "cyberpunk-tcg": {
-     "n": 10,
-     "median": 2749,
+     "n": 11,
+     "median": 2999,
      "level": 100
     },
     "digimon-card-game": {
-     "n": 64,
-     "median": 1442,
+     "n": 74,
+     "median": 1299,
      "level": 100
     },
     "disney-lorcana": {
      "n": 110,
-     "median": 2450,
+     "median": 2923,
      "level": 100
     },
     "dragon-ball-super-fusion-world": {
-     "n": 29,
-     "median": 4500,
+     "n": 25,
+     "median": 12999,
      "level": 100
     },
     "dragon-ball-super-masters": {
-     "n": 13,
-     "median": 2499,
+     "n": 10,
+     "median": 10048,
      "level": 100
     },
     "elestrals": {
@@ -1013,7 +1013,7 @@
     },
     "final-fantasy-tcg": {
      "n": 32,
-     "median": 4250,
+     "median": 4750,
      "level": 100
     },
     "flesh-and-blood": {
@@ -1042,12 +1042,12 @@
      "level": 100
     },
     "magic-the-gathering": {
-     "n": 1078,
-     "median": 6172,
+     "n": 1077,
+     "median": 6149,
      "level": 100
     },
     "one-piece": {
-     "n": 123,
+     "n": 120,
      "median": 4000,
      "level": 100
     },
@@ -1057,8 +1057,8 @@
      "level": 100
     },
     "pokemon": {
-     "n": 696,
-     "median": 5000,
+     "n": 681,
+     "median": 5275,
      "level": 100
     },
     "pokemon-japan": {
@@ -1067,8 +1067,8 @@
      "level": 100
     },
     "riftbound": {
-     "n": 30,
-     "median": 3468,
+     "n": 32,
+     "median": 3113,
      "level": 100
     },
     "shadowverse-evolve": {
@@ -1078,7 +1078,7 @@
     },
     "sorcery-contested-realm": {
      "n": 9,
-     "median": 12199,
+     "median": 10999,
      "level": 100
     },
     "star-wars-unlimited": {
@@ -1087,8 +1087,8 @@
      "level": 95.59
     },
     "union-arena": {
-     "n": 48,
-     "median": 3100,
+     "n": 53,
+     "median": 2999,
      "level": 100
     },
     "universus": {
@@ -1097,8 +1097,8 @@
      "level": 100
     },
     "weiss-schwarz": {
-     "n": 140,
-     "median": 2200,
+     "n": 142,
+     "median": 1998,
      "level": 100
     },
     "wixoss": {
