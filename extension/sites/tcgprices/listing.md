@@ -32,7 +32,8 @@ Shows independent stores' prices for the sealed trading card product the user is
 ## Permission justifications
 - **storage:** keeps the downloaded public price file and the user's market and panel settings in the browser.
 - **contextMenus:** adds "Search TCG Prices for …" to the right-click menu for selected text.
-- **activeTab:** when the user presses "Find the product on this page" in the popup, reads the current tab's title and address to fill the search box. Nothing is read without that press.
+- **activeTab:** when the user opens the popup (or presses "Find the product on this page"), reads the current tab's title and address to recognise the product they are looking at. Nothing is read from any tab the user did not open the popup on.
+- **scripting:** with that same activeTab grant only, reads the product's name, heading and barcode from the open page (its structured product data and title tags) so the popup can show our price for that exact product. It runs only when the user opens the popup, changes nothing on the page, and sends nothing anywhere: the match is made inside the extension.
 - **Host permission tcgprices.app:** downloads the public price file (https://tcgprices.app/extension.json).
 - **Content script on tcgplayer.com/product/\*:** reads the product number from the page address and shows the price panel.
 - **Remote code:** No. All code is in the package.

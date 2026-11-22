@@ -1424,3 +1424,20 @@ pasted URL or a translate proxy is "none" or "cross-site". "yandex" and "baidu" 
 builds, baiduboxapp). Now `looksLikeBot` (the one thing that untags) is only an empty User-Agent or a self-named crawler or
 script; the header checks moved to `suspectClick`, which at most leaves a click out of the server-side click log, never the tag.
 The 10-14 Nov crawler with full browser headers will reach the networks tagged again: accepted by the owner's rule.
+
+## 2026-11-22 — The extension names the product on a store's page only when its words decide it
+
+Bill: "it doesn't work properly" (Good Games' Vendetta Booster Box: "No match"). v1.1.0 put the whole tab title, store name
+and all, into the search box and needed 60% of its words to appear in our name; "Booster Box" is "Booster Display" on
+TCGplayer, so it failed. Measured on 2,307 real page titles (MTG Compare and DexCompare store titles, Rift Compare's sealed
+listings, TCG Prices' own store handles for the other 27 games, eBay and Amazon tab styles, 149 single cards) it named the
+right product 59% of the time and claimed a sealed product for 31% of singles.
+
+v1.2.0 (`extension/src/match.js`): the store's name and Amazon's and eBay's furniture are taken off; type words (box,
+display, pack, case, bundle, ETB…) decide the KIND, never the name, and a kind that disagrees is never a match (a box is
+never its case); the game named on the page and the language must agree; name words are weighted by how rare they are, so
+"Mega Evolution Perfect Order" is Perfect Order; a barcode on the page decides outright. The popup reads the open tab's
+product data, share title and heading (activeTab + scripting, only the tab it was opened on, nothing sent anywhere) and
+names the product only when sure; otherwise it lists the closest. Result on the same set: 87% right first time, 98% in the
+top 3, wrong claims 2% (most of those are the test labels' own errors, e.g. "Play Booster" labelled as the sleeved one),
+singles 98% left alone. The feed carries each product's sealed type, set name, set code and barcode for it.

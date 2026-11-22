@@ -1,6 +1,7 @@
-// The toolbar popup: search our price file, pick a market, turn the panel on or off. "Find the product on this page"
-// reads only the current tab's title, and only when the visitor presses it (activeTab), to fill the search box: the
-// results are search matches for them to choose from, never a claim that the page is that product.
+// The toolbar popup: search our price file, pick a market, turn the panel on or off. On opening (and from "Find the
+// product on this page") it reads the current tab's title, product name and barcode (activeTab: only the tab the
+// visitor opened it on) and names the product only when match.js is sure; otherwise it lists the closest products for
+// the visitor to pick from.
 (async () => {
   const $ = (id) => document.getElementById(id);
   document.documentElement.style.setProperty("--brand", CONFIG.brand);
@@ -19,7 +20,7 @@
     const res = await chrome.runtime.sendMessage({ type: "feed" });
     if (!res?.ok) throw new Error(res?.error || "no feed");
     feed = res.feed;
-    index = Object.entries(feed.items).map(([id, it]) => ({ id, it, hay: fold(`${it.n} ${feed.lines[it.g]?.name ?? ""}`) }));
+    index = Object.entries(feed.items).map(([id, it]) => ({ id, it, hay: fold(`${it.n} ${feed.lines[it.g]?.name ?? ""} ${it.t ?? ""} ${it.k ?? ""}`) }));
     status(`${index.length.toLocaleString()} products · updated ${new Date(feed.generatedAt).toLocaleDateString()}`);
   } catch (e) {
     status("Couldn't load prices. Check your connection and try again.");
@@ -140,17 +141,82 @@
     await chrome.storage.sync.set({ market: $("market").value });
     run();
   });
-  $("page").addEventListener("click", async () => {
+  // ── What is this page selling? ─────────────────────────────────────────────────────────────────────────
+  // Only when the visitor opens the popup or presses the button (activeTab): the tab's title and, on a normal web
+  // page, the product's own name and barcode as the page states them (its product data, share title and heading).
+  // Nothing is sent anywhere: the match is made here, against the price file already in the browser.
+  const matcher = index ? makeMatcher(feed) : null;
+
+  async function readPage(tab) {
+    if (!/^https?:/.test(tab?.url ?? "") || !chrome.scripting) return null;
+    try {
+      const [r] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          const names = [];
+          const gtins = [];
+          const walk = (x) => {
+            if (!x || typeof x !== "object") return;
+            if (Array.isArray(x)) return x.forEach(walk);
+            const t = [].concat(x["@type"] ?? []).map(String);
+            if (t.some((y) => /^(Product|ProductGroup|IndividualProduct)$/i.test(y))) {
+              if (typeof x.name === "string") names.push(x.name);
+              for (const k of ["gtin", "gtin13", "gtin12", "gtin14", "gtin8", "ean", "upc"]) if (x[k]) gtins.push(String(x[k]));
+              for (const o of [].concat(x.offers ?? [], x.hasVariant ?? [])) for (const k of ["gtin", "gtin13", "gtin12", "gtin14", "gtin8"]) if (o?.[k]) gtins.push(String(o[k]));
+            }
+            if (x["@graph"]) walk(x["@graph"]);
+          };
+          for (const el of document.querySelectorAll('script[type="application/ld+json"]')) {
+            try { walk(JSON.parse(el.textContent)); } catch {}
+          }
+          const meta = (k) => document.querySelector(`meta[property="${k}"],meta[name="${k}"]`)?.content ?? "";
+          return { names: names.slice(0, 3), gtins: gtins.slice(0, 10), og: meta("og:title"), h1: document.querySelector("h1")?.textContent?.trim().slice(0, 200) ?? "" };
+        },
+      });
+      return r?.result ?? null;
+    } catch {
+      return null; // a page the browser will not let extensions read (the Web Store, settings, PDFs)
+    }
+  }
+
+  async function findOnPage(fromButton) {
+    if (!matcher) return;
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     const id = tab?.url?.match(/tcgplayer\.com\/product\/(\d{3,9})/i)?.[1];
-    if (id && feed?.items[id]) return show([{ id, it: feed.items[id] }]);
-    const title = (tab?.title ?? "")
-      .replace(/\s*[|\-–—]\s*(eBay|TCGplayer|Amazon\.[a-z.]+|Amazon).*$/i, "")
-      .replace(/\b(new|sealed|free shipping|in stock|buy now|english)\b/gi, " ")
-      .slice(0, 120);
-    $("q").value = title.trim();
-    run();
-  });
+    if (id && feed.items[id]) {
+      show([{ id, it: feed.items[id] }], "", "On this page");
+      return status("Tap it to compare every store, or Buy to go to the cheapest.");
+    }
+    if (!/^https?:/.test(tab?.url ?? "")) return fromButton && status("Open a product page in a store, then press the button.");
+    const page = (await readPage(tab)) ?? {};
+    const market = $("market").value;
+    const texts = [...(page.names ?? []), page.og, page.h1, tab.title].filter((t) => t && t.trim().length > 3);
+    let res = null;
+    for (const t of texts) {
+      const r = matcher(t, market, page.gtins ?? []);
+      if (r.sure) { res = r; break; }
+      res ??= r;
+      if (r.single) break;
+    }
+    if (res?.sure) {
+      show([{ id: res.sure, it: feed.items[res.sure] }], "", "On this page");
+      return status(res.by === "barcode" ? "Matched by the barcode on the page. Tap to compare every store." : "Tap it to compare every store, or Buy to go to the cheapest.");
+    }
+    if (res?.single) {
+      if (!fromButton) return;
+      show([], "");
+      return status("This looks like a single card. We compare sealed product only: boxes, packs, bundles, decks and tins.");
+    }
+    const rows = (res?.top ?? []).slice(0, 6).map((i) => ({ id: i, it: feed.items[i] }));
+    if (!rows.length) return fromButton && status("We couldn't tell which product this page is. Try searching for it above.");
+    if (!fromButton && rows.length === 0) return;
+    show(rows, "", res.foreign ? "Closest English products" : "Closest matches");
+    status(res.foreign ? "This page looks like a foreign-language product; we price English product. Pick the one you mean." : "Not sure which one this page is. Pick the one you mean.");
+  }
+
+  $("page").addEventListener("click", () => findOnPage(true));
   deals();
   $("q").focus();
+  // Opening the popup on a product page shows that product straight away.
+  findOnPage(false);
 })();
