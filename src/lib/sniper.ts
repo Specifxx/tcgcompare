@@ -251,11 +251,20 @@ export function productUrl(siteUrl: string, slug: string, drop?: string): string
 /** One run is one drop: ONE Discord message holding every checked post (owner's cap: at most 3 drops a day across the
  * hub; this feed runs twice a day). The id tags each link (utm_content) so clicks can be read per drop. */
 export const dropId = (ms: number): string => `sniper-${new Date(ms).toISOString().slice(0, 13).replace(/[-T]/g, "")}`;
-export function dropMessage(embeds: DiscordEmbed[]): { username: string; content: string; embeds: DiscordEmbed[]; allowed_mentions: { parse: never[] } } {
+/** The Chrome extension's launch line (owner's ask via the extension thread, 2026-11-22): under every drop for 7 days,
+ * then gone by itself. Tagged per channel so clicks are read apart. */
+export const EXTENSION_PROMO_UNTIL = Date.UTC(2026, 10, 29, 12, 0);
+export function extensionPromo(source: "discord" | "telegram", now: number): string | null {
+  if (now >= EXTENSION_PROMO_UNTIL) return null;
+  return `New: our free Chrome extension shows the cheapest store price right on every TCGplayer sealed page, with one click to buy. No account, nothing tracked. https://chromewebstore.google.com/detail/fdhpgledimoadpaokiipficepklogmha?utm_source=${source}&utm_medium=social&utm_campaign=extension`;
+}
+
+export function dropMessage(embeds: DiscordEmbed[], now = Date.now()): { username: string; content: string; embeds: DiscordEmbed[]; allowed_mentions: { parse: never[] } } {
   const n = embeds.length;
+  const promo = extensionPromo("discord", now);
   return {
     username: "Sealed Sniper",
-    content: `**Sealed Sniper drop:** ${n} ${n === 1 ? "deal" : "deals"}, each checked at the store just before posting.`,
+    content: `**Sealed Sniper drop:** ${n} ${n === 1 ? "deal" : "deals"}, each checked at the store just before posting.${promo ? `\n${promo.replace(/(https:\S+)/, "<$1>")}` : ""}`,
     embeds: embeds.slice(0, 10),
     allowed_mentions: { parse: [] },
   };
@@ -268,7 +277,7 @@ export const TELEGRAM_CHANNEL = "@tcgdealsrestocks";
  * The same drop as one plain-text Telegram message: Discord's bold, links and relative timestamps turned into plain text
  * ("HH:MM UTC"), every link tagged utm_source=telegram, kept under Telegram's 4,096 characters (whole deals only).
  */
-export function telegramText(embeds: DiscordEmbed[]): string {
+export function telegramText(embeds: DiscordEmbed[], now = Date.now()): string {
   const plain = (t: string) =>
     t
       .replace(/<t:(\d+):R>/g, (_, s: string) => `at ${new Date(Number(s) * 1000).toISOString().slice(11, 16)} UTC`)
@@ -276,7 +285,8 @@ export function telegramText(embeds: DiscordEmbed[]): string {
       .replace(/\*\*/g, "")
       .replace(/utm_source=discord/g, "utm_source=telegram");
   const parts: string[] = [];
-  const head = (n: number) => `Sealed Sniper drop: ${n} ${n === 1 ? "deal" : "deals"}, each checked at the store just before posting.`;
+  const promo = extensionPromo("telegram", now);
+  const head = (n: number) => `Sealed Sniper drop: ${n} ${n === 1 ? "deal" : "deals"}, each checked at the store just before posting.${promo ? `\n${promo}` : ""}`;
   for (const e of embeds.slice(0, 10)) {
     const part = `${plain(e.title)}\n${plain(e.description)}`;
     if ([head(parts.length + 1), ...parts, part].join("\n\n").length > 4096) break;
