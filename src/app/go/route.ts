@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { SITE } from "@/site.config";
 import { isPaidSource, subId, tagged } from "@/lib/affiliate";
 import { track } from "@vercel/analytics/server";
-import { looksLikeBot } from "@/lib/bot-click";
+import { looksLikeBot, suspectClick } from "@/lib/bot-click";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +34,8 @@ export async function GET(req: Request) {
   const target = looksLikeBot(req.headers) ? dest : tagged(dest, subId(market, page, pid), { checkout: u.searchParams.get("c") === "1" });
   // The click log's server half (DECISIONS.md, 2026-11-17): the visitor's country, which the browser does not know. No database:
   // a Vercel Analytics event and one runtime-log line (scripts/paid-click-share.ts reads either). Bots are not logged.
-  if (!looksLikeBot(req.headers)) {
+  // Only the server-side log skips a suspect click; its link stays tagged (owner, 2026-11-22: never untag a real person).
+  if (!suspectClick(req.headers)) {
     const source = (u.searchParams.get("s") ?? "").slice(0, 24);
     const country = (req.headers.get("x-vercel-ip-country") ?? "").slice(0, 2).toUpperCase() || "XX";
     const evt = {
