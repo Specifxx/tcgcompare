@@ -1472,3 +1472,23 @@ so ShareButton's share-for-a-deal A/B test is untouched; event `share { medium: 
 **Why.** On 22 Nov a CA$89.99 Delta Reign ETB pre-order at Cardboard Hero took ten referral orders in 41 minutes, almost none through
 a click we tracked: the store link had been pasted into a restock chat. People share drops anyway; this makes the link they paste ours.
 Owner, 2026-11-23: "apply all these learnings to all the other sites". Read `share` medium `drop` and `share_visit` a week after release.
+
+## 2026-11-23: TCG Prices: a real profile page, and sign-in slides inside the one-prompt-a-visit budget
+
+**Decision.** `/account` signed in is now a profile (`components/account/ProfileHub.tsx`): who, Free or Premium, three tiles (the
+collection's value today from this browser's list and `/prices.json`, the price alerts, Premium),, a "get the most from your account" checklist, and the Premium card for a free
+account. Signed out, `/account` puts the sign-in slides (`SignInSlides`, "panel") beside the form. The slides sell only the FREE
+account, one true benefit each (alerts, the collection, one account for every card site): no price, no
+Premium, nothing the copy rules ban. The minimal home page gets no banner. `SignInCorner` (new here; this site had no
+corner card): a signed-out visitor is asked for a free account, never money; never on a visit's first page, after a scroll, closed
+for 7 days, never on the account pages, never on product pages (`/card/`, where the leave-nudge test runs). It is the visit's ONE self-opening prompt
+(`lib/prompt-slot.ts`): it stands down when the rating card, the return nudge or the leave nudge had the visit, and the
+rating card stands down after it.
+Every sign-in prompt links `/account?src=<surface>`; the sign-in sends it on, and RiftCompare stamps a new account
+`sister:tcgprices:<surface>` (TCGEmpire `sisterSignupSource`). Events: `signin_prompt` {surface, step}, `signin_prompt_click`,
+`signin_complete` {src, method}, `profile_view`.
+
+**Why.** Owner, 2026-11-22: "Can we significantly uplift the profile pages and the sign in and login incentive ... especially
+dexcompare and mtgcompare". In the week to 22 Nov, 118 of 125 new reachable people were RiftCompare accounts and Dex and MTG, with most of the Google traffic, added 6. Owner, 2026-11-23: "keep user experience high and not flooding them with ads and
+information" (ops/product-ux/page-budget.md): hence one prompt a visit and nothing on the first page.
+TCG Prices runs no giveaway, so its slides are alerts, the collection and one account. Ported from MTG Compare and DexCompare.
