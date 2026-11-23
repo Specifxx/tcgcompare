@@ -92,6 +92,32 @@ test("the extension recognises store pages by their words, and refuses a guess",
   assert.equal(m("Order a Booster Box & Folder - Save £10", "UK").sure, null);
 });
 
+// Real store titles from the 1.3.0 test on live shops (Collectors Kingdom UK, TCGKing NL), 23 Nov 2026.
+test("the extension never names a set of two, a bonus pack or a special edition as the plain product", async () => {
+  const { makeMatcher } = createRequire(import.meta.url)("../extension/src/match.js");
+  const item = (n: string, g: string) => ({ n, u: "/card/x", g, s: 3, m: 1000, p: { US: 900 }, k: "Starter Deck", t: "" });
+  const feed = {
+    lines: { pkm: { name: "Pokémon" }, gun: { name: "Gundam Card Game" } },
+    items: {
+      "1": item("30th Celebration Battle Deck [Espeon ex]", "pkm"),
+      "2": item("30th Celebration Battle Deck [Umbreon ex]", "pkm"),
+      "3": item("30th Celebration Battle Deck: Umbreon ex/Espeon ex [Set of two]", "pkm"),
+      "4": item("Starter Deck 04: SEED Strike", "gun"),
+      "5": item("Starter Deck 04: SEED Strike - Gundam Assemble Starter Set", "gun"),
+      "6": item("Starter Deck: SEED Strike Bonus Pack", "gun"),
+    },
+  };
+  const m = makeMatcher(feed);
+  // One deck, either one: not the set of two, and not decided between the two.
+  assert.equal(m("Pokémon 30th Celebration Battle Deck", "UK").sure, null);
+  assert.equal(m("Pokémon 30th Celebration Battle Deck Espeon ex", "UK").sure, "1");
+  assert.equal(m("30th Celebration Battle Deck Umbreon ex / Espeon ex Set of 2", "US").sure, "3");
+  // "ST04" is TCGplayer's "Starter Deck 04"; the bonus pack and the special edition are other products.
+  assert.equal(m("Gundam ST04: SEED Strike Starter Deck [English]", "EU").sure, "4");
+  assert.equal(m("Gundam ST04: SEED Strike Special Edition (ST04A) Starter Deck [English]", "EU").sure, null);
+  assert.equal(m("Gundam Starter Deck SEED Strike Bonus Pack", "US").sure, "6");
+});
+
 test("page budget: the product page's extension card waits for the Cyber banner to end", () => {
   const src = fs.readFileSync("src/app/card/[slug]/page.tsx", "utf8");
   assert.match(src, /cyberBannerState\(Date\.now\(\)\) === "off" && <ExtensionCta/);
