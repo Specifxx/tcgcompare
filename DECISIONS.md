@@ -1577,3 +1577,10 @@ words ("most popular first"). `tests/list-controls.test.ts` pins the server HTML
 
 Read 7 Dec: buy clickers per 100 visitors who land on `/sealed/*` and `/games/*/*` (Vercel, 24 Nov to 6 Dec against 9 to 22
 Nov), and phone bounce on those paths. If either is worse, put newest-first back as the default sort before anything else.
+
+## 2026-11-23: The deal finder's table fits a phone
+
+On a 390px screen the deal finder's six columns pushed the price, the saving and the Buy button off the right edge, behind a
+sideways scroll: the one page whose whole point is the buy click hid it. Below `sm` the Where, Market and Under columns are
+hidden and their content folds into the two cells that stay (the store under the name, "−N% · mkt $X" under the price), so a
+row is name, price, Buy. Desktop is unchanged. No new copy, prompt or ad.
