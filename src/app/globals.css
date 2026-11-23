@@ -1722,3 +1722,11 @@ html[data-adlook="b"] [data-leave-nudge]::before {
 .ff-miss { display: none !important; }
 .ff-hits { min-height: 1.5rem; margin-top: 0.375rem; font-size: 0.8125rem; color: rgb(var(--muted)); }
 @media (prefers-reduced-motion: reduce) { .set-row-link { transition: none; } .set-row-link:hover { transform: none; } }
+
+/* A tap that navigates draws a line of light along the top edge until the new page is in (components/NavBoost.tsx sets
+   html[data-nav]); it waits 120 ms, so a page that was prefetched and swaps at once never flashes it. */
+.nav-line { position: fixed; inset: 0 0 auto 0; height: 2px; z-index: 80; pointer-events: none; opacity: 0; transform-origin: 0 50%;
+  background: linear-gradient(90deg, rgb(var(--neo-a)), rgb(var(--neo-b)), rgb(var(--neo-c))); }
+html[data-nav] .nav-line { opacity: 1; animation: nav-line 2.4s cubic-bezier(0.1, 0.7, 0.2, 1) 120ms both; }
+@keyframes nav-line { from { transform: scaleX(0); } to { transform: scaleX(0.92); } }
+@media (prefers-reduced-motion: reduce) { html[data-nav] .nav-line { animation: none; transform: none; } }

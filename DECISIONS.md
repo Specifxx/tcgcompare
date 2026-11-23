@@ -1602,3 +1602,25 @@ words go from ~25 to a median of 147 (10th percentile 90). `usCheapestQuoted` st
 but the page no longer uses it. Judge on 1 to 8 Dec against 3 to 9 Nov.
 
 Set pages too: `setRead` (same file) writes "<set> prices at a glance" under each set page's grid from the set's own products. The import and marketplace advice sentences that would repeat on every page were removed from both sections.
+
+## 2026-11-23: Clicks that feel instant, on the real URLs (NavBoost)
+
+Owner, 23 Nov: "I want the sites to be very, very fast to use ... clicking all the tabs", with a single-page site of his as the
+model (it switches views on a `#hash`, so nothing loads). We cannot do that: a hash route is one URL to Google and breaks the URL
+freeze. The same feel the crawlable way, in `components/NavBoost.tsx` (one delegated listener, mounted once in the layout, nothing
+in the server HTML):
+
+- **Intent prefetch.** A same-site link starts loading on touch-down, on a 65 ms hover and on keyboard focus (`router.prefetch`),
+  once a visit. Only a page somebody is already pressing or pointing at, so it costs about what the click would have. The
+  viewport prefetch `components/Link.tsx` turns off for cost stays off (`tests/nav-boost.test.ts` fails on an IntersectionObserver).
+- **The main tabs warmed when idle**: `/`, `/sealed`, `/sets`, `/games`, `/tools/deal-finder`, once a visit, skipped on Save-Data
+  and 2g. Five CDN-cached hubs: at most five edge requests a visit and no function run while the CDN copy is warm.
+- **Feedback inside the tap**: `html[data-nav]` draws a line of light on the top edge from the click until the new page is in
+  (after 120 ms, so an instant swap never flashes it). A tile that opens the quick view is left alone.
+- Never `/go`, `/out`, `/api`, a sponsored link, a new-tab link or another host.
+
+Measured (production build, emulated phone: 4x CPU slowdown, 150 ms round trip, 9 Mbps; tap to first paint of the new page, median
+of 5): Sealed tab 871 → 567 ms, All games 740 → 432 ms; a link that is only prefetched on touch-down 609 → 591 ms (the touch
+gives about 100 ms of head start, most of the rest is the phone drawing the page). What is left is page weight, not network:
+`/sealed/booster-box` takes 1.4 s to draw on that phone because every product is in the page. Next: make the heavy pages lighter
+to draw. Rollback: remove `<NavBoost>` from the layout.
