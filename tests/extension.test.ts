@@ -90,6 +90,67 @@ test("the extension recognises store pages by their words, and refuses a guess",
   // A singles store's own style, and a store bundle that names no set, are never a sealed product.
   assert.equal(m("Black Lotus (233) - 2ED", "UK").single, true);
   assert.equal(m("Order a Booster Box & Folder - Save £10", "UK").sure, null);
+  // eBay, 23 Nov 2026: a damaged box is not the product at its price.
+  assert.equal(m("Pokémon TCG Perfect Order Elite Trainer Box ETB (Seal Damage)", "US").sure, null);
+  assert.equal(m("Pokemon Perfect Order Elite Trainer Box Factory Sealed Unopened", "US").sure, "6");
+});
+
+// Real store titles from the 1.3.0 test on live shops (Collectors Kingdom UK, TCGKing NL), 23 Nov 2026.
+test("the extension never names a set of two, a bonus pack or a special edition as the plain product", async () => {
+  const { makeMatcher } = createRequire(import.meta.url)("../extension/src/match.js");
+  const item = (n: string, g: string) => ({ n, u: "/card/x", g, s: 3, m: 1000, p: { US: 900 }, k: "Starter Deck", t: "" });
+  const feed = {
+    lines: { pkm: { name: "Pokémon" }, gun: { name: "Gundam Card Game" } },
+    items: {
+      "1": item("30th Celebration Battle Deck [Espeon ex]", "pkm"),
+      "2": item("30th Celebration Battle Deck [Umbreon ex]", "pkm"),
+      "3": item("30th Celebration Battle Deck: Umbreon ex/Espeon ex [Set of two]", "pkm"),
+      "4": item("Starter Deck 04: SEED Strike", "gun"),
+      "5": item("Starter Deck 04: SEED Strike - Gundam Assemble Starter Set", "gun"),
+      "6": item("Starter Deck: SEED Strike Bonus Pack", "gun"),
+    },
+  };
+  const m = makeMatcher(feed);
+  // One deck, either one: not the set of two, and not decided between the two.
+  assert.equal(m("Pokémon 30th Celebration Battle Deck", "UK").sure, null);
+  assert.equal(m("Pokémon 30th Celebration Battle Deck Espeon ex", "UK").sure, "1");
+  assert.equal(m("30th Celebration Battle Deck Umbreon ex / Espeon ex Set of 2", "US").sure, "3");
+  // "ST04" is TCGplayer's "Starter Deck 04"; the bonus pack and the special edition are other products.
+  assert.equal(m("Gundam ST04: SEED Strike Starter Deck [English]", "EU").sure, "4");
+  assert.equal(m("Gundam ST04: SEED Strike Special Edition (ST04A) Starter Deck [English]", "EU").sure, null);
+  assert.equal(m("Gundam Starter Deck SEED Strike Bonus Pack", "US").sure, "6");
+});
+
+// Good Games AU lists One Piece singles under the booster they came from (23 Nov 2026): never that booster.
+test("a single card named after its booster is a single card", async () => {
+  const { makeMatcher } = createRequire(import.meta.url)("../extension/src/match.js");
+  const feed = {
+    lines: { op: { name: "One Piece Card Game" } },
+    items: { "1": { n: "Extra Booster: One Piece Heroines Edition Vol.2 - Booster Pack", u: "/card/x", g: "op", s: 3, m: 600, p: { AU: 1999 }, k: "Booster Pack", t: "" } },
+  };
+  const m = makeMatcher(feed);
+  for (const t of [
+    "Nami EB05-055 (Extra Booster: One Piece Heroines Edition Vol. 2)  - Alternate Art Foil",
+    "Shirley EB05-013 (Extra Booster: One Piece Heroines Edition Vol. 2)",
+    "DON!! Card Gold  (Extra Booster: One Piece Heroines Edition Vol. 2)  - Foil",
+  ]) {
+    const r = m(t, "AU");
+    assert.equal(r.sure, null, t);
+    assert.equal(r.single, true, t);
+  }
+  assert.equal(m("One Piece Card Game Extra Booster Heroines Edition Vol. 2 Booster Pack EB05", "AU").sure, "1");
+});
+
+// Common Lands US gives its Collector Booster Display the pack's UPC (23 Nov 2026): the words win over that barcode.
+test("a barcode never turns a display into the pack inside it", async () => {
+  const { makeMatcher } = createRequire(import.meta.url)("../extension/src/match.js");
+  const item = (n: string, k: string, e: string) => ({ n, u: "/card/x", g: "mtg", s: 3, m: 1000, p: { US: 900 }, k, t: "Dominaria Remastered", e });
+  const m = makeMatcher({
+    lines: { mtg: { name: "Magic: The Gathering" } },
+    items: { "1": item("Dominaria Remastered - Collector Booster Display", "Booster Box", "195166200699"), "2": item("Dominaria Remastered - Collector Booster Pack", "Booster Pack", "195166200682") },
+  });
+  assert.equal(m("Dominaria Remastered - Collector Booster Display", "US", ["195166200682"]).sure, "1");
+  assert.equal(m("Dominaria Remastered - Collector Booster Pack", "US", ["195166200682"]).sure, "2");
 });
 
 test("page budget: the product page's extension card waits for the Cyber banner to end", () => {

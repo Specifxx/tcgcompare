@@ -56,6 +56,9 @@
   // Signs of a single card (or a graded slab) rather than sealed product.
   const SINGLE = /\b\d{1,3}\s?\/\s?\d{2,3}\b|\b(psa|cgc|bgs|sgc|beckett|ace)\s?(\d{1,2}(\.\d)?|gem|mint)\b|\b(near mint|nm\/m|nm|lp|mp|hp|holo rare|reverse holo|full art|alt art|alternate art|secret rare|illustration rare|special illustration|sir|hyper rare|ultra rare|serialized|serialised|graded|slab|single|singles|foil|non foil|borderless|showcase|extended art|signed|autograph|playset|x4|4x)\b/;
 
+  const CARD_CODE = /\b[A-Z]{2,4}\d{1,2}[A-Z]?-\d{3}[A-Z]?\b/;
+  const PRINTING = /\s[-–]\s*(alternate art |alt art |reverse |parallel )?(foil|holofoil|holo|normal|non-?foil)\s*$/i;
+
   function fold(s) {
     return String(s ?? "")
       .toLowerCase()
@@ -86,6 +89,8 @@
       .replace(/ vol(ume)? ?(\d+) /g, " vol$2 ")
       .replace(/ (\d+) ?(ct|count|pc|pcs|pieces) /g, " ")
       .replace(/ s and v | s v /g, " scarlet and violet ")
+      // "Starter Deck 04" is how TCGplayer names what stores call "ST04".
+      .replace(/ starter deck 0*(\d{1,2}) /g, " starter deck st$1 ")
       .replace(/ ([a-z]{1,4}) ?-? ?0*(\d{1,3})([a-z]?) /g, (m, a, d, z) => (/^(vol|op|eb|st|prb|sv|me|sm|xy|bw|swsh|bt|ex|fb|ue|gd|bs|ga|dz|ds|ch|ou|ws|qb|sd|ec|rb|ad|mb|mp|ap)$/.test(a) ? ` ${a}${d}${z} ` : m))
       .replace(/\s+/g, " ")
       .trim();
@@ -94,6 +99,19 @@
   /** "36 packs", "12 boosters", "24 cards": what a thing holds, never part of its name. */
   function stripCounts(s) {
     return (" " + s + " ").replace(/(?<! (set|series|vol|wave|part|season|chapter|volume)) \d+ ?x? ?(booster |sleeved |card )?(packs|pack|boosters|cards|decks|tins|bundles|pcs) /g, " ");
+  }
+
+  /**
+   * Words that make a different product of the same name: a set of two decks is not one deck, a bonus pack is not the
+   * deck it came with, a special edition is not the standard one. Both sides must say the same ones, or it is no match.
+   */
+  function marks(s) {
+    const m = [];
+    if (/ set of (two|2|three|3|four|4) /.test(s)) m.push("set");
+    if (/ bonus /.test(s)) m.push("bonus");
+    if (/ special edition | st\d{1,2}a /.test(s)) m.push("special");
+    if (/ gundam assemble /.test(s)) m.push("assemble");
+    return m.join(",");
   }
 
   /** The kind of sealed product a text describes, or null when it does not say. */
@@ -171,7 +189,7 @@
       const kind = kindOf(nameF) ?? kindOf(canon(fold(it.k ?? ""))) ?? null;
       const jp = it.g === "pkj" || /\bjapanese\b/.test(nameF);
       const foreign = jp || LANG_FOREIGN.test(nameF);
-      rows.push({ id, it, req, opt, kind, jp, foreign, code: it.e ?? null });
+      rows.push({ id, it, req, opt, kind, jp, foreign, code: it.e ?? null, mk: marks(" " + nameF + " ") });
       for (const w of new Set([...req, ...opt])) df.set(w, (df.get(w) ?? 0) + 1);
     }
     const N = rows.length;
@@ -195,9 +213,12 @@
      * @returns {{ sure: string|null, top: string[], single: boolean, foreign: boolean, kind: string|null, by?: string }}
      */
     return function match(text, market, gtins = []) {
+      // A barcode decides it, unless the page's own words name another kind of product: stores often give a display
+      // the barcode of the pack inside it ("Collector Booster Display" carrying the Collector Booster Pack's UPC).
+      const wordKind = gtins.length ? kindOf(canon(fold(cleanTitle(text)))) : null;
       for (const g of gtins) {
         const r = byCode.get(String(g).replace(/\D/g, "").replace(/^0+/, ""));
-        if (r) return { sure: r.id, top: [r.id], single: false, foreign: false, by: "barcode", kind: r.kind };
+        if (r && !(wordKind && r.kind && kindsAgree(wordKind, r.kind))) return { sure: r.id, top: [r.id], single: false, foreign: false, by: "barcode", kind: r.kind };
       }
       const clean = cleanTitle(text);
       const f = canon(fold(clean));
@@ -207,10 +228,14 @@
       const qJp = JAPANESE.test(f);
       const qForeign = LANG_FOREIGN.test(f);
       const qKind = kindOf(f);
+      const qMk = marks(" " + f + " ");
       // "Black Lotus (233) - 2ED", "Elsa - Snow Queen (41)": a card's collector number, as singles stores list them.
-      const single = /\b\d{1,3}\s?\/\s?\d{2,3}\b/.test(clean) || (!qKind && (SINGLE.test(f) || /\(\s*#?\d{1,4}[a-z]?\s*\)\s*(-\s*[A-Za-z0-9]{2,6}\s*)?$/.test(clean.trim())));
-      // Several products, or part of one, are never one product of ours: "lot of 5", "x3", "half booster box".
-      const many = /(^| )(lot|lots|bundle of \d+|half|bulk|mixed|random|assorted|mystery|repack|repacks|break)( |$)|(^| )x ?\d+( |$)|(^| )\d+ ?x( |$)/.test(f);
+      // "Nami EB05-055 (Extra Booster: …) - Alternate Art Foil": a card's code, or a printing after a dash, is a single
+      // card even when the set it came from is a booster.
+      const single = /\b\d{1,3}\s?\/\s?\d{2,3}\b/.test(clean) || CARD_CODE.test(text) || PRINTING.test(text) || (!qKind && (SINGLE.test(f) || /\(\s*#?\d{1,4}[a-z]?\s*\)\s*(-\s*[A-Za-z0-9]{2,6}\s*)?$/.test(clean.trim())));
+      // Several products, part of one, or a damaged or opened one are never one product of ours: "lot of 5", "x3",
+      // "half booster box", "ETB (Seal Damage)".
+      const many = /(^| )(lot|lots|bundle of \d+|half|bulk|mixed|random|assorted|mystery|repack|repacks|break|damage|damaged|dented|crushed|torn|opened|resealed|empty)( |$)|(^| )x ?\d+( |$)|(^| )\d+ ?x( |$)/.test(f);
       const q = toks(clean, dropOf(named));
       if (!q.length) return { sure: null, top: [], single, foreign: qForeign, kind: qKind };
 
@@ -240,7 +265,7 @@
         let extra = 0;
         for (const w of q) if (!used.has(w) && df.has(w)) extra += idf(w);
         const kd = kindsAgree(qKind, r.kind);
-        const langBad = r.jp !== qJp || (qForeign && !r.foreign);
+        const langBad = r.jp !== qJp || (qForeign && !r.foreign) || r.mk !== qMk;
         const cover = r.req.length ? got / (got + miss) : opt > 0 ? 1 : 0;
         const s = got + W.opt * opt - W.miss * miss - W.extra * extra - kd * 6 - (!qKind && r.kind ? W.kindless : 0) - (langBad ? 8 : 0) + (r.it.p?.[market] != null ? 0.4 : 0) + Math.log10(1 + (r.it.s ?? 0)) * 0.3;
         scored.push({ r, s, cover, kd, langBad, gotN, extra, got, miss, opt });

@@ -1646,3 +1646,21 @@ Flesh and Blood and Cyberpunk. Pokémon Japan stays out (yen prices). The same c
 still ONE message of at most `MAX_POSTS`, so the hub's three drops a day hold. So that Pokémon's volume cannot fill every slot,
 `spreadGames` puts each game's first `MAX_PER_GAME` (3) ranked events in front and the rest after them: a quiet day still fills its
 slots. The hub's price bot copies each drop's posts into the game's own channel (TCGEmpire `scripts/discord-publish.ts`).
+
+## 2026-11-23: Extension matcher: a set of two, a bonus pack or a special edition is never the plain product
+
+The 1.3.0 test on live shops (Collectors Kingdom UK, TCGKing NL) found two wrong names: a single "30th Celebration
+Battle Deck" was named as the "[Set of two]" (and told the visitor it was the lowest price), and "ST04: SEED Strike
+Starter Deck" as the deck's bonus pack, because TCGplayer writes "Starter Deck 04" where stores write "ST04". `marks()` in
+`extension/src/match.js` now reads set of two/three, bonus, special edition (and "ST02A"-style codes) and Gundam Assemble;
+both sides must say the same ones or it is no match. "Starter Deck 04" reads as "ST04". It only refuses (and the ST
+reading finds the right deck); the 2,307-title set went from 86.8% to 87.0% right first time, wrong claims unchanged at
+1.9%. It ships in 1.3.1, which was not uploaded yet. `tests/extension.test.ts` holds the real titles.
+The same test at Good Games AU found One Piece singles listed under their booster ("Nami EB05-055 (Extra Booster: …) -
+Alternate Art Foil") named as the booster pack, three with a "Save" line. A card code (`EB05-055`, `OP01-001`, `GD01-012`)
+or a printing after a dash ("- Foil", "- Alternate Art Foil", "- Normal") now makes a page a single card, whatever kind
+of product the words also name. No change on the 2,307-title set.
+And at Common Lands US a "Collector Booster Display" page carried the Collector Booster Pack's UPC, so the barcode named
+the pack. A barcode still decides a page, except when the page's own words name another kind of product.
+On eBay, a "(Seal Damage)" ETB was called the lowest price: damaged, dented, crushed, torn, opened, resealed and empty
+now refuse a page, as lots and repacks already did ("unopened" is still fine).
