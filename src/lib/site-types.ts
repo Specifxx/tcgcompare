@@ -472,6 +472,8 @@ export interface CrawlMeta {
   refusedDetail?: Record<string, number>;
   /** Listings taken, by game line (diagnostic). */
   takenByLine?: Record<string, number>;
+  /** Each crawled game's funnel, every market ("dbs") and the US ("dbs@US"): listings, taken, refused by reason (diagnostic). */
+  lineFunnel?: Record<string, { listings: number; taken: number; refused: Record<string, number> }>;
   /** Offers kept after vetting and the price band, and rows carried for stores not read this run. */
   offers: number;
   carried: number;

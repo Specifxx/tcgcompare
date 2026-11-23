@@ -427,8 +427,20 @@ export interface CrawlTake {
   refusedDetail?: Record<string, number>;
   /** Listings taken, by game line. */
   takenByLine?: Record<string, number>;
+  /** Each crawled game's funnel (the games whose collections listed it), for every market ("dbs") and the US ("dbs@US"). */
+  lineFunnel?: Record<string, LineFunnel>;
   listings: number;
 }
+
+/** One game's crawl funnel: listings read in its collections, taken, and refused by reason (the 8 commonest). */
+export interface LineFunnel {
+  listings: number;
+  taken: number;
+  refused: Record<string, number>;
+}
+
+/** Funnel keys of a listing: each game it was crawled for, and that game in the US. */
+const funnelKeys = (lines: readonly string[], market: Market): string[] => [...new Set(lines)].flatMap((line) => (market === "US" ? [line, `${line}@US`] : [line]));
 
 /**
  * Adds the crawl's offers to the sisters' result. A store and product a sister already prices keeps the sister's row:
@@ -465,6 +477,14 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
   const refused: Record<string, number> = {};
   const detail: Record<string, number> = {};
   const byLine: Record<string, number> = {};
+  const funnel: Record<string, LineFunnel> = {};
+  const stage = (l: CrawlListing, market: Market, what: "listings" | "taken" | string) => {
+    for (const k of funnelKeys(l.lines, market)) {
+      const f = (funnel[k] ??= { listings: 0, taken: 0, refused: {} });
+      if (what === "listings" || what === "taken") f[what]++;
+      else f.refused[what] = (f.refused[what] ?? 0) + 1;
+    }
+  };
   let taken = 0;
   let titled = 0;
   let aiTaken = 0;
@@ -485,6 +505,7 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
     const best = new Map<number, Offer>();
     for (const l of s.listings) {
       listings++;
+      stage(l, s.market, "listings");
       let r = pickId(l, ctx);
       // A product of another game in this game's collection (GameLine.alsoIn): read again as a listing of both games,
       // so every one of pickId's checks (photo, ids, type, quantity, that game's matcher) still decides.
@@ -515,14 +536,17 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
           continue;
         }
         refuse(r.refuse, r.detail);
+        stage(l, s.market, r.refuse);
         continue;
       }
       // A placeholder price ($999.99, $9,999) is no price: never shown, whoever sells it.
       if (PLACEHOLDER_CENTS.test(String(l.cents))) {
         refused.placeholder = (refused.placeholder ?? 0) + 1;
+        stage(l, s.market, "placeholder");
         continue;
       }
       taken++;
+      stage(l, s.market, "taken");
       const tp = ctx.products.get(r.id);
       const tl = tp ? ctx.lineOf(tp) : null;
       if (tl) byLine[tl] = (byLine[tl] ?? 0) + 1;
@@ -556,10 +580,12 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
       const usd = launch!.usd(h.l.cents, h.market);
       if (market == null || ref == null || ref >= market || usd < ref * 0.4 || usd > market * 2.5) {
         refuse(h.refuse, h.detail);
+        stage(h.l, h.market, h.refuse);
         continue;
       }
       taken++;
       launchTaken++;
+      stage(h.l, h.market, "taken");
       const tp = ctx.products.get(id);
       const tl = tp ? ctx.lineOf(tp) : null;
       if (tl) byLine[tl] = (byLine[tl] ?? 0) + 1;
@@ -574,7 +600,9 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
     }
   }
   const refusedDetail = Object.fromEntries(Object.entries(detail).sort((a, b) => b[1] - a[1]).slice(0, 40));
-  return { offers, fresh, taken, refused, refusedDetail, takenByLine: byLine, listings, titled, aiTaken, alsoTaken, launchTaken };
+  for (const f of Object.values(funnel)) f.refused = Object.fromEntries(Object.entries(f.refused).sort((a, b) => b[1] - a[1]).slice(0, 8));
+  const lineFunnel = Object.fromEntries(Object.entries(funnel).sort(([a], [b]) => a.localeCompare(b)));
+  return { offers, fresh, taken, refused, refusedDetail, takenByLine: byLine, lineFunnel, listings, titled, aiTaken, alsoTaken, launchTaken };
 }
 
 /**
