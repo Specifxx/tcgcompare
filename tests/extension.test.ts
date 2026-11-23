@@ -90,6 +90,9 @@ test("the extension recognises store pages by their words, and refuses a guess",
   // A singles store's own style, and a store bundle that names no set, are never a sealed product.
   assert.equal(m("Black Lotus (233) - 2ED", "UK").single, true);
   assert.equal(m("Order a Booster Box & Folder - Save £10", "UK").sure, null);
+  // eBay, 23 Nov 2026: a damaged box is not the product at its price.
+  assert.equal(m("Pokémon TCG Perfect Order Elite Trainer Box ETB (Seal Damage)", "US").sure, null);
+  assert.equal(m("Pokemon Perfect Order Elite Trainer Box Factory Sealed Unopened", "US").sure, "6");
 });
 
 // Real store titles from the 1.3.0 test on live shops (Collectors Kingdom UK, TCGKing NL), 23 Nov 2026.

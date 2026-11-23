@@ -233,8 +233,9 @@
       // "Nami EB05-055 (Extra Booster: …) - Alternate Art Foil": a card's code, or a printing after a dash, is a single
       // card even when the set it came from is a booster.
       const single = /\b\d{1,3}\s?\/\s?\d{2,3}\b/.test(clean) || CARD_CODE.test(text) || PRINTING.test(text) || (!qKind && (SINGLE.test(f) || /\(\s*#?\d{1,4}[a-z]?\s*\)\s*(-\s*[A-Za-z0-9]{2,6}\s*)?$/.test(clean.trim())));
-      // Several products, or part of one, are never one product of ours: "lot of 5", "x3", "half booster box".
-      const many = /(^| )(lot|lots|bundle of \d+|half|bulk|mixed|random|assorted|mystery|repack|repacks|break)( |$)|(^| )x ?\d+( |$)|(^| )\d+ ?x( |$)/.test(f);
+      // Several products, part of one, or a damaged or opened one are never one product of ours: "lot of 5", "x3",
+      // "half booster box", "ETB (Seal Damage)".
+      const many = /(^| )(lot|lots|bundle of \d+|half|bulk|mixed|random|assorted|mystery|repack|repacks|break|damage|damaged|dented|crushed|torn|opened|resealed|empty)( |$)|(^| )x ?\d+( |$)|(^| )\d+ ?x( |$)/.test(f);
       const q = toks(clean, dropOf(named));
       if (!q.length) return { sure: null, top: [], single, foreign: qForeign, kind: qKind };
 

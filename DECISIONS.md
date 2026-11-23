@@ -1662,3 +1662,5 @@ or a printing after a dash ("- Foil", "- Alternate Art Foil", "- Normal") now ma
 of product the words also name. No change on the 2,307-title set.
 And at Common Lands US a "Collector Booster Display" page carried the Collector Booster Pack's UPC, so the barcode named
 the pack. A barcode still decides a page, except when the page's own words name another kind of product.
+On eBay, a "(Seal Damage)" ETB was called the lowest price: damaged, dented, crushed, torn, opened, resealed and empty
+now refuse a page, as lots and repacks already did ("unopened" is still fine).
