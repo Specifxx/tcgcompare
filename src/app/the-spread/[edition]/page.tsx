@@ -169,6 +169,9 @@ export default function SpreadEdition({ params }: { params: { edition: string } 
             </tbody>
           </table>
         </div>
+        <p className="text-sm text-muted">
+          To see this spread for the box you are about to buy, our free <Link className="link" href={"/extension?utm_source=the-spread&utm_medium=report&utm_campaign=extension"}>Chrome extension</Link> shows the cheapest card stores on any TCGplayer page.
+        </p>
       </section>
 
       {e.events.length > 0 && (

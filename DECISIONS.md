@@ -1524,3 +1524,11 @@ nothing outside TCGplayer unless the popup was opened. 1.3.0:
 
 Tested on real pages: Common Lands, eBay, TCGplayer, Good Games (20 products, 17 named, 0 wrong, every price read),
 Zone 151 (21 products, 18 named, 0 wrong). Amazon refuses automated browsers, so its selectors are untested.
+
+## 2026-11-23: Extension 1.3.1: one honest rating ask
+
+Owner: get people to rate it. The popup (never a page) shows one line, "Saving you money? A rating helps other collectors
+find us", only after the extension has sent the visitor to buy once or shown them a saving three times, at least three
+days after install. "Rate it" opens the store's reviews tab and ends the ask; "Not now" waits 30 days, twice at most. The
+two counters stay in `chrome.storage.local`. No incentive, no review written for anyone, no prompt on any web page
+(Chrome Web Store policy and the page budget). Uploaded only after 1.3.0 is approved, so its review isn't restarted.

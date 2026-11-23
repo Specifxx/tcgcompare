@@ -227,6 +227,23 @@
     here.hidden = true;
   }
 
+  // ── The one rating ask: only after the extension has shown a real saving or sent someone to buy, at least three
+  // days after install, in this popup (never on a page), and never again once rated or after two "Not now"s.
+  const { stats = {}, rateAsk = {}, installedAt = Date.now() } = await chrome.storage.local.get(["stats", "rateAsk", "installedAt"]);
+  const earned = (stats.buys ?? 0) >= 1 || (stats.saves ?? 0) >= 3;
+  if (CONFIG.listing && earned && !rateAsk.done && (rateAsk.later ?? 0) < 2 && Date.now() - installedAt > 3 * 864e5 && Date.now() > (rateAsk.until ?? 0)) {
+    $("rate").hidden = false;
+    $("rateGo").href = `${CONFIG.listing}/reviews`;
+    $("rateGo").addEventListener("click", () => {
+      chrome.storage.local.set({ rateAsk: { ...rateAsk, done: true } });
+      $("rate").hidden = true;
+    });
+    $("rateLater").addEventListener("click", () => {
+      chrome.storage.local.set({ rateAsk: { ...rateAsk, later: (rateAsk.later ?? 0) + 1, until: Date.now() + 30 * 864e5 } });
+      $("rate").hidden = true;
+    });
+  }
+
   await showDeals();
   $("q").focus();
   findOnPage();
