@@ -1,5 +1,5 @@
 // Sealed Sniper (lib/sniper.ts): after the import and scripts/restocks.ts, before the data commit, post this run's
-// verified restocks and price drops of sealed Pokémon, One Piece, Riftbound, Magic and Lorcana to Discord through an
+// verified restocks and price drops of sealed product of every game in SNIPER_LINES to Discord through an
 // incoming webhook (the DISCORD_SNIPER_WEBHOOK secret). A no-op until the secret exists; never fatal.
 //
 // Every candidate is checked once at the store itself (Shopify /products/<handle>.js through lib/import/polite-http.ts)

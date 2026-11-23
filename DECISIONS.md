@@ -1637,3 +1637,12 @@ Owner, 23 Nov: "our sites' navigation can be significantly improved". Two things
   highest in the home page's own ranking (`rankProducts`, lib/home-demand.ts), titled "Popular sets".
 
 No URL changed.
+
+## 2026-11-23: The Sealed Sniper covers every game our sites cover
+
+The owner asked for the deals hub to "cover all the tcgs we have": the Discord and Telegram feed read as Pokémon-only. `SNIPER_LINES`
+now holds Pokémon, One Piece, Riftbound, Magic, Lorcana, Yu-Gi-Oh!, Gundam, Union Arena, Fusion World, Digimon, Star Wars: Unlimited,
+Flesh and Blood and Cyberpunk. Pokémon Japan stays out (yen prices). The same checks, bands and caps apply to every game, and a run is
+still ONE message of at most `MAX_POSTS`, so the hub's three drops a day hold. So that Pokémon's volume cannot fill every slot,
+`spreadGames` puts each game's first `MAX_PER_GAME` (3) ranked events in front and the rest after them: a quiet day still fills its
+slots. The hub's price bot copies each drop's posts into the game's own channel (TCGEmpire `scripts/discord-publish.ts`).

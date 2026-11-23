@@ -16,6 +16,8 @@ import {
   judgeLive,
   productPath,
   rankEvents,
+  spreadGames,
+  MAX_PER_GAME,
   recordPosted,
   restockEvents,
   telegramText,
@@ -27,7 +29,7 @@ import {
 const fx = { USD: 1, AUD: 1.5, CAD: 1.4, EUR: 0.9, GBP: 0.75, SGD: 1.3 };
 const box: SniperProduct = { id: 1, slug: "some-booster-box", name: "Some Booster Box", sealedType: "Booster Box", image: null, line: "pkm", marketCents: 10000 };
 const pack: SniperProduct = { ...box, id: 2, slug: "pack", sealedType: "Booster Pack" };
-const ygo: SniperProduct = { ...box, id: 3, slug: "ygo-box", line: "ygo" };
+const ygo: SniperProduct = { ...box, id: 3, slug: "pkj-box", line: "pkj" };
 const products = new Map([box, pack, ygo].map((p) => [p.id, p]));
 const us: SniperStore = { key: "shopus", name: "Shop US", base: "https://shop-us.example", market: "US" };
 const au: SniperStore = { key: "shopau", name: "Shop AU", base: "https://shop-au.example", market: "AU" };
@@ -35,10 +37,11 @@ const stores = new Map([us, au].map((s) => [s.key, s]));
 const at = "2026-11-19T09:47:00.000Z";
 const NOW = Date.parse(at);
 
-test("only the five games' headline sealed products with a real market price are eligible", () => {
+test("only the covered games' headline sealed products with a real market price are eligible", () => {
   assert.equal(eligible(box), true);
   assert.equal(eligible(pack), false, "loose packs are noise");
-  assert.equal(eligible(ygo), false, "not one of the five games");
+  assert.equal(eligible(ygo), false, "Pokémon Japan is priced in yen");
+  for (const line of ["mtg", "op", "rb", "lor", "ygo", "gun", "ua", "fw", "dg", "swu", "fab", "cp"]) assert.equal(eligible({ ...box, line }), true, line);
   assert.equal(eligible({ ...box, marketCents: 1000 }), false, "under US$25");
   assert.equal(eligible({ ...box, marketCents: null }), false);
 });
@@ -193,4 +196,12 @@ test("a first pre-order in a market is posted once, before restocks, and only wh
   assert.equal(rankEvents([restock, ev[0]], emptySniperState(), NOW)[0].kind, "preorder");
   const posted = recordPosted(emptySniperState(), ev, NOW);
   assert.equal(isNew(ev[0], posted, NOW + 40 * 86400e3), false, "news once");
+});
+
+test("one game takes at most MAX_PER_GAME of a run's lead slots while other games have news", () => {
+  const ev = (id: number, line: string) => ({ kind: "drop", product: { ...box, id, line }, store: us, cents: 9000, prevCents: 10000, pct: 10, ref: "a" }) as unknown as Parameters<typeof spreadGames>[0][number];
+  const ranked = [1, 2, 3, 4, 5].map((i) => ev(i, "pkm")).concat([ev(6, "mtg"), ev(7, "ygo")]);
+  const out = spreadGames(ranked).map((e) => e.product.id);
+  assert.deepEqual(out.slice(0, MAX_PER_GAME + 2), [1, 2, 3, 6, 7]);
+  assert.deepEqual(out.slice(-2), [4, 5], "the rest still follow, so a quiet day fills its slots");
 });
