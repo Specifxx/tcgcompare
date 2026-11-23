@@ -1492,3 +1492,35 @@ Every sign-in prompt links `/account?src=<surface>`; the sign-in sends it on, an
 dexcompare and mtgcompare". In the week to 22 Nov, 118 of 125 new reachable people were RiftCompare accounts and Dex and MTG, with most of the Google traffic, added 6. Owner, 2026-11-23: "keep user experience high and not flooding them with ads and
 information" (ops/product-ux/page-budget.md): hence one prompt a visit and nothing on the first page.
 TCG Prices runs no giveaway, so its slides are alerts, the collection and one account. Ported from MTG Compare and DexCompare.
+
+## 2026-11-23: Chrome extension 1.3.0: what you'd save on the page you're on, on any shop, and price drops
+
+Owner, 23 Nov: "test out our extension and see if you can improve it significantly". Tried as a shopper, 1.2.1 never
+said whether the page in front of you was a good price (it showed our cheapest store and TCGplayer's market price, and
+on the Lost Origin ETB our "cheapest" was above TCGplayer's market without saying so), named one store only, and did
+nothing outside TCGplayer unless the popup was opened. 1.3.0:
+
+- **The page's own price against the cheapest store.** `extension/src/pageinfo.js` reads the price the page states
+  (schema.org offers; Amazon's and eBay's own price elements), and `verdict()` (shared.js) says "Save $18.24 (8%)",
+  "✓ the lowest price we track" or "about the same", only in the same currency and only when the page's price is
+  40–250% of the store's (a pack's page matched to a box, or a case price, says nothing). On TCGplayer it is the
+  product's own lowest listing (its JSON-LD offer whose URL carries this product id), else the market price.
+- **The three cheapest stores.** The feed gains `r`: the next two cheapest stores per market as [key, cents], no URL
+  (the cheapest keeps `b` with its listing link for 1.2.x; the others link to our page). The feed grows from about
+  470 KB to 570 KB gzipped; with URLs it was 860 KB, so they stay out.
+- **Price check on other shops, opt in.** Off by default. Turning it on asks Chrome for `https://*/*` as an OPTIONAL
+  host permission, and the service worker registers the content script then (`registerContentScripts`). It speaks only
+  on pages that describe a product and only when the matcher is sure, as one line in the corner ("Save $33 at Common
+  Lands"), opened with a click, with "Hide on this site". Never on our own sites. Matching runs in the service worker
+  against the downloaded file: nothing about the page leaves the browser.
+- **Watch price.** A star on every card; the watchlist lives in `chrome.storage.local`. Each new price file is checked
+  (and an `alarms` tick every 6 hours, which reuses the 12-hour cache): a 3%+ and one-unit drop under the lowest seen,
+  or a return to stock, sets a green ↓ badge and, if the visitor allowed the OPTIONAL `notifications` permission, a
+  notification. New permission `alarms` gives no install warning, so 1.2.x users are not asked again.
+- The popup asks the service worker for search, deals and matching instead of loading the whole file each time it opens.
+- `cleanTitle` no longer cuts a title at a dash followed by the product's own name ("Sword & Shield – Lost Origin Elite
+  Trainer Box - DXCOLLECTION" was read as "Sword & Shield"): 2,307-title test set 86.7% → 86.8% right first time, top 3
+  97.9% → 98.1%, wrong claims unchanged at 1.9%.
+
+Tested on real pages: Common Lands, eBay, TCGplayer, Good Games (20 products, 17 named, 0 wrong, every price read),
+Zone 151 (21 products, 18 named, 0 wrong). Amazon refuses automated browsers, so its selectors are untested.

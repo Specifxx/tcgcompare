@@ -131,9 +131,10 @@
     let t = String(title ?? "").replace(/\s+/g, " ").trim();
     t = t.replace(/^amazon(\.[a-z.]+)?\s*:\s*/i, "").replace(/\s*:\s*(toys (and|&) games|video games|toys|toys & games|everything else|home & kitchen)\s*$/i, "");
     t = t.replace(/\s*[|]\s*ebay.*$/i, "").replace(/\s*[|]\s*tcgplayer.*$/i, "");
-    // "Product – Store", "Product | Store", "Product — Store": the last part is the shop.
-    const m = t.match(/^(.*\S)\s+[–—|]\s+[^–—|]{2,60}$/);
-    if (m && m[1].length >= 8) t = m[1];
+    // "Product – Store", "Product | Store", "Product — Store": the last part is the shop, unless a dash leads to words
+    // naming a kind of product ("Sword & Shield – Lost Origin Elite Trainer Box"): then it is the product's own name.
+    const m = t.match(/^(.*\S)\s+([–—|])\s+([^–—|]{2,60})$/);
+    if (m && m[1].length >= 8 && !(m[2] !== "|" && fold(m[3]).split(" ").some((w) => KIND_WORDS.has(w)))) t = m[1];
     return t.slice(0, 200);
   }
 

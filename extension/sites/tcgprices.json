@@ -2,8 +2,8 @@
   "id": "tcgprices",
   "name": "TCG Prices: Sealed Price Checker",
   "short": "TCG Prices",
-  "version": "1.2.1",
-  "description": "See the cheapest store price for sealed TCG product on TCGplayer pages: booster boxes, ETBs, bundles. 31 games, 6 markets.",
+  "version": "1.3.0",
+  "description": "Compare sealed TCG prices on TCGplayer and other shops: see what you'd save at the cheapest store, and watch prices drop.",
   "home": "https://tcgprices.app",
   "feed": "https://tcgprices.app/extension.json",
   "search": "https://tcgprices.app/search?q={q}",
@@ -11,5 +11,8 @@
   "brand": "#4f46e5",
   "brandDark": "#3730a3",
   "icon": "../src/app/icon.svg",
-  "matches": ["https://www.tcgplayer.com/product/*", "https://tcgplayer.com/product/*"]
+  "matches": [
+    "https://www.tcgplayer.com/product/*",
+    "https://tcgplayer.com/product/*"
+  ]
 }

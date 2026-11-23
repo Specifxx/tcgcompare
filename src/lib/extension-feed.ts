@@ -7,7 +7,7 @@
 // cheapest in-stock STORE price (never eBay, never Amazon, never TCGplayer itself, never converted) and TCGplayer's
 // own market price as the reference, so the panel can say "cheapest store $X · TCGplayer market $Y" truthfully.
 import { SITE } from "@/site.config";
-import { products, refCents, setById, summaryOf } from "./data";
+import { priceOf, products, refCents, setById, summaryOf } from "./data";
 import { SITE_URL } from "./site";
 import { CURRENCY, MARKETS, type Market, type Offer } from "./site-types";
 
@@ -28,6 +28,9 @@ export interface ExtensionItem {
   p: Partial<Record<Market, number>>;
   /** the cheapest store per market: [store key, its listing URL] for the panel's "Buy at" button (through /go) */
   b?: Partial<Record<Market, [string, string]>>;
+  /** the next two cheapest stores per market after `b`'s, cheapest first: [store key, that market's cents]
+   * (extension 1.3.0+; `b` stays for older versions) */
+  r?: Partial<Record<Market, [string, number][]>>;
   /** 1 when the set is not out yet (every store price is a pre-order) */
   pre?: 1;
   /** TCGplayer's sealed type ("Booster Box", "Case", "Elite Trainer Box"…), for telling a box from its case */
@@ -71,6 +74,20 @@ export function cheapestStores(best: Offer[]): Partial<Record<Market, number>> {
   return Object.fromEntries(Object.entries(cheapestStoreOffers(best)).map(([m, o]) => [m, o.cents]));
 }
 
+/** Pure: up to `n` cheapest in-stock store offers per market, one per store, cheapest first (same rules as above). */
+export function topStoreOffers(best: Offer[], n = 3): Partial<Record<Market, Offer[]>> {
+  const by: Partial<Record<Market, Map<string, Offer>>> = {};
+  for (const o of best) {
+    if (!o.inStock || !(o.cents > 0) || !/^https:\/\//.test(o.url)) continue;
+    if (o.source === "tcgplayer" || o.source === "ebay" || o.source === "amazon") continue;
+    if (o.currency !== CURRENCY[o.market]) continue;
+    const m = (by[o.market] ??= new Map());
+    const cur = m.get(o.source);
+    if (!cur || o.cents < cur.cents) m.set(o.source, o);
+  }
+  return Object.fromEntries(Object.entries(by).map(([k, m]) => [k, [...m!.values()].sort((a, b) => a.cents - b.cents).slice(0, n)]));
+}
+
 export function cheapestStoreOffers(best: Offer[]): Partial<Record<Market, Offer>> {
   const out: Partial<Record<Market, Offer>> = {};
   for (const o of best) {
@@ -97,13 +114,14 @@ export function buildExtensionFeed(now = new Date()): ExtensionFeed {
     const cheapest = cheapestStoreOffers(sum.best);
     const prices = Object.fromEntries(Object.entries(cheapest).map(([m, o]) => [m, o.cents])) as Partial<Record<Market, number>>;
     const buy = Object.fromEntries(Object.entries(cheapest).filter(([, o]) => /^https:\/\//.test(o.url)).map(([m, o]) => { used.add(`s:${o.source}`); return [m, [o.source, o.url]]; }));
+    const top = Object.fromEntries(Object.entries(topStoreOffers(priceOf(p.id).offers)).filter(([, l]) => l!.length > 1).map(([m, l]) => [m, l!.slice(1).map((o) => { used.add(`s:${o.source}`); return [o.source, o.cents] as [string, number]; })]));
     const ref = refCents(p.id);
     if (!Object.keys(prices).length && ref == null) continue;
     const set = setById(p.setId);
     const g = set?.line ?? null;
     if (g) used.add(g);
     const upcoming = !!set?.releasedOn && set.releasedOn > now.toISOString().slice(0, 10);
-    items[p.id] = { n: p.number ? `${p.name} ${p.number}` : p.name, u: `/card/${p.slug}`, g, s: sum.inStockSources, m: ref, p: prices, ...(Object.keys(buy).length ? { b: buy } : {}), ...(upcoming ? { pre: 1 as const } : {}), ...matchHints(p, set) };
+    items[p.id] = { n: p.number ? `${p.name} ${p.number}` : p.name, u: `/card/${p.slug}`, g, s: sum.inStockSources, m: ref, p: prices, ...(Object.keys(buy).length ? { b: buy } : {}), ...(Object.keys(top).length ? { r: top } : {}), ...(upcoming ? { pre: 1 as const } : {}), ...matchHints(p, set) };
   }
   const lines: ExtensionFeed["lines"] = {};
   for (const l of SITE.lines ?? []) {
