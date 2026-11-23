@@ -56,6 +56,9 @@
   // Signs of a single card (or a graded slab) rather than sealed product.
   const SINGLE = /\b\d{1,3}\s?\/\s?\d{2,3}\b|\b(psa|cgc|bgs|sgc|beckett|ace)\s?(\d{1,2}(\.\d)?|gem|mint)\b|\b(near mint|nm\/m|nm|lp|mp|hp|holo rare|reverse holo|full art|alt art|alternate art|secret rare|illustration rare|special illustration|sir|hyper rare|ultra rare|serialized|serialised|graded|slab|single|singles|foil|non foil|borderless|showcase|extended art|signed|autograph|playset|x4|4x)\b/;
 
+  const CARD_CODE = /\b[A-Z]{2,4}\d{1,2}[A-Z]?-\d{3}[A-Z]?\b/;
+  const PRINTING = /\s[-–]\s*(alternate art |alt art |reverse |parallel )?(foil|holofoil|holo|normal|non-?foil)\s*$/i;
+
   function fold(s) {
     return String(s ?? "")
       .toLowerCase()
@@ -224,7 +227,9 @@
       const qKind = kindOf(f);
       const qMk = marks(" " + f + " ");
       // "Black Lotus (233) - 2ED", "Elsa - Snow Queen (41)": a card's collector number, as singles stores list them.
-      const single = /\b\d{1,3}\s?\/\s?\d{2,3}\b/.test(clean) || (!qKind && (SINGLE.test(f) || /\(\s*#?\d{1,4}[a-z]?\s*\)\s*(-\s*[A-Za-z0-9]{2,6}\s*)?$/.test(clean.trim())));
+      // "Nami EB05-055 (Extra Booster: …) - Alternate Art Foil": a card's code, or a printing after a dash, is a single
+      // card even when the set it came from is a booster.
+      const single = /\b\d{1,3}\s?\/\s?\d{2,3}\b/.test(clean) || CARD_CODE.test(text) || PRINTING.test(text) || (!qKind && (SINGLE.test(f) || /\(\s*#?\d{1,4}[a-z]?\s*\)\s*(-\s*[A-Za-z0-9]{2,6}\s*)?$/.test(clean.trim())));
       // Several products, or part of one, are never one product of ours: "lot of 5", "x3", "half booster box".
       const many = /(^| )(lot|lots|bundle of \d+|half|bulk|mixed|random|assorted|mystery|repack|repacks|break)( |$)|(^| )x ?\d+( |$)|(^| )\d+ ?x( |$)/.test(f);
       const q = toks(clean, dropOf(named));

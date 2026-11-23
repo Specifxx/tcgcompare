@@ -1656,3 +1656,7 @@ Starter Deck" as the deck's bonus pack, because TCGplayer writes "Starter Deck 0
 both sides must say the same ones or it is no match. "Starter Deck 04" reads as "ST04". It only refuses (and the ST
 reading finds the right deck); the 2,307-title set went from 86.8% to 87.0% right first time, wrong claims unchanged at
 1.9%. It ships in 1.3.1, which was not uploaded yet. `tests/extension.test.ts` holds the real titles.
+The same test at Good Games AU found One Piece singles listed under their booster ("Nami EB05-055 (Extra Booster: …) -
+Alternate Art Foil") named as the booster pack, three with a "Save" line. A card code (`EB05-055`, `OP01-001`, `GD01-012`)
+or a printing after a dash ("- Foil", "- Alternate Art Foil", "- Normal") now makes a page a single card, whatever kind
+of product the words also name. No change on the 2,307-title set.

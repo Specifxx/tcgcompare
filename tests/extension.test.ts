@@ -118,6 +118,26 @@ test("the extension never names a set of two, a bonus pack or a special edition 
   assert.equal(m("Gundam Starter Deck SEED Strike Bonus Pack", "US").sure, "6");
 });
 
+// Good Games AU lists One Piece singles under the booster they came from (23 Nov 2026): never that booster.
+test("a single card named after its booster is a single card", async () => {
+  const { makeMatcher } = createRequire(import.meta.url)("../extension/src/match.js");
+  const feed = {
+    lines: { op: { name: "One Piece Card Game" } },
+    items: { "1": { n: "Extra Booster: One Piece Heroines Edition Vol.2 - Booster Pack", u: "/card/x", g: "op", s: 3, m: 600, p: { AU: 1999 }, k: "Booster Pack", t: "" } },
+  };
+  const m = makeMatcher(feed);
+  for (const t of [
+    "Nami EB05-055 (Extra Booster: One Piece Heroines Edition Vol. 2)  - Alternate Art Foil",
+    "Shirley EB05-013 (Extra Booster: One Piece Heroines Edition Vol. 2)",
+    "DON!! Card Gold  (Extra Booster: One Piece Heroines Edition Vol. 2)  - Foil",
+  ]) {
+    const r = m(t, "AU");
+    assert.equal(r.sure, null, t);
+    assert.equal(r.single, true, t);
+  }
+  assert.equal(m("One Piece Card Game Extra Booster Heroines Edition Vol. 2 Booster Pack EB05", "AU").sure, "1");
+});
+
 test("page budget: the product page's extension card waits for the Cyber banner to end", () => {
   const src = fs.readFileSync("src/app/card/[slug]/page.tsx", "utf8");
   assert.match(src, /cyberBannerState\(Date\.now\(\)\) === "off" && <ExtensionCta/);
