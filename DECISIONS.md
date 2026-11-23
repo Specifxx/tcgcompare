@@ -1551,3 +1551,29 @@ directory are not on it (1,039 in all markets).
 
 Read after the Sun 29 Nov 04:15 UTC probe and the import after it: `takenByLine.gun` (22 Nov: 91), Gundam products with no
 store (23 of 82). Lorcana (41 of 171) is thinner but noindex here (its sister ranks), so it waits.
+
+## 2026-11-23: The pages past the home page: a filter bar on lists, folded directories
+
+Owner: "we spend so much time on the landing page that we've kind of forgoed the database pages, the filters, the guides, all
+the other pages and hubs … revamp and upgrade those." Measured on a 390px phone before: `/sealed/booster-box` 123,022 px tall
+(774 tiles, no filter, no sort, unpriced pre-orders of small games on top), `/sealed` 41,085, `/sets` 84,435 (a table whose
+last columns were cut off), `/stores` 48,003 (one bulleted list). After: 8,711, 6,419, about 18,000 and 9,233.
+
+- **Type pages** (`/sealed/<type>`, `/games/<game>/<type>`): `FilterGrid.tsx` renders EVERY tile in the server HTML, most
+  likely to be bought first (`rankProducts`, the home page's own ranking; it was newest set first), and folds the tiles
+  after the first 40 with a class. `ListControls.tsx` is the bar: a name filter, a sort (popular, newest set, price up
+  or down, most stores), "In stock now" and, on the all-games pages, one chip a game. It only hides tiles and sets their CSS
+  `order`: no fetch, no navigation, no query string (one CDN copy per URL), the choice kept in the hash so a filtered list
+  can be shared. Scripts off: a `<noscript>` rule shows every tile and hides the bar. A list of 12 or fewer has no bar.
+- **`/sealed`**: ten of each type, most popular first (it was 24, newest first), one sideways row on a phone like the home shelf.
+- **`/sets`** and **`/stores`**: `FoldFinder.tsx`, a find box, a jump row (games, countries) and each group folded to its
+  first rows (6 newest sets a game; 12 stores a country, most listings matched first) with "Show all". Every set and store
+  link is still in the HTML; store links keep `nofollow`.
+- Dates read "Jun 26, 2026" (`shortDate`, US first) on the set page, the sets list and the guides; JSON-LD keeps ISO dates.
+
+Unchanged: every URL, title, canonical, h1 and JSON-LD type; the price table and its row order; the one ad block a page,
+under the grid; no new prompt, banner or pop-up (the page budget). Only the two type pages' meta description changed two
+words ("most popular first"). `tests/list-controls.test.ts` pins the server HTML, the no-fetch bar and the folded directories.
+
+Read 7 Dec: buy clickers per 100 visitors who land on `/sealed/*` and `/games/*/*` (Vercel, 24 Nov to 6 Dec against 9 to 22
+Nov), and phone bounce on those paths. If either is worse, put newest-first back as the default sort before anything else.
