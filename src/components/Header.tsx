@@ -27,8 +27,11 @@ import { AccountHeaderLink, PremiumHeaderLink } from "@/components/premium/Accou
 export function headerNavItems(all: NavGroup[], shop: ShopMenus): HeaderNavItem[] {
   // Deals & stock gets its own dropdown (owner, 2026-11-09), pre-orders and the stores with it; "More" keeps the tools, the guides and the rest.
   const deals = all.filter((g) => g.title === "Deals & stock");
-  const more = all.filter((g) => g.title !== "Deals & stock");
+  // The games lead the row (2026-11-23): 31 games on one site, and the game is the first thing a visitor picks.
+  const games = all.filter((g) => g.title === "Games");
+  const more = all.filter((g) => g.title !== "Deals & stock" && g.title !== "Games");
   return [
+    ...(games.length ? [{ href: "/games", label: "Games", menu: games }] : []),
     { href: "/sealed", label: "Sealed", also: ["/card"], menu: shop.sealed.length ? shop.sealed : undefined },
     { href: "/sets", label: "Sets", menu: shop.sets },
     ...(SITE.kits ? [{ href: "/kits", label: SITE.kits.label, also: ["/kit"] }] : []),

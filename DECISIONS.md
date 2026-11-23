@@ -1624,3 +1624,16 @@ of 5): Sealed tab 871 → 567 ms, All games 740 → 432 ms; a link that is only 
 gives about 100 ms of head start, most of the rest is the phone drawing the page). What is left is page weight, not network:
 `/sealed/booster-box` takes 1.4 s to draw on that phone because every product is in the page. Next: make the heavy pages lighter
 to draw. Rollback: remove `<NavBoost>` from the layout.
+
+## 2026-11-23: The games get their own menu, and the Sets menu shows the sets people open
+
+Owner, 23 Nov: "our sites' navigation can be significantly improved". Two things were wrong in the header and the phone menu:
+
+- The eight biggest games were filed under "Deals & stock", between the sale and the pre-orders. On a site of 31 games the game
+  is the first thing a visitor picks. `navGroups` now returns a "Games" group first; the header row is Games, Sealed, Sets, Deals,
+  More (five, the most `tests/shop-nav.test.ts` allows) and the phone menu opens on the games. Deals & stock keeps the sale, the
+  pre-orders, the deals, the movers, restocks and the stores. Same links, same server HTML, none added or dropped.
+- The Sets menu listed the six newest sets of any game, which few visitors know. It now lists the sets whose products rank
+  highest in the home page's own ranking (`rankProducts`, lib/home-demand.ts), titled "Popular sets".
+
+No URL changed.

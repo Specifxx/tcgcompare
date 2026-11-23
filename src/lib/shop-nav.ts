@@ -5,6 +5,7 @@
 // so there is no dead end and no new query. Server-side: lib/nav.ts stays free of data.
 import { products } from "@/lib/data";
 import { sealedHubs, sealedSets } from "@/lib/hubs";
+import { rankProducts } from "@/lib/home-demand";
 import type { NavGroup, NavLink } from "@/lib/nav";
 
 export interface ShopMenus {
@@ -31,11 +32,15 @@ export function shopNav(): ShopNav {
 function build(): ShopNav {
   const types: NavLink[] = sealedHubs().map((h) => ({ href: `/sealed/${h.slug}`, label: h.label }));
   const listed = sealedSets();
-  const released = listed.filter((s) => !s.upcoming);
+  // The sets shoppers open most, not the six newest of 31 games (2026-11-23: the menu led with sets few visitors know). A set's
+  // place is its best product's place in the home page's ranking (lib/home-demand.ts); sets with no ranked product keep date order.
+  const place = new Map<number, number>();
+  rankProducts(products().filter((p) => p.kind === "sealed")).forEach((p, i) => { if (!place.has(p.setId)) place.set(p.setId, i); });
+  const released = listed.filter((s) => !s.upcoming).map((s, i) => ({ s, i })).sort((a, b) => (place.get(a.s.id) ?? 1e9) - (place.get(b.s.id) ?? 1e9) || a.i - b.i).map((x) => x.s);
   const setLinks: NavLink[] = released.map((s) => ({ href: `/sets/${s.slug}`, label: s.name }));
   const all: NavLink = { href: "/sealed", label: "All sealed" };
   const sealed: NavGroup[] = types.length ? [{ title: "By product type", links: [...types, all] }] : [];
-  const sets: NavGroup[] = [{ title: "Newest sets", links: cap(setLinks, 6, { href: "/sets", label: `All ${listed.length} sets` }) }];
+  const sets: NavGroup[] = [{ title: "Popular sets", links: cap(setLinks, 6, { href: "/sets", label: `All ${listed.length} sets` }) }];
   const groups: NavGroup[] = [
     ...(types.length ? [{ title: "Sealed by type", links: [...types, all] }] : []),
     { title: "Sets", links: cap(setLinks, 6, { href: "/sets", label: "Every set" }) },
