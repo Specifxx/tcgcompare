@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { shortDate } from "@/lib/format";
 import Link from "@/components/Link";
 import { notFound } from "next/navigation";
 import { SITE } from "@/site.config";
@@ -30,7 +31,7 @@ export default function PostPage({ params }: { params: { slug: string } }) {
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Article", headline: p.title, description: p.description, datePublished: p.date, dateModified: p.updated ?? p.date, image: abs(p.image?.src ?? "/opengraph-image.jpg"), author: { "@type": "Organization", name: SITE.name, url: abs("/about") }, publisher: { "@type": "Organization", name: SITE.name, url: abs("/"), logo: { "@type": "ImageObject", url: abs("/icon.svg") } }, mainEntityOfPage: abs(`/blog/${p.slug}`) }} />
       {p.faq && <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: p.faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: renderPost(f.a) } })) }} />}
       <Breadcrumbs items={[{ name: "Guides", href: "/blog" }, { name: p.title }]} />
-      <p className="text-xs text-muted">{p.updated ? `Updated ${p.updated}` : p.date}</p>
+      <p className="text-xs text-muted">{p.updated ? `Updated ${shortDate(p.updated)}` : shortDate(p.date)}</p>
       <h1 className="mt-2 font-display text-3xl font-black md:text-4xl">{p.title}</h1>
       <p className="mt-3 text-lg text-muted">{p.description}</p>
       <ShareButton path={`/blog/${p.slug}`} name={p.title} medium="guide" text={`${p.title}, on ${SITE.name}`} className="mt-3" />

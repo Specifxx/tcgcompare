@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { shortDate } from "@/lib/format";
 import Link from "@/components/Link";
 import { SITE } from "@/site.config";
 import { canon } from "@/lib/site";
@@ -26,7 +27,7 @@ export default function Blog() {
             )}
             <Link href={`/blog/${p.slug}`} className="text-lg font-semibold hover:underline">{p.title}</Link>
             <p className="mt-1 text-sm text-muted">{p.description}</p>
-            <p className="mt-2 text-xs text-muted">{p.updated ?? p.date}</p>
+            <p className="mt-2 text-xs text-muted">{p.updated ? `Updated ${shortDate(p.updated)}` : shortDate(p.date)}</p>
           </li>
         ))}
       </ul>

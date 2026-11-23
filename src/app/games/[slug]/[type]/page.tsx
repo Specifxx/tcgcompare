@@ -6,7 +6,7 @@ import { abs, canon } from "@/lib/site";
 import { lineBySlug } from "@/lib/lines";
 import { GAME_TYPE_MIN, gameTypeHub, gameTypeHubs } from "@/lib/game-hubs";
 import { setById } from "@/lib/data";
-import { TileGrid } from "@/components/ProductTile";
+import { FilterGrid } from "@/components/FilterGrid";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd } from "@/components/JsonLd";
 
@@ -20,7 +20,7 @@ export function generateMetadata({ params }: { params: { slug: string; type: str
   if (!line || !h) return {};
   return {
     title: `${line.name} ${h.label.toLowerCase()} — prices for every set`,
-    description: `Compare prices for all ${h.items.length} ${line.name} ${h.label.toLowerCase()} across TCGplayer, eBay and ${SITE.stores.length} stores, newest set first.`,
+    description: `Compare prices for all ${h.items.length} ${line.name} ${h.label.toLowerCase()} across TCGplayer, eBay and ${SITE.stores.length} stores, most popular first.`,
     ...canon(`/games/${line.slug}/${h.slug}`),
     ...(h.items.length >= GAME_TYPE_MIN ? {} : { robots: { index: false, follow: true } }),
   };
@@ -37,9 +37,9 @@ export default function GameTypeHub({ params }: { params: { slug: string; type: 
       <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", name: `${line.name} ${h.label.toLowerCase()}`, numberOfItems: items.length, itemListElement: items.slice(0, 30).map((p, i) => ({ "@type": "ListItem", position: i + 1, name: p.name, url: abs(`/card/${p.slug}`) })) }} />
       <header>
         <h1 className="font-display text-3xl font-black">{line.name} {h.label.toLowerCase()}</h1>
-        <p className="mt-2 text-muted">{h.items.length} products, newest set first. Open any one to compare every store and eBay.</p>
+        <p className="mt-2 text-muted">{h.items.length} products, most popular first. Open any one to compare every store and eBay.</p>
       </header>
-      <TileGrid items={items} />
+      <FilterGrid items={items} noun={h.label.toLowerCase()} />
       <section>
         <h2 className="mb-3 text-lg font-bold">Other {line.name} sealed products</h2>
         <div className="flex flex-wrap gap-2">

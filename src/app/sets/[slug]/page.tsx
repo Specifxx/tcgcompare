@@ -3,6 +3,7 @@ import Link from "@/components/Link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { gameHubOfSet } from "@/lib/data";
 import { SITE } from "@/site.config";
+import { shortDate } from "@/lib/format";
 import { canon } from "@/lib/site";
 import { setBySlug, summaryOf } from "@/lib/data";
 import { preorderSetList, sealedInSet } from "@/lib/hubs";
@@ -92,7 +93,7 @@ export default function SetPage({ params }: { params: { slug: string } }) {
       <div>
         <Breadcrumbs items={[line ? { name: line.short, href: `/games/${line.slug}` } : { name: "Sets", href: "/sets" }, { name: s.name }]} />
         <header>
-          <p className="eyebrow">{s.upcoming ? "Upcoming" : "Released"} {s.releasedOn}{seo.code ? ` · ${seo.code}` : ""}</p>
+          <p className="eyebrow">{s.upcoming ? "Upcoming" : "Released"} {s.releasedOn ? shortDate(s.releasedOn) : ""}{seo.code ? ` · ${seo.code}` : ""}</p>
           <h1 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-5xl">{seo.game ? `${seo.game} ` : ""}{seo.name} booster box &amp; sealed prices</h1>
           <p className="mt-3 text-sm text-muted">
             {sealed.length} sealed product{sealed.length === 1 ? "" : "s"}, compared across every store we track, TCGplayer, eBay and Amazon.
