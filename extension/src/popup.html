@@ -10,21 +10,30 @@
   <b id="brand"></b>
   <select id="market" aria-label="Your market"></select>
 </header>
+<section id="here" hidden>
+  <h2 id="hereTitle">On this page</h2>
+  <div id="hereBody"></div>
+  <p id="shopsTip" class="tip" hidden>Want this on every shop, without opening this?
+    <button id="shopsTipOn" type="button">Turn on the price check</button></p>
+</section>
 <form id="f" role="search">
-  <input id="q" type="search" placeholder="Search sealed product… (e.g. Prismatic ETB)" autocomplete="off" aria-label="Search">
+  <input id="q" type="search" placeholder="Search any sealed product…" autocomplete="off" aria-label="Search">
 </form>
-<button id="page" type="button" class="ghost">Find the product on this page</button>
-<h2 id="listTitle"></h2>
+<nav class="tabs" role="tablist">
+  <button id="tDeals" role="tab" type="button" aria-selected="true">Deals</button>
+  <button id="tWatch" role="tab" type="button" aria-selected="false">Watching <span id="wCount"></span></button>
+</nav>
 <ul id="results" aria-live="polite"></ul>
 <p id="status" class="muted"></p>
-<nav id="sites" aria-label="Our price comparison sites"></nav>
 <footer>
-  <label><input id="panel" type="checkbox"> Show the price panel on TCGplayer product pages</label>
-  <p class="muted">Prices are the cheapest in-stock store price per market from our last daily update. "Buy" and eBay buttons are affiliate links: we may earn a commission, at no cost to you. <a id="about" target="_blank" rel="noopener">How it works &amp; privacy</a></p>
+  <label><input id="panel" type="checkbox"> Price panel on TCGplayer product pages</label>
+  <label><input id="shops" type="checkbox"> Price check on other shops <small>(asks Chrome first)</small></label>
+  <label><input id="notify" type="checkbox"> Notify me when a watched price drops</label>
+  <nav id="sites" aria-label="Our price comparison sites"></nav>
+  <p class="muted">Store prices are the cheapest in-stock prices per market from our last daily update. Pages are read and matched inside your browser; nothing about your browsing leaves it. "Buy" and eBay links are affiliate links: we may earn a commission, at no cost to you. <a id="about" target="_blank" rel="noopener">How it works &amp; privacy</a></p>
 </footer>
 <script src="config.js"></script>
 <script src="shared.js"></script>
-<script src="match.js"></script>
 <script src="popup.js"></script>
 </body>
 </html>

@@ -1,134 +1,150 @@
-// The toolbar popup: search our price file, pick a market, turn the panel on or off. On opening (and from "Find the
-// product on this page") it reads the current tab's title, product name and barcode (activeTab: only the tab the
-// visitor opened it on) and names the product only when match.js is sure; otherwise it lists the closest products for
-// the visitor to pick from.
+// The toolbar popup. On opening it shows the product on the current tab when it can tell which one it is (the
+// TCGplayer id in the address, or, through activeTab, what the page says it sells, matched inside the extension),
+// then today's deals, the watchlist and search. The price file and the matching live in the service worker, so the
+// popup opens without loading the whole file.
 (async () => {
   const $ = (id) => document.getElementById(id);
   document.documentElement.style.setProperty("--brand", CONFIG.brand);
+  document.head.append(Object.assign(document.createElement("style"), { textContent: CARD_CSS }));
   $("brand").textContent = CONFIG.short;
   $("about").href = tagged(CONFIG.page, "popup-about");
+  const send = (m) => chrome.runtime.sendMessage(m).catch(() => null);
   const settings = await getSettings();
   for (const m of MARKETS) $("market").append(new Option(MARKET_LABEL[m], m, false, m === settings.market));
+  const market = () => $("market").value;
+
+  // ── Settings ─────────────────────────────────────────────────────────────────────────────────────────────────
   $("panel").checked = settings.panel;
   $("panel").addEventListener("change", () => chrome.storage.sync.set({ panel: $("panel").checked }));
+  const hasShops = () => chrome.permissions.contains({ origins: ["https://*/*"] });
+  $("shops").checked = settings.shops && (await hasShops());
+  async function shopsOn(on) {
+    if (on) on = await chrome.permissions.request({ origins: ["https://*/*"] }).catch(() => false);
+    else await chrome.permissions.remove({ origins: ["https://*/*"] }).catch(() => {});
+    await chrome.storage.sync.set({ shops: on });
+    $("shops").checked = on;
+    $("shopsTip").hidden = true;
+    return on;
+  }
+  $("shops").addEventListener("change", () => shopsOn($("shops").checked));
+  $("shopsTipOn").addEventListener("click", () => shopsOn(true));
+  $("notify").checked = await chrome.permissions.contains({ permissions: ["notifications"] });
+  $("notify").addEventListener("change", async () => {
+    if ($("notify").checked) $("notify").checked = await chrome.permissions.request({ permissions: ["notifications"] }).catch(() => false);
+    else await chrome.permissions.remove({ permissions: ["notifications"] }).catch(() => {});
+  });
 
-  let feed = null;
-  let index = null;
   const status = (t) => ($("status").textContent = t);
-  status("Loading prices…");
-  try {
-    const res = await chrome.runtime.sendMessage({ type: "feed" });
-    if (!res?.ok) throw new Error(res?.error || "no feed");
-    feed = res.feed;
-    index = Object.entries(feed.items).map(([id, it]) => ({ id, it, hay: fold(`${it.n} ${feed.lines[it.g]?.name ?? ""} ${it.t ?? ""} ${it.k ?? ""}`) }));
-    status(`${index.length.toLocaleString()} products · updated ${new Date(feed.generatedAt).toLocaleDateString()}`);
-  } catch (e) {
-    status("Couldn't load prices. Check your connection and try again.");
+  const meta = await send({ type: "meta" });
+  if (!meta?.ok) status("Couldn't load prices. Check your connection and try again.");
+  else status(`${meta.count.toLocaleString()} products · prices updated ${new Date(meta.generatedAt).toLocaleDateString()}`);
+  for (const s of meta?.sites ?? []) {
+    const a = Object.assign(document.createElement("a"), { href: tagged(s.url, "popup-sites"), target: "_blank", rel: "noopener", textContent: s.name, title: s.game });
+    $("sites").append(a);
   }
 
-  function fold(s) {
-    return s.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/elite trainer box/g, "etb").replace(/[^a-z0-9]+/g, " ").trim();
+  // ── Watching ─────────────────────────────────────────────────────────────────────────────────────────────────
+  let watched = new Set();
+  async function loadWatched() {
+    const w = (await chrome.storage.local.get("watch")).watch ?? {};
+    watched = new Set(Object.keys(w));
+    $("wCount").textContent = watched.size ? String(watched.size) : "";
   }
-
-  function search(q) {
-    const words = fold(q).split(" ").filter((w) => w.length > 1 || /\d/.test(w));
-    if (!words.length || !index) return [];
-    const market = $("market").value;
-    const scored = [];
-    for (const row of index) {
-      let hit = 0;
-      for (const w of words) if (row.hay.includes(w)) hit++;
-      if (hit < Math.max(1, Math.ceil(words.length * 0.6))) continue;
-      // Fewer words the visitor did not type ranks first: "destined rivals etb" puts the ETB above the ETB case.
-      const extra = row.hay.split(" ").filter((h) => !words.some((w) => h.startsWith(w))).length;
-      scored.push({ row, s: hit * 10 - extra * 1.5 + (row.it.p[market] != null ? 3 : 0) + Math.log10(1 + (row.it.m ?? 0)) * 0.5 });
+  await loadWatched();
+  async function watch(id, on) {
+    const r = await send({ type: "watch", id, market: market(), on });
+    await loadWatched();
+    // The first watch offers the drop notification (Chrome asks; it can only be asked from a click like this one).
+    if (on && !$("notify").checked && !(await chrome.storage.local.get("askedNotify")).askedNotify) {
+      await chrome.storage.local.set({ askedNotify: true });
+      $("notify").checked = await chrome.permissions.request({ permissions: ["notifications"] }).catch(() => false);
     }
-    return scored.sort((a, b) => b.s - a.s).slice(0, 25).map((x) => x.row);
+    return r?.on ?? false;
   }
 
-  function show(rows, emptyText, title = "") {
+  // ── Lists ────────────────────────────────────────────────────────────────────────────────────────────────────
+  function rowsOf(packs, res, from, opts = {}) {
     const ul = $("results");
     ul.textContent = "";
-    $("listTitle").textContent = title;
-    const market = $("market").value;
-    const cur = feed?.currency?.[market] ?? "USD";
-    for (const { id, it } of rows) {
-      const a = document.createElement("a");
-      a.className = "row";
-      a.href = tagged(feed.home + it.u, title ? "popup-deals" : "popup-search");
-      a.target = "_blank";
-      a.rel = "noopener";
+    const m = market();
+    const cur = res?.currency?.[m] ?? "USD";
+    for (const pk of packs) {
+      if (!pk) continue;
+      const it = pk.it;
+      const a = Object.assign(document.createElement("a"), { className: "row", href: tagged(res.home + it.u, from), target: "_blank", rel: "noopener" });
       const n = document.createElement("span");
       n.className = "n";
       n.textContent = it.n;
       const sm = document.createElement("small");
-      const c = it.p[market];
-      const pct = market === "US" && c != null && it.m ? Math.round((1 - c / it.m) * 100) : 0;
-      sm.textContent = [feed.lines[it.g]?.name, it.s ? `${it.s} stores in stock` : null, it.pre ? "pre-order" : null].filter(Boolean).join(" · ");
-      if (pct >= 5) {
-        const sv = document.createElement("span");
-        sv.className = "save";
-        sv.textContent = ` · ${pct}% under TCGplayer`;
-        sm.append(sv);
+      const c = it.p[m];
+      const pct = m === "US" && c != null && it.m ? Math.round((1 - c / it.m) * 100) : 0;
+      if (opts.watch && pk.w) {
+        const wc = pk.w.c;
+        const d = pk.w.drop && !pk.w.drop.seen ? pk.w.drop : null;
+        sm.textContent = d ? "" : wc != null && c != null && c < wc ? `${money(wc - c, cur)} under the price when you started watching` : wc != null ? `${money(wc, cur)} when you started watching` : "Not in stock when you started watching";
+        if (d) {
+          const sv = Object.assign(document.createElement("span"), { className: "drop", textContent: d.from == null ? "Back in stock" : `Dropped from ${money(d.from, cur)}` });
+          sm.append(sv);
+        }
+      } else {
+        sm.textContent = [pk.line?.name, it.s ? `${it.s} stores` : null, it.pre ? "pre-order" : null].filter(Boolean).join(" · ");
+        if (pct >= 5) sm.append(Object.assign(document.createElement("span"), { className: "save", textContent: ` · ${pct}% under TCGplayer` }));
       }
       n.append(sm);
       const p = document.createElement("span");
       p.className = c != null ? "p" : "p none";
-      p.textContent = c != null ? money(c, cur) : `none in ${MARKET_LABEL[market]}`;
+      p.textContent = c != null ? money(c, cur) : `none in ${MARKET_LABEL[m]}`;
+      if (pct >= 5 && it.m != null) p.append(Object.assign(document.createElement("s"), { textContent: money(it.m, "USD") }));
       a.append(n, p);
       const li = document.createElement("li");
       li.append(a);
-      const b = it.b?.[market];
+      const b = it.b?.[m];
       if (b && c != null) {
-        const buy = document.createElement("a");
-        buy.className = "buy";
-        buy.href = goUrl(feed.home, b[1], b[0], market, id, title ? "popup-deals-buy" : "popup-buy");
-        buy.target = "_blank";
-        buy.rel = "noopener sponsored";
-        buy.textContent = "Buy";
-        buy.title = `Buy at ${feed.stores?.[b[0]] ?? "the store"}`;
-        li.append(buy);
+        li.append(Object.assign(document.createElement("a"), { className: "buy", href: goUrl(res.home, b[1], b[0], m, pk.id, `${from}-buy`), target: "_blank", rel: "noopener sponsored", textContent: "Buy", title: `Buy at ${pk.stores?.[b[0]] ?? "the store"}` }));
+      }
+      if (opts.watch) {
+        const rm = Object.assign(document.createElement("button"), { className: "rm", type: "button", textContent: "×", title: "Stop watching" });
+        rm.addEventListener("click", async () => {
+          await watch(pk.id, false);
+          li.remove();
+          if (!watched.size) status("Nothing watched. Press ☆ Watch price on a product to get told when it drops.");
+        });
+        li.append(rm);
       }
       ul.append(li);
     }
-    if (!rows.length && emptyText) status(emptyText);
   }
 
-  /** With the search box empty: today's best store prices under TCGplayer's market (US), else the most stocked products. */
-  function deals() {
-    if (!index) return;
-    const market = $("market").value;
-    let rows;
-    if (market === "US") {
-      rows = index
-        .filter(({ it }) => it.p.US != null && it.m && it.m >= 2000 && it.s >= 3 && !it.pre && it.p.US < it.m * 0.9 && it.p.US > it.m * 0.4)
-        .sort((a, b) => a.it.p.US / a.it.m - b.it.p.US / b.it.m)
-        .slice(0, 12);
-      show(rows, "", "Today's deals under TCGplayer market");
-    } else {
-      rows = index.filter(({ it }) => it.p[market] != null && !it.pre).sort((a, b) => b.it.s - a.it.s).slice(0, 12);
-      show(rows, "", `Most stocked in ${MARKET_LABEL[market]}`);
-    }
+  let tab = "deals";
+  function selectTab(t) {
+    tab = t;
+    $("tDeals").setAttribute("aria-selected", String(t === "deals"));
+    $("tWatch").setAttribute("aria-selected", String(t === "watch"));
   }
-
-  for (const s of feed?.sites ?? []) {
-    const a = document.createElement("a");
-    a.href = tagged(s.url, "popup-sites");
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.textContent = s.name;
-    a.title = s.game;
-    $("sites").append(a);
+  async function showDeals() {
+    selectTab("deals");
+    const r = await send({ type: "deals", market: market() });
+    if (!r?.ok) return;
+    rowsOf(r.rows, r, "popup-deals");
+    status(market() === "US" ? "Today's biggest store prices under TCGplayer's market price" : `Most stocked in ${MARKET_LABEL[market()]} today`);
   }
-
+  async function showWatch() {
+    selectTab("watch");
+    const r = await send({ type: "watched" });
+    if (!r?.ok) return;
+    rowsOf(r.rows, r, "popup-watch", { watch: true });
+    status(r.rows.length ? "We check every price update and tell you when a watched price drops." : "Nothing watched. Press ☆ Watch price on a product to get told when it drops.");
+    send({ type: "seen" });
+  }
   let t = 0;
-  const run = () => {
-    const q = $("q").value;
-    if (!q.trim()) return deals();
-    const rows = search(q);
-    show(rows, q.trim() ? `No match for “${q.trim()}”. Try fewer words.` : "");
-    if (rows.length) status(`${rows.length} match${rows.length === 1 ? "" : "es"} · tap one to compare every store`);
-  };
+  async function run() {
+    const q = $("q").value.trim();
+    if (!q) return tab === "watch" ? showWatch() : showDeals();
+    const r = await send({ type: "search", q, market: market() });
+    if (!r?.ok) return;
+    rowsOf(r.rows, r, "popup-search");
+    status(r.rows.length ? `${r.rows.length} match${r.rows.length === 1 ? "" : "es"} · tap one to compare every store` : `No match for “${q}”. Try fewer words.`);
+  }
   $("q").addEventListener("input", () => {
     clearTimeout(t);
     t = setTimeout(run, 120);
@@ -137,87 +153,79 @@
     e.preventDefault();
     run();
   });
+  $("tDeals").addEventListener("click", () => (($("q").value = ""), showDeals()));
+  $("tWatch").addEventListener("click", () => (($("q").value = ""), showWatch()));
   $("market").addEventListener("change", async () => {
-    await chrome.storage.sync.set({ market: $("market").value });
+    await chrome.storage.sync.set({ market: market() });
     run();
+    findOnPage();
   });
-  // ── What is this page selling? ─────────────────────────────────────────────────────────────────────────
-  // Only when the visitor opens the popup or presses the button (activeTab): the tab's title and, on a normal web
-  // page, the product's own name and barcode as the page states them (its product data, share title and heading).
-  // Nothing is sent anywhere: the match is made here, against the price file already in the browser.
-  const matcher = index ? makeMatcher(feed) : null;
 
-  async function readPage(tab) {
-    if (!/^https?:/.test(tab?.url ?? "") || !chrome.scripting) return null;
+  // ── What is this page selling? ───────────────────────────────────────────────────────────────────────────────
+  async function currentTab() {
+    const forced = Number(new URLSearchParams(location.search).get("tab")); // for testing the popup in a tab
+    if (forced) return chrome.tabs.get(forced).catch(() => null);
+    const [t] = await chrome.tabs.query({ active: true, currentWindow: true });
+    return t ?? null;
+  }
+  async function readPage(t) {
+    if (!/^https?:/.test(t?.url ?? "") || !chrome.scripting) return null;
     try {
-      const [r] = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => {
-          const names = [];
-          const gtins = [];
-          const walk = (x) => {
-            if (!x || typeof x !== "object") return;
-            if (Array.isArray(x)) return x.forEach(walk);
-            const t = [].concat(x["@type"] ?? []).map(String);
-            if (t.some((y) => /^(Product|ProductGroup|IndividualProduct)$/i.test(y))) {
-              if (typeof x.name === "string") names.push(x.name);
-              for (const k of ["gtin", "gtin13", "gtin12", "gtin14", "gtin8", "ean", "upc"]) if (x[k]) gtins.push(String(x[k]));
-              for (const o of [].concat(x.offers ?? [], x.hasVariant ?? [])) for (const k of ["gtin", "gtin13", "gtin12", "gtin14", "gtin8"]) if (o?.[k]) gtins.push(String(o[k]));
-            }
-            if (x["@graph"]) walk(x["@graph"]);
-          };
-          for (const el of document.querySelectorAll('script[type="application/ld+json"]')) {
-            try { walk(JSON.parse(el.textContent)); } catch {}
-          }
-          const meta = (k) => document.querySelector(`meta[property="${k}"],meta[name="${k}"]`)?.content ?? "";
-          return { names: names.slice(0, 3), gtins: gtins.slice(0, 10), og: meta("og:title"), h1: document.querySelector("h1")?.textContent?.trim().slice(0, 200) ?? "" };
-        },
-      });
+      await chrome.scripting.executeScript({ target: { tabId: t.id }, files: ["pageinfo.js"] });
+      const [r] = await chrome.scripting.executeScript({ target: { tabId: t.id }, func: () => globalThis.__tcgpxRead?.() ?? null });
       return r?.result ?? null;
     } catch {
       return null; // a page the browser will not let extensions read (the Web Store, settings, PDFs)
     }
   }
 
-  async function findOnPage(fromButton) {
-    if (!matcher) return;
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    const id = tab?.url?.match(/tcgplayer\.com\/product\/(\d{3,9})/i)?.[1];
-    if (id && feed.items[id]) {
-      show([{ id, it: feed.items[id] }], "", "On this page");
-      return status("Tap it to compare every store, or Buy to go to the cheapest.");
+  async function findOnPage() {
+    const t = await currentTab();
+    const here = $("here");
+    if (!/^https?:/.test(t?.url ?? "")) return (here.hidden = true);
+    const onTcg = /^https:\/\/(www\.)?tcgplayer\.com\//.test(t.url);
+    const id = t.url.match(/tcgplayer\.com\/product\/(\d{3,9})/i)?.[1];
+    const info = await readPage(t);
+    let r;
+    if (id) r = await send({ type: "item", id });
+    else if (info) r = await send({ type: "match", info, market: market() });
+    $("hereBody").textContent = "";
+    if (r?.ok && r.pack) {
+      $("hereTitle").textContent = "On this page";
+      $("hereBody").append(
+        buildCard({ pack: r.pack, market: market(), currency: r.currency, home: r.home, page: info?.price ?? null, onTcg, watching: watched.has(r.pack.id), from: "popup" }, { watch: (on) => watch(r.pack.id, on) }),
+      );
+      here.hidden = false;
+      // Matched without the shop check on: offer it, once per popup, never on TCGplayer (its panel is on already).
+      $("shopsTip").hidden = onTcg || $("shops").checked;
+      return;
     }
-    if (!/^https?:/.test(tab?.url ?? "")) return fromButton && status("Open a product page in a store, then press the button.");
-    const page = (await readPage(tab)) ?? {};
-    const market = $("market").value;
-    const texts = [...(page.names ?? []), page.og, page.h1, tab.title].filter((t) => t && t.trim().length > 3);
-    let res = null;
-    for (const t of texts) {
-      const r = matcher(t, market, page.gtins ?? []);
-      if (r.sure) { res = r; break; }
-      res ??= r;
-      if (r.single) break;
+    $("shopsTip").hidden = true;
+    if (r?.res?.single) {
+      $("hereTitle").textContent = "On this page";
+      $("hereBody").append(Object.assign(document.createElement("p"), { className: "muted", textContent: "This looks like a single card. We compare sealed product: boxes, packs, bundles, decks and tins." }));
+      here.hidden = false;
+      return;
     }
-    if (res?.sure) {
-      show([{ id: res.sure, it: feed.items[res.sure] }], "", "On this page");
-      return status(res.by === "barcode" ? "Matched by the barcode on the page. Tap to compare every store." : "Tap it to compare every store, or Buy to go to the cheapest.");
+    if (r?.top?.length) {
+      $("hereTitle").textContent = r.res?.foreign ? "Foreign-language page · closest English products" : "Is it one of these?";
+      const ul = document.createElement("ul");
+      ul.className = "close";
+      for (const pk of r.top.slice(0, 4)) {
+        const cur = r.currency[market()] ?? "USD";
+        const li = document.createElement("li");
+        li.append(Object.assign(document.createElement("a"), { className: "row", href: tagged(r.home + pk.it.u, "popup-close"), target: "_blank", rel: "noopener" }));
+        li.firstChild.append(Object.assign(document.createElement("span"), { className: "n", textContent: pk.it.n }), Object.assign(document.createElement("span"), { className: "p", textContent: pk.it.p[market()] != null ? money(pk.it.p[market()], cur) : "—" }));
+        ul.append(li);
+      }
+      $("hereBody").append(ul);
+      here.hidden = false;
+      return;
     }
-    if (res?.single) {
-      if (!fromButton) return;
-      show([], "");
-      return status("This looks like a single card. We compare sealed product only: boxes, packs, bundles, decks and tins.");
-    }
-    // Closest matches only when the page names a kind of sealed product (a box, a pack, a deck…): a card, an
-    // accessory or an event has no near match worth showing.
-    const rows = res?.kind ? (res.top ?? []).slice(0, 6).map((i) => ({ id: i, it: feed.items[i] })) : [];
-    if (!rows.length) return fromButton && status("We couldn't tell which sealed product this page is. We compare sealed product only; try searching for it above.");
-    show(rows, "", res.foreign ? "Closest English products" : "Closest matches");
-    status(res.foreign ? "This page looks like a foreign-language product; we price English product. Pick the one you mean." : "Not sure which one this page is. Pick the one you mean.");
+    here.hidden = true;
   }
 
-  $("page").addEventListener("click", () => findOnPage(true));
-  deals();
+  await showDeals();
   $("q").focus();
-  // Opening the popup on a product page shows that product straight away.
-  findOnPage(false);
+  findOnPage();
 })();

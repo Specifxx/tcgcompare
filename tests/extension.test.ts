@@ -33,12 +33,14 @@ test("extension.json is a static file open to every origin", () => {
 test("the extension asks for the narrowest permissions and never touches another site's links", () => {
   const site = JSON.parse(fs.readFileSync("extension/sites/tcgprices.json", "utf8"));
   const m = manifestFor(site);
-  assert.deepEqual(m.permissions, ["storage", "contextMenus", "activeTab", "scripting"]);
+  assert.deepEqual(m.permissions, ["storage", "contextMenus", "activeTab", "scripting", "alarms"]);
   assert.deepEqual(m.host_permissions, ["https://tcgprices.app/*"]);
+  // Every-site access and notifications are optional: asked only when the visitor turns those on (1.3.0).
+  assert.deepEqual(m.optional_host_permissions, ["https://*/*"]);
+  assert.deepEqual(m.optional_permissions, ["notifications"]);
+  assert.equal(m.web_accessible_resources, undefined);
   assert.ok(site.matches.every((u: string) => /^https:\/\/(www\.)?tcgplayer\.com\/product\/\*$/.test(u)));
   assert.ok(site.description.length <= 132);
-  // Chrome refuses a web_accessible_resources pattern with a path (it failed the store's install test, 2026-11-22).
-  for (const w of m.web_accessible_resources) for (const u of w.matches) assert.match(u, /^https:\/\/[^/]+\/\*$/);
   const content = fs.readFileSync("extension/src/content.js", "utf8");
   // No affiliate injection: it never rewrites or reads the page's links, and never builds an eBay/Amazon/TCGplayer link.
   assert.doesNotMatch(content, /querySelectorAll\(["']a/);
@@ -93,4 +95,36 @@ test("the extension recognises store pages by their words, and refuses a guess",
 test("page budget: the product page's extension card waits for the Cyber banner to end", () => {
   const src = fs.readFileSync("src/app/card/[slug]/page.tsx", "utf8");
   assert.match(src, /cyberBannerState\(Date\.now\(\)\) === "off" && <ExtensionCta/);
+});
+
+// 1.3.0: the page's own price against the cheapest store, and the next cheapest stores in the feed.
+test("the extension says what you'd save only when the page's price is believable for the product", () => {
+  const ctx: Record<string, unknown> = { CONFIG: { id: "t", brand: "#000", brandDark: "#000" }, Intl, URL, URLSearchParams };
+  const vm = createRequire(import.meta.url)("node:vm");
+  vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync("extension/src/shared.js", "utf8") + ";this.verdict=verdict;this.storesIn=storesIn;", ctx);
+  const verdict = ctx.verdict as (p: number | null, c: number | null) => { kind: string; diff: number; pct: number } | null;
+  assert.equal(JSON.stringify(verdict(21499, 19675)), JSON.stringify({ kind: "save", diff: 1824, pct: 8 }));
+  assert.equal(verdict(15499, 15500)?.kind, "lowest");
+  assert.equal(verdict(19900, 19675)?.kind, "same"); // 1% apart: not a saving worth claiming
+  assert.equal(verdict(599, 19675), null); // a pack's price against a box: says nothing
+  assert.equal(verdict(90000, 19675), null); // a case's price
+  assert.equal(verdict(null, 19675), null);
+  const storesIn = ctx.storesIn as (p: unknown, m: string) => { name: string; cents: number; url: string | null }[];
+  const rows = storesIn({ it: { p: { US: 100 }, b: { US: ["a", "https://a/x"] }, r: { US: [["b", 110], ["c", 120]] } }, stores: { a: "A", b: "B" } }, "US");
+  assert.equal(JSON.stringify(rows.map((r) => [r.name, r.cents, r.url])), JSON.stringify([["A", 100, "https://a/x"], ["B", 110, null], ["c", 120, null]]));
+});
+
+test("the feed lists the next cheapest stores, one row per store, never eBay, Amazon or TCGplayer", async () => {
+  const { topStoreOffers } = await import("../src/lib/extension-feed");
+  const t = topStoreOffers([
+    o({ source: "a", cents: 1000, url: "https://a/1" }),
+    o({ source: "a", cents: 900, url: "https://a/2" }),
+    o({ source: "b", cents: 950, url: "https://b/1" }),
+    o({ source: "ebay", cents: 100, url: "https://e/1" }),
+    o({ source: "c", cents: 980, url: "https://c/1", inStock: false }),
+    o({ source: "d", cents: 990, url: "https://d/1" }),
+    o({ source: "e", cents: 999, url: "https://e/2" }),
+  ]);
+  assert.deepEqual(t.US!.map((x) => [x.source, x.cents]), [["a", 900], ["b", 950], ["d", 990]]);
 });
