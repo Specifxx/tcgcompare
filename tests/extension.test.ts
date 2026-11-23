@@ -138,6 +138,18 @@ test("a single card named after its booster is a single card", async () => {
   assert.equal(m("One Piece Card Game Extra Booster Heroines Edition Vol. 2 Booster Pack EB05", "AU").sure, "1");
 });
 
+// Common Lands US gives its Collector Booster Display the pack's UPC (23 Nov 2026): the words win over that barcode.
+test("a barcode never turns a display into the pack inside it", async () => {
+  const { makeMatcher } = createRequire(import.meta.url)("../extension/src/match.js");
+  const item = (n: string, k: string, e: string) => ({ n, u: "/card/x", g: "mtg", s: 3, m: 1000, p: { US: 900 }, k, t: "Dominaria Remastered", e });
+  const m = makeMatcher({
+    lines: { mtg: { name: "Magic: The Gathering" } },
+    items: { "1": item("Dominaria Remastered - Collector Booster Display", "Booster Box", "195166200699"), "2": item("Dominaria Remastered - Collector Booster Pack", "Booster Pack", "195166200682") },
+  });
+  assert.equal(m("Dominaria Remastered - Collector Booster Display", "US", ["195166200682"]).sure, "1");
+  assert.equal(m("Dominaria Remastered - Collector Booster Pack", "US", ["195166200682"]).sure, "2");
+});
+
 test("page budget: the product page's extension card waits for the Cyber banner to end", () => {
   const src = fs.readFileSync("src/app/card/[slug]/page.tsx", "utf8");
   assert.match(src, /cyberBannerState\(Date\.now\(\)\) === "off" && <ExtensionCta/);

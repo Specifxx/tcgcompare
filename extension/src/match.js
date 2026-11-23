@@ -213,9 +213,12 @@
      * @returns {{ sure: string|null, top: string[], single: boolean, foreign: boolean, kind: string|null, by?: string }}
      */
     return function match(text, market, gtins = []) {
+      // A barcode decides it, unless the page's own words name another kind of product: stores often give a display
+      // the barcode of the pack inside it ("Collector Booster Display" carrying the Collector Booster Pack's UPC).
+      const wordKind = gtins.length ? kindOf(canon(fold(cleanTitle(text)))) : null;
       for (const g of gtins) {
         const r = byCode.get(String(g).replace(/\D/g, "").replace(/^0+/, ""));
-        if (r) return { sure: r.id, top: [r.id], single: false, foreign: false, by: "barcode", kind: r.kind };
+        if (r && !(wordKind && r.kind && kindsAgree(wordKind, r.kind))) return { sure: r.id, top: [r.id], single: false, foreign: false, by: "barcode", kind: r.kind };
       }
       const clean = cleanTitle(text);
       const f = canon(fold(clean));

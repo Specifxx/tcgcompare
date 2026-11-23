@@ -1660,3 +1660,5 @@ The same test at Good Games AU found One Piece singles listed under their booste
 Alternate Art Foil") named as the booster pack, three with a "Save" line. A card code (`EB05-055`, `OP01-001`, `GD01-012`)
 or a printing after a dash ("- Foil", "- Alternate Art Foil", "- Normal") now makes a page a single card, whatever kind
 of product the words also name. No change on the 2,307-title set.
+And at Common Lands US a "Collector Booster Display" page carried the Collector Booster Pack's UPC, so the barcode named
+the pack. A barcode still decides a page, except when the page's own words name another kind of product.
