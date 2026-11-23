@@ -32,7 +32,8 @@ test("the eBay query keeps the game's words unless the name says the whole phras
 test("the product page uses those helpers", () => {
   const src = readFileSync("src/app/card/[slug]/page.tsx", "utf8");
   assert.match(src, /const usOffers = jsonLdOffers\(e\.offers\)/);
-  assert.match(src, /usCheapestQuoted\(e\.offers\)/);
+  // "Is it worth it?" is lib/buyer-read.ts (2026-11-23): stores only, US dollars against TCGplayer, never an eBay price.
+  assert.match(src, /ebayPrices: false/);
   assert.match(src, /ebayQueryFor\(name, ebayQueryOf\(set\)\)/);
   assert.doesNotMatch(src, /inStock\[0\]/);
   assert.doesNotMatch(src, /split\(" "\)\[0\]/);
