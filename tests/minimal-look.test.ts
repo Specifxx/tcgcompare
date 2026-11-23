@@ -65,8 +65,10 @@ test("one navigation: no sidebar, five sections at most, no ad in it, and every 
   const inMenus = new Set(items.flatMap((i) => [i.href, ...hrefsIn(i.menu)]));
   for (const l of navGroups({ shop: [] }).flatMap((g) => g.links)) assert.ok(inMenus.has(l.href), `${l.href} is in a header menu`);
   // And the shopping menus hold real links: the product types and the newest sets.
-  assert.ok(hrefsIn(items[0].menu).some((h) => h.startsWith("/sealed/")), "Sealed opens the product types");
-  assert.ok(hrefsIn(items[1].menu).some((h) => h.startsWith("/sets/")), "Sets opens the sets");
+  assert.ok(hrefsIn(items.find((i) => i.label === "Sealed")!.menu).some((h) => h.startsWith("/sealed/")), "Sealed opens the product types");
+  assert.ok(hrefsIn(items.find((i) => i.label === "Sets")!.menu).some((h) => h.startsWith("/sets/")), "Sets opens the sets");
+  assert.equal(items[0].label, "Games", "the games lead the row");
+  assert.ok(hrefsIn(items[0].menu).some((h) => h.startsWith("/games/")), "Games opens the games");
   assert.match(readFileSync(new URL("../tailwind.config.ts", import.meta.url), "utf8"), /maxWidth: \{ page: "1200px" \}/, "one centred column");
 });
 

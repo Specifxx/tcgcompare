@@ -18,7 +18,8 @@ test("every shop link is a hub that exists, and the phone menu lists every dropd
   for (const l of [...menu, ...s.groups.flatMap((g) => g.links)]) assert.ok(hubs.has(l.href) || setSlugs.has(l.href), `${l.href} is not a hub`);
   for (const l of menu) assert.ok(sheet.includes(l.href), `${l.href} is in a dropdown but not the phone menu`);
   assert.equal(new Set(sheet).size, sheet.length, "the phone menu repeats a link");
-  assert.equal(navGroups({ shop: s.groups })[0].title, "Sealed by type");
+  // The games lead the phone menu (2026-11-23), then the product types.
+  assert.deepEqual(navGroups({ shop: s.groups }).slice(0, 2).map((g) => g.title), ["Games", "Sealed by type"]);
 });
 
 test("the dropdowns are server HTML and the phone menu reads the same groups", () => {
