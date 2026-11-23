@@ -159,7 +159,7 @@ test("Telegram gets the same drop as one plain message: no Discord markup, links
   assert.match(wf, /TELEGRAM_BOT_TOKEN: \$\{\{ secrets\.TELEGRAM_BOT_TOKEN \}\}/);
 });
 
-test("the Chrome extension line rides every drop for 7 days, tagged per channel, then disappears by itself", () => {
+test("the Chrome extension line rides every drop until 21 Dec, tagged per channel, then disappears by itself", () => {
   const r = { kind: "restock" as const, product: box, store: au, cents: 15000, ref: "a" };
   const em = embedFor(r, 14999, NOW, "https://tcgprices.app", "sniper-2026112221");
   const during = Date.UTC(2026, 10, 23, 9, 47);
@@ -169,7 +169,7 @@ test("the Chrome extension line rides every drop for 7 days, tagged per channel,
   assert.equal(extensionPromo("discord", EXTENSION_PROMO_UNTIL), null);
   assert.doesNotMatch(dropMessage([em], EXTENSION_PROMO_UNTIL).content, /Chrome/);
   assert.doesNotMatch(telegramText([em], EXTENSION_PROMO_UNTIL), /Chrome/);
-  assert.ok(EXTENSION_PROMO_UNTIL - Date.UTC(2026, 10, 22, 11, 46) <= 7 * 86400e3 + 3600e3);
+  assert.ok(EXTENSION_PROMO_UNTIL <= Date.UTC(2026, 11, 21, 12, 0));
 });
 
 test("a first pre-order in a market is posted once, before restocks, and only where that market was read before", () => {

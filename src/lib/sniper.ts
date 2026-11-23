@@ -301,10 +301,10 @@ export function productUrl(siteUrl: string, slug: string, drop?: string): string
 export const dropId = (ms: number): string => `sniper-${new Date(ms).toISOString().slice(0, 13).replace(/[-T]/g, "")}`;
 /** The Chrome extension's launch line (owner's ask via the extension thread, 2026-11-22): under every drop for 7 days,
  * then gone by itself. Tagged per channel so clicks are read apart. */
-export const EXTENSION_PROMO_UNTIL = Date.UTC(2026, 10, 29, 12, 0);
+export const EXTENSION_PROMO_UNTIL = Date.UTC(2026, 11, 21, 12, 0);
 export function extensionPromo(source: "discord" | "telegram", now: number): string | null {
   if (now >= EXTENSION_PROMO_UNTIL) return null;
-  return `New: our free Chrome extension shows the cheapest store price right on every TCGplayer sealed page, with one click to buy. No account, nothing tracked. https://chromewebstore.google.com/detail/fdhpgledimoadpaokiipficepklogmha?utm_source=${source}&utm_medium=social&utm_campaign=extension`;
+  return `🧩 See what you'd save on TCGplayer and other shops: free Chrome extension https://chromewebstore.google.com/detail/fdhpgledimoadpaokiipficepklogmha?utm_source=${source}&utm_medium=social&utm_campaign=extension`;
 }
 
 export function dropMessage(embeds: DiscordEmbed[], now = Date.now()): { username: string; content: string; embeds: DiscordEmbed[]; allowed_mentions: { parse: never[] } } {
