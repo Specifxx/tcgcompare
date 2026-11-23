@@ -19,3 +19,9 @@ export function ago(iso: string | null | undefined, now = Date.now()): string {
   if (h < 48) return Math.round(h) === 1 ? "1 hour ago" : `${Math.round(h)} hours ago`;
   return `${Math.round(h / 24)} days ago`;
 }
+
+/** "Jun 26, 2026" from an ISO date (US-first, owner 2026-11-22); the input back when it is not a date. */
+export function shortDate(iso: string): string {
+  const d = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+}

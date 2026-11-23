@@ -8,6 +8,8 @@ import { JsonLd } from "@/components/JsonLd";
 import { abs } from "@/lib/site";
 import { LINES, isMultiGame } from "@/lib/lines";
 import type { GameLine } from "@/lib/site-types";
+import { FoldFinder } from "@/components/FoldFinder";
+import { shortDate } from "@/lib/format";
 
 export const revalidate = 86400;
 export const metadata: Metadata = {
@@ -17,39 +19,62 @@ export const metadata: Metadata = {
   ...canon("/sets"),
 };
 
+/** Sets of a game shown before "Show all": the releases people are buying now (a one-game site shows more). */
+const FIRST_MANY = 6;
+const FIRST_ONE = 30;
+
+// Since 2026-11-23: a set finder, a jump row of the games, and each game folded to its newest sets. It was one table per game,
+// every set open (84,000 px on a phone, the last columns cut off). Every set link is still in the HTML, in release order.
 export default function Sets() {
   const listed = sealedSets();
+  const groups = (isMultiGame ? LINES.map((l) => ({ line: l as GameLine | null, list: listed.filter((s) => s.line === l.id) })).filter(({ list }) => list.length > 0) : [{ line: null as GameLine | null, list: listed }]);
+  const FIRST = groups.length > 1 ? FIRST_MANY : FIRST_ONE;
   return (
-    <div>
+    <div data-ff-root>
       <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", name: `${SITE.gameShort} sets`, numberOfItems: listed.length, itemListElement: listed.map((s, i) => ({ "@type": "ListItem", position: i + 1, name: s.name, url: abs(`/sets/${s.slug}`) })) }} />
-      <h1 className="mb-6 font-display text-3xl font-black">{SITE.gameShort} sets in order</h1>
-      <p className="-mt-3 mb-6 text-sm text-muted">Newest first. Open a set for its booster boxes and sealed at every store.</p>
-      {(isMultiGame ? LINES.map((l) => ({ line: l as GameLine | null, list: listed.filter((s) => s.line === l.id) })).filter(({ list }) => list.length > 0) : [{ line: null as GameLine | null, list: listed }]).map(({ line, list }) => (
-      <section key={line?.id ?? "all"} className="mb-8">
-      {line && <h2 className="mb-3 text-xl font-bold"><Link className="hover:underline" href={`/games/${line.slug}`}>{line.name} sets</Link></h2>}
-      <div className="overflow-hidden rounded-xl border border-ink-700/60">
-        <table className="w-full text-sm">
-          <thead className="bg-ink-850 text-left text-xs uppercase text-muted">
-            <tr><th className="px-3 py-2">Set</th><th className="px-3 py-2">Released</th><th className="px-3 py-2 text-right">Sealed products</th><th className="px-3 py-2 text-right">Booster boxes</th></tr>
-          </thead>
-          <tbody>
-            {list.map((s) => {
-              const sealed = sealedInSet(s.id);
-              const boxes = sealed.filter((p) => p.sealedType === "Booster Box").length;
-              return (
-                <tr key={s.id} className="border-t border-ink-800">
-                  <td className="px-3 py-2"><Link className="link" href={`/sets/${s.slug}`}>{s.name}</Link>{s.upcoming && <span className="tag ml-2">Upcoming</span>}</td>
-                  <td className="px-3 py-2 text-muted">{s.releasedOn}</td>
-                  <td className="px-3 py-2 text-right">{sealed.length}</td>
-                  <td className="px-3 py-2 text-right">{boxes || "—"}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <noscript><style>{`.ff-x{display:flex!important}.ff-box,[data-ff-more]{display:none!important}`}</style></noscript>
+      <h1 className="font-display text-3xl font-bold tracking-tight sm:text-5xl">{SITE.gameShort} sets in order</h1>
+      <p className="mt-3 text-sm text-muted">{listed.length.toLocaleString()} sets{groups.length > 1 ? ` across ${groups.length} games` : ""}, newest first. Open a set for its booster boxes and sealed at every store.</p>
+      <div className="mt-5 max-w-xl"><FoldFinder placeholder={`Find a set, e.g. ${listed.find((s) => !s.upcoming)?.name ?? "a set name"}`} noun="sets" /></div>
+      {groups.length > 1 && (
+        <nav aria-label="Jump to a game" className="mt-2">
+          <ul className="scroller -mx-4 scroll-px-4 gap-2 px-4 sm:mx-0 sm:px-0">
+            {groups.map(({ line, list }) => (
+              <li key={line!.id}><a href={`#${line!.slug}`} className="chip min-h-10 whitespace-nowrap">{line!.short} <span className="tabular text-xs text-faint">{list.length}</span></a></li>
+            ))}
+          </ul>
+        </nav>
+      )}
+      <div className="mt-8 flex flex-col gap-10">
+        {groups.map(({ line, list }) => (
+          <section key={line?.id ?? "all"} id={line?.slug} data-ff-group className="ff-group scroll-mt-24">
+            {line && (
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+                <h2 className="font-display text-xl font-bold tracking-tight sm:text-2xl"><Link className="hover:underline" href={`/games/${line.slug}`}>{line.name} sets</Link></h2>
+                <span className="text-sm text-muted">{list.length} set{list.length === 1 ? "" : "s"}</span>
+              </div>
+            )}
+            <ul className="set-list">
+              {list.map((s, i) => {
+                const sealed = sealedInSet(s.id);
+                const boxes = sealed.filter((p) => p.sealedType === "Booster Box").length;
+                return (
+                  <li key={s.id} data-ff={s.name.toLowerCase()} className={i >= FIRST ? "set-row ff-x" : "set-row"}>
+                    <Link href={`/sets/${s.slug}`} className="set-row-link">
+                      <span className="set-row-name">{s.name}</span>
+                      <span className="set-row-meta">
+                        {s.upcoming ? <span className="set-row-soon">Pre-order</span> : null}
+                        {s.releasedOn ? shortDate(s.releasedOn) : "Date to be announced"} · {sealed.length} sealed{boxes ? ` · ${boxes} booster box${boxes === 1 ? "" : "es"}` : ""}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            {list.length > FIRST && <button type="button" data-ff-more className="btn-soft mt-4 min-h-11 px-5">Show all {list.length} {line ? `${line.short} ` : ""}sets</button>}
+          </section>
+        ))}
       </div>
-      </section>
-      ))}
     </div>
   );
 }
