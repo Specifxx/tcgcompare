@@ -1567,3 +1567,5 @@ the set's release and age, the product's rank among the set's priced sealed prod
 costs. `ebayPrices: false`: no eBay price is ever named here (2026-11-14). On the 1,000 indexable products the section's own
 words go from ~25 to a median of 147 (10th percentile 90). `usCheapestQuoted` stays in `lib/product-page.ts` for its test
 but the page no longer uses it. Judge on 1 to 8 Dec against 3 to 9 Nov.
+
+Set pages too: `setRead` (same file) writes "<set> prices at a glance" under each set page's grid from the set's own products. The import and marketplace advice sentences that would repeat on every page were removed from both sections.
