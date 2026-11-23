@@ -32,6 +32,7 @@ import { AiReferralTracker } from "@/components/AiReferralTracker";
 import { ShareArrival } from "@/components/ShareArrival";
 import { DockAds } from "@/components/DockAds";
 import { BottomNav } from "@/components/BottomNav";
+import { NavBoost } from "@/components/NavBoost";
 import { AskSheet } from "@/components/AskSheet";
 import { cardAds } from "@/lib/card-ads";
 import { ReturnBeacon } from "@/components/ReturnBeacon";
@@ -92,6 +93,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         <Neo />
+        {/* Clicks that feel instant on the real URLs: intent prefetch, the main tabs warmed when idle, a line of light on tap. */}
+        <NavBoost warm={["/", "/sealed", "/sets", "/games", "/tools/deal-finder"]} />
         <PrefsProvider>
           <Header />
           {/* ONE line under the header at most (the minimal look, 2026-11-13: two promo bars sat above every headline): the sale's
