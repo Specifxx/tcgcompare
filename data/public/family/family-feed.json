@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-22T18:42:40.662Z",
+ "generatedAt": "2026-11-23T03:12:50.868Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -33,9 +33,9 @@
    "currency": "USD",
    "store": "Primepull TCG",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/679558_200w.jpg",
-   "refCents": 160425,
+   "refCents": 159357,
    "refLabel": "TCGplayer market price",
-   "savingPct": 33
+   "savingPct": 32
   },
   {
    "kind": "deal",
@@ -61,7 +61,7 @@
    "currency": "USD",
    "store": "Primepull TCG",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/496905_200w.jpg",
-   "refCents": 282739,
+   "refCents": 282099,
    "refLabel": "TCGplayer market price",
    "savingPct": 29
   },
