@@ -22,10 +22,12 @@ globalThis.__tcgpxRead = function readPageInfo() {
     const n = num(v);
     return Number.isFinite(n) && n > 0 && n < 1e6 ? Math.round(n * 100) : null;
   };
-  const addPrice = (v, cur, why) => {
+  const addPrice = (v, cur, why, url) => {
     const c = cents(v);
-    if (c && /^[A-Z]{3}$/.test(String(cur ?? ""))) prices.push({ cents: c, currency: String(cur), why });
+    if (c && /^[A-Z]{3}$/.test(String(cur ?? ""))) prices.push({ cents: c, currency: String(cur), why, ...(typeof url === "string" ? { url } : {}) });
   };
+  // Some shops escape their product data twice ("Scarlet &amp; Violet").
+  const unescape = (s) => String(s).replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
 
   const walk = (x) => {
     if (!x || typeof x !== "object") return;
@@ -33,7 +35,7 @@ globalThis.__tcgpxRead = function readPageInfo() {
     const t = [].concat(x["@type"] ?? []).map(String);
     if (t.some((y) => /^(Product|ProductGroup|IndividualProduct)$/i.test(y))) {
       isProduct = true;
-      if (typeof x.name === "string") names.push(x.name);
+      if (typeof x.name === "string") names.push(unescape(x.name));
       for (const k of ["gtin", "gtin13", "gtin12", "gtin14", "gtin8", "ean", "upc"]) if (x[k]) gtins.push(String(x[k]));
       const offers = [].concat(x.offers ?? []).flatMap((o) => (o?.offers ? [].concat(o.offers) : [o]));
       const variants = [].concat(x.hasVariant ?? []);
@@ -43,7 +45,7 @@ globalThis.__tcgpxRead = function readPageInfo() {
       for (const o of sorted) {
         for (const k of ["gtin", "gtin13", "gtin12", "gtin14", "gtin8"]) if (o?.[k]) gtins.push(String(o[k]));
         const cur = o.priceCurrency ?? o.priceSpecification?.priceCurrency;
-        addPrice(o.price ?? o.lowPrice ?? o.priceSpecification?.price, cur, "ld");
+        addPrice(o.price ?? o.lowPrice ?? o.priceSpecification?.price, cur, "ld", o.url);
       }
     }
     if (x["@graph"]) walk(x["@graph"]);

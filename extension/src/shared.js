@@ -102,7 +102,7 @@ function buildCard(d, handlers = {}) {
   // On TCGplayer with no price read from the page, its market price stands in (US only, same currency).
   const pageRef = page ?? (d.onTcg && market === "US" ? it.m : null);
   const v = best ? verdict(pageRef, best.cents) : null;
-  const pageWord = page != null ? (d.onTcg ? "TCGplayer's price here" : "this page") : "TCGplayer's market price";
+  const pageWord = page != null ? (d.onTcg ? "TCGplayer's lowest listing" : "this page") : "TCGplayer market price";
   const where = `${best?.name ?? ""}`;
 
   const card = el("div", { class: "tp-card" });
@@ -114,7 +114,7 @@ function buildCard(d, handlers = {}) {
     const others = Object.keys(it.p ?? {}).filter((m) => m !== market);
     card.append(el("div", { class: "tp-v tp-none" }, el("b", { text: `No store has it in stock in ${MARKET_LABEL[market]} today` }), others.length ? el("span", { text: `In stock in ${others.map((m) => MARKET_LABEL[m]).join(", ")}.` }) : null));
   } else if (v?.kind === "save") {
-    card.append(el("div", { class: "tp-v tp-save" }, el("b", { text: `Save ${money(v.diff, cur)} (${v.pct}%)` }), el("span", { text: `${where} has it for ${money(best.cents, cur)}, against ${money(pageRef, cur)} on ${pageWord}.` })));
+    card.append(el("div", { class: "tp-v tp-save" }, el("b", { text: `Save ${money(v.diff, cur)} (${v.pct}%)` }), el("span", { text: `${where} has it for ${money(best.cents, cur)} (${pageWord}: ${money(pageRef, cur)}).` })));
   } else if (v?.kind === "lowest") {
     card.append(el("div", { class: "tp-v tp-ok" }, el("b", { text: page != null ? "✓ The lowest price we track" : "✓ TCGplayer's market price is lower than any store" }), el("span", { text: `Cheapest store: ${money(best.cents, cur)} at ${where}.` })));
   } else {
@@ -124,7 +124,7 @@ function buildCard(d, handlers = {}) {
         { class: "tp-v" },
         el("small", { text: `${it.pre ? "Cheapest pre-order" : "Cheapest in stock"} · ${MARKET_LABEL[market]}` }),
         el("strong", { text: money(best.cents, cur) }),
-        el("span", { text: v?.kind === "same" ? `at ${where}, about the same as ${pageWord}.` : `at ${where}` }),
+        el("span", { text: v?.kind === "same" ? `at ${where}, about the same as ${pageWord} (${money(pageRef, cur)}).` : `at ${where}` }),
       ),
     );
   }

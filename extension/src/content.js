@@ -37,7 +37,16 @@
     if (!onTcg && (await local("hiddenHosts", [])).includes(location.hostname)) return;
     if (onTcg && (await local("dismissed", [])).includes(key)) return;
 
-    const info = globalThis.__tcgpxRead?.() ?? null;
+    let info = globalThis.__tcgpxRead?.() ?? null;
+    // TCGplayer draws its product data after the page: wait a few seconds for this product's own lowest listing.
+    const tcgPrice = (i) => (i?.price?.url?.includes(`/product/${key}`) ? i.price : null);
+    if (onTcg) {
+      for (let n = 0; n < 8 && !tcgPrice(info); n++) {
+        await new Promise((r) => setTimeout(r, 500));
+        info = globalThis.__tcgpxRead?.() ?? null;
+      }
+      if (info) info.price = tcgPrice(info);
+    }
     let res;
     if (onTcg) {
       res = await send({ type: "item", id: key });

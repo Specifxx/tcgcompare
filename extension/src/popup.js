@@ -186,6 +186,8 @@
     const onTcg = /^https:\/\/(www\.)?tcgplayer\.com\//.test(t.url);
     const id = t.url.match(/tcgplayer\.com\/product\/(\d{3,9})/i)?.[1];
     const info = await readPage(t);
+    // On TCGplayer, only this product's own lowest listing counts as the page's price (it is a single-page app).
+    if (info && id && !info.price?.url?.includes(`/product/${id}`)) info.price = null;
     let r;
     if (id) r = await send({ type: "item", id });
     else if (info) r = await send({ type: "match", info, market: market() });
