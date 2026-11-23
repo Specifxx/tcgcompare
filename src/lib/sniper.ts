@@ -1,5 +1,5 @@
-// Sealed Sniper (boardroom move N2, 2026-11-19): restocks and price drops of sealed Pokémon, One Piece, Riftbound, Magic
-// and Lorcana product, posted to the Compare Empire Discord by scripts/sniper.ts after each import (refresh-prices.yml).
+// Sealed Sniper (boardroom move N2, 2026-11-19): restocks and price drops of sealed product of every game in SNIPER_LINES,
+// posted to the Compare Empire Discord by scripts/sniper.ts after each import (refresh-prices.yml).
 // This file is pure and tested (tests/sniper.test.ts); the script reads the files, checks the store, posts and saves state.
 //
 // ACCURACY FIRST: a wrong "in stock" post costs the channel its trust.
@@ -18,9 +18,13 @@
 import { CURRENCY, type Market } from "./site-types";
 import { money } from "./format";
 
-/** The games the Sniper covers (SITE.lines ids): Pokémon (English), One Piece, Riftbound, Magic, Lorcana. */
-export const SNIPER_LINES = ["pkm", "op", "rb", "mtg", "lor"] as const;
-export const GAME_LABEL: Record<string, string> = { pkm: "Pokémon", op: "One Piece", rb: "Riftbound", mtg: "Magic", lor: "Lorcana" };
+/** The games the Sniper covers (SITE.lines ids): every game one of our sites covers, plus Star Wars: Unlimited and Flesh
+ * and Blood (owner, 2026-11-23: "cover all the tcgs we have"). Pokémon Japan stays out: its prices are in yen. */
+export const SNIPER_LINES = ["pkm", "op", "rb", "mtg", "lor", "ygo", "gun", "ua", "fw", "dg", "swu", "fab", "cp"] as const;
+export const GAME_LABEL: Record<string, string> = {
+  pkm: "Pokémon", op: "One Piece", rb: "Riftbound", mtg: "Magic", lor: "Lorcana", ygo: "Yu-Gi-Oh!", gun: "Gundam",
+  ua: "Union Arena", fw: "Fusion World", dg: "Digimon", swu: "Star Wars: Unlimited", fab: "Flesh and Blood", cp: "Cyberpunk",
+};
 /** Headline sealed types only: no loose packs, blisters or prerelease kits. */
 export const SNIPER_TYPES = new Set(["Booster Box", "Elite Trainer Box", "Bundle", "Case", "Collection", "Illumineer's Trove", "Commander Deck"]);
 export const MIN_MARKET_USD_CENTS = 2500;
@@ -225,7 +229,7 @@ export function isNew(e: SniperEvent, state: SniperState, now: number): boolean 
 export function rankEvents(events: readonly SniperEvent[], state: SniperState, now: number, demand: (id: number) => number = () => 0): SniperEvent[] {
   const score = (e: SniperEvent) => (e.kind === "preorder" ? 2e9 : e.kind === "restock" ? 1e9 : 0) + demand(e.product.id) * 1e4 + (e.kind === "drop" ? e.pct * 100 : 0) + (e.product.marketCents ?? 0) / 100;
   const seen = new Set<string>();
-  return events
+  const ranked = events
     .filter((e) => isNew(e, state, now))
     .sort((a, b) => score(b) - score(a) || sniperKey(a).localeCompare(sniperKey(b)))
     .filter((e) => {
@@ -234,6 +238,24 @@ export function rankEvents(events: readonly SniperEvent[], state: SniperState, n
       seen.add(k);
       return true;
     });
+  return spreadGames(ranked);
+}
+
+/** At most this many posts of one game lead a run while other games have news; the rest follow (owner, 2026-11-23). */
+export const MAX_PER_GAME = 3;
+
+/** The ranked list with each game's first MAX_PER_GAME events in front, in rank order, and every other event after them. */
+export function spreadGames(ranked: readonly SniperEvent[]): SniperEvent[] {
+  const count = new Map<string, number>();
+  const front: SniperEvent[] = [];
+  const back: SniperEvent[] = [];
+  for (const e of ranked) {
+    const g = e.product.line ?? "";
+    const n = count.get(g) ?? 0;
+    count.set(g, n + 1);
+    (n < MAX_PER_GAME ? front : back).push(e);
+  }
+  return [...front, ...back];
 }
 
 /** The state after posting: posted events stamped, entries past both cooldowns forgotten. */
