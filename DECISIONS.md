@@ -1532,3 +1532,22 @@ find us", only after the extension has sent the visitor to buy once or shown the
 days after install. "Rate it" opens the store's reviews tab and ends the ask; "Not now" waits 30 days, twice at most. The
 two counters stay in `chrome.storage.local`. No incentive, no review written for anyone, no prompt on any web page
 (Chrome Web Store policy and the page budget). Uploaded only after 1.3.0 is approved, so its review isn't restarted.
+
+## 2026-11-23: Gundam joins the gap crawl; its probe words refuse model-kit shelves
+
+Site loop, the first import after the 22 Nov probe: the gap crawl (2026-11-18) took 117 Union Arena listings (6 on 17
+Nov) and 338 Digimon (117), and products with no store fell UA 94 → 88, Fusion World 50 → 44, Digimon 32 → 30
+(`scripts/coverage-report.ts`). The next thinnest sister game with indexable pages is Gundam: 23 of 82 products with no
+store, store collections only at the 52 own-list shops. Gundam Compare's list is 321 shops (163 US); 293 US shops of the
+directory are not on it (1,039 in all markets).
+
+- `gun` is a gap game (`GAP_CRAWL` in `site.config.ts`), on the 2026-11-18 terms: read only at a shop Gundam Compare does not
+  list, only in the slots the uncovered games leave, a sister's row for the same shop and product wins, taken by id (or
+  the crawl's title rules), never a new rule.
+- The probe's words are whole words, so `not: ["model kit"]` never refused "Gundam Model Kits": the 22 Nov probe gave
+  `gundam-model-kits`, `gundam-kits` and `gundam-figures-model-kits` slots at own-list shops. `gun`'s `not` words now
+  add the plurals, kit/kits, the grades (high, master, real, perfect), plastic model, Gundam Assemble (a tabletop game),
+  paints and figures. Refuse-only. `tests/crawl.test.ts` pins both.
+
+Read after the Sun 29 Nov 04:15 UTC probe and the import after it: `takenByLine.gun` (22 Nov: 91), Gundam products with no
+store (23 of 82). Lorcana (41 of 171) is thinner but noindex here (its sister ranks), so it waits.

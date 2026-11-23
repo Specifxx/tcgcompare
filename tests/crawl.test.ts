@@ -647,9 +647,9 @@ test("an AI placement outside the wide price band, on another game's product or 
 
 // ── Gap games: a sister's game at the stores its sister does not list (2026-11-18) ─────────────────
 
-test("gap games: only Bandai's thin games, with their own-store words, never a crawl word", () => {
+test("gap games: only the thin sisters' games (Bandai's three, Gundam), with their own-store words, never a crawl word", () => {
   const gap = (SITE.lines ?? []).filter((l) => l.gapCrawl);
-  assert.deepEqual(gap.map((l) => l.id).sort(), ["dg", "fw", "ua"]);
+  assert.deepEqual(gap.map((l) => l.id).sort(), ["dg", "fw", "gun", "ua"]);
   const sisterLines = new Set(SISTERS.flatMap((s) => s.lines));
   for (const l of gap) {
     assert.ok(sisterLines.has(l.id), `${l.id} has a sister`);
@@ -689,6 +689,24 @@ test("the probe reads a gap game only where its sister does not list the shop, a
   const net2 = fakeNet({ "https://free.test/collections.json": cols });
   const r2 = await runProbe([{ key: "free", name: "Free", base: "https://free.test", market: "US" }], SITE.lines ?? [], { fetch: net2.f, sleep: net2.sleep, now: net2.now, budget: 100, perStoreCap: 6 });
   assert.deepEqual(r2.entries.map((e) => e.line), ["ga"]);
+});
+
+test("Gundam as a gap game: its card collections at a shop Gundam Compare does not list, never a Gunpla or model kit shelf", async () => {
+  const cols = { body: { collections: [
+    { handle: "gundam-card-game", title: "Gundam Card Game", products_count: 30 },
+    { handle: "gunpla", title: "Gundam Gunpla", products_count: 300 },
+    { handle: "gundam-model-kits", title: "Gundam Model Kits", products_count: 120 },
+  ] } };
+  const net = fakeNet({ "https://free.test/collections.json": cols, "https://gundam.test/collections.json": cols });
+  const lines = (SITE.lines ?? []).filter((l) => l.gapCrawl).map((l) => ({ id: l.id, crawl: l.ownCrawl }));
+  const r = await runProbe(
+    [{ key: "free", name: "Free", base: "https://free.test", market: "US" }, { key: "gundam", name: "Listed", base: "https://gundam.test", market: "US" }],
+    SITE.lines ?? [],
+    { fetch: net.f, sleep: net.sleep, now: net.now, budget: 100, perStoreCap: 6, gap: { lines, sisterLists: (host, line) => line === "gun" && host === "gundam.test" } },
+  );
+  const of = (host: string) => r.entries.filter((e) => e.host === host).map((e) => [e.line, e.handles]);
+  assert.deepEqual(of("free.test"), [["gun", ["gundam-card-game"]]]);
+  assert.deepEqual(of("gundam.test"), [], "a shop Gundam Compare lists is left to it");
 });
 
 test("addCrawlOffers: a sister's row for the same store, market and product wins; other rows are added and marked", async () => {
