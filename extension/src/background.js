@@ -215,6 +215,13 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
           await setWatch(w);
           return reply({ ok: true, on: !!msg.on });
         }
+        case "stat": {
+          // Two local counters for the rating ask: savings shown and Buy clicks. Never sent anywhere.
+          const { stats = {} } = await chrome.storage.local.get("stats");
+          if (msg.k === "buys" || msg.k === "saves") stats[msg.k] = (stats[msg.k] ?? 0) + 1;
+          await chrome.storage.local.set({ stats });
+          return reply({ ok: true });
+        }
         case "seen": {
           const w = await getWatch();
           for (const x of Object.values(w)) if (x.drop) x.drop.seen = true;
@@ -259,6 +266,7 @@ chrome.runtime.onStartup.addListener(setup);
 chrome.runtime.onInstalled.addListener((details) => {
   chrome.contextMenus.create({ id: "search", title: `Search ${CONFIG.short} for “%s”`, contexts: ["selection"] });
   setup();
+  chrome.storage.local.get("installedAt").then((x) => x.installedAt || chrome.storage.local.set({ installedAt: Date.now() }));
   if (details.reason === "install") chrome.tabs.create({ url: tagged(CONFIG.page + "?installed=1", "installed") });
 });
 

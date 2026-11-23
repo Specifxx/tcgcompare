@@ -114,6 +114,7 @@ function buildCard(d, handlers = {}) {
     const others = Object.keys(it.p ?? {}).filter((m) => m !== market);
     card.append(el("div", { class: "tp-v tp-none" }, el("b", { text: `No store has it in stock in ${MARKET_LABEL[market]} today` }), others.length ? el("span", { text: `In stock in ${others.map((m) => MARKET_LABEL[m]).join(", ")}.` }) : null));
   } else if (v?.kind === "save") {
+    chrome.runtime.sendMessage({ type: "stat", k: "saves" }).catch(() => {}); // counts towards the one rating ask (popup.js)
     card.append(el("div", { class: "tp-v tp-save" }, el("b", { text: `Save ${money(v.diff, cur)} (${v.pct}%)` }), el("span", { text: `${where} has it for ${money(best.cents, cur)} (${pageWord}: ${money(pageRef, cur)}).` })));
   } else if (v?.kind === "lowest") {
     card.append(el("div", { class: "tp-v tp-ok" }, el("b", { text: page != null ? "✓ The lowest price we track" : "✓ TCGplayer's market price is lower than any store" }), el("span", { text: `Cheapest store: ${money(best.cents, cur)} at ${where}.` })));
@@ -134,6 +135,7 @@ function buildCard(d, handlers = {}) {
     stores.forEach((s, i) => {
       const href = i === 0 && s.url ? goUrl(home, s.url, s.key, market, pack.id, `${d.from}-buy`) : tagged(home + it.u, `${d.from}-store`);
       const a = el("a", { href, target: "_blank", rel: i === 0 && s.url ? "noopener sponsored" : "noopener", class: i === 0 ? "tp-buy" : "tp-go", text: i === 0 && s.url ? "Buy" : "View" });
+      if (i === 0 && s.url) a.addEventListener("click", () => chrome.runtime.sendMessage({ type: "stat", k: "buys" }).catch(() => {}));
       list.append(el("li", {}, el("span", { class: "tp-sn", text: s.name }), el("span", { class: "tp-sp", text: money(s.cents, cur) }), a));
     });
     card.append(list);
