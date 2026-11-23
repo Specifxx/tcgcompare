@@ -11,9 +11,12 @@ import { SITE } from "@/site.config";
 import { byValue, historyOf, indexSignals, looseSingleSetId, meta, priceOf, productBySlug, productsInSet, refCents, setById, setBySlug } from "@/lib/data";
 import { imageAt } from "@/lib/image";
 import { money, pct } from "@/lib/format";
+import { buyerRead } from "@/lib/buyer-read";
+import { sourceNameServer } from "@/lib/sources";
+import { MARKETS, MARKET_LABEL, type Market, type Offer } from "@/lib/site-types";
 import { shortName } from "@/lib/names";
 import { ebayQueryOf, lineOfSet, tcgplayerSlugOf } from "@/lib/lines";
-import { ebayQueryFor, jsonLdOffers, usCheapestQuoted } from "@/lib/product-page";
+import { ebayQueryFor, jsonLdOffers } from "@/lib/product-page";
 import { PriceTable } from "@/components/PriceTable";
 import { VaultOwn } from "@/components/vault/VaultOwn";
 import { PriceAlert } from "@/components/PriceAlert";
@@ -103,8 +106,22 @@ export default function CardPage({ params }: { params: { slug: string } }) {
   const inStock = e.offers.filter((o) => o.inStock);
   // In-stock US-dollar offers, never eBay or Amazon: no structured data carries an eBay price (2026-11-14).
   const usOffers = jsonLdOffers(e.offers);
-  // The sentence below names one market's price (the US baseline), never eBay, never a foreign currency.
-  const usCheapest = usCheapestQuoted(e.offers);
+  const read = buyerRead({
+    name,
+    sealedType: p.kind === "sealed" ? p.sealedType : null,
+    refCents: ref,
+    tcgLowCents: Object.values(e.tcg).map((t) => t.low).filter((c): c is number => c != null).sort((x, y) => x - y)[0] ?? null,
+    history: series,
+    today: historyThrough(),
+    offers: e.offers,
+    storeName: (o) => sourceNameServer(o as Offer),
+    set: set ? { name: set.name, releasedOn: set.releasedOn, upcoming: set.upcoming } : null,
+    siblings: p.kind === "sealed" ? productsInSet(p.setId).filter((x) => x.id !== p.id && x.kind === "sealed").map((x) => ({ name: shortName(x.name), sealedType: x.sealedType, refCents: refCents(x.id) })) : [],
+    money,
+    marketOrder: MARKETS,
+    ebayPrices: false, // no eBay price on this site, ever (src/lib/no-ebay-prices.ts)
+    marketName: (mk) => (mk === "US" || mk === "UK" ? `the ${MARKET_LABEL[mk as Market]}` : MARKET_LABEL[mk as Market] ?? String(mk)),
+  });
   // Sealed only: the markets' tagged searches, upgraded to the item's own page and this build's price where the API found them.
   const amazon = p.kind === "sealed" && amazonCarries(p) ? amazonCells(p.id, amazonSearchUrls(`${SITE.game} ${name}`)) : null;
   return (
@@ -210,10 +227,9 @@ export default function CardPage({ params }: { params: { slug: string } }) {
           </section>
           <section className="prose-site max-w-none text-sm">
             <h2>Is {name} worth it?</h2>
-            <p>
-              {name} {ref ? `sells for about ${money(ref)} on TCGplayer` : "has no TCGplayer market price yet"}
-              {e.change30d != null ? `, ${e.change30d >= 0 ? "up" : "down"} ${Math.abs(e.change30d)}% over 30 days` : ""}. {usCheapest ? `The cheapest in-stock US price we track is ${money(usCheapest.cents, usCheapest.currency)}.` : ""} Prices from {SITE.stores.length} stores, TCGplayer and eBay are checked every day.
-            </p>
+            {/* Written from this product's own prices, stock and history (lib/buyer-read.ts, 2026-11-23 SEO quality pass). */}
+            {read.map((t, k) => <p key={k}>{t}</p>)}
+            <p className="text-muted">Prices from {SITE.stores.length} stores and TCGplayer are checked twice a day.</p>
           </section>
           {/* Which RiftCompare tool to build here next: a one-tap demand test, low on the page, never by a price (2026-11-18). */}
           <ToolInterest page="card" />

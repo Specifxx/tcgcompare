@@ -1551,3 +1551,19 @@ directory are not on it (1,039 in all markets).
 
 Read after the Sun 29 Nov 04:15 UTC probe and the import after it: `takenByLine.gun` (22 Nov: 91), Gundam products with no
 store (23 of 82). Lorcana (41 of 171) is thinner but noindex here (its sister ranks), so it waits.
+
+## 2026-11-23: "Is it worth it?" is written from each product's own data (SEO quality pass)
+
+A live audit of the sitemap's product pages on 23 Nov (24 random pages per page type, `<main>` text without header, footer,
+nav and forms; 5-word shingles shared by more than a fifth of the sample counted as template) found a median of **69 words
+of a page's own** on `/card/*` here (16 of 20 under 80), against 653 on DexCompare's product pages. The "Is it worth it?"
+section was one templated sentence on every product page.
+
+`lib/buyer-read.ts` (pure, the same file as YGO Compare's; `tests/buyer-read.test.ts`) now writes it from the product's own
+prices, stock and history: each market's in-stock store count, cheapest and dearest and what the gap saves; the cheapest
+US-dollar store against TCGplayer's market price (never converted); one store versus many, sold out, pre-orders only;
+TCGplayer's lowest listing; TCGplayer's market price since we started recording it, its tracked range and where today sits;
+the set's release and age, the product's rank among the set's priced sealed products and how many of its cheapest pack it
+costs. `ebayPrices: false`: no eBay price is ever named here (2026-11-14). On the 1,000 indexable products the section's own
+words go from ~25 to a median of 147 (10th percentile 90). `usCheapestQuoted` stays in `lib/product-page.ts` for its test
+but the page no longer uses it. Judge on 1 to 8 Dec against 3 to 9 Nov.
