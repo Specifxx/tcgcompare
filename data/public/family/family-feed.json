@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-23T03:12:50.868Z",
+ "generatedAt": "2026-11-23T22:58:47.520Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -19,7 +19,7 @@
    "currency": "USD",
    "store": "Primepull TCG",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/544384_200w.jpg",
-   "refCents": 236041,
+   "refCents": 234321,
    "refLabel": "TCGplayer market price",
    "savingPct": 39
   },
@@ -97,6 +97,18 @@
    "kind": "preorder",
    "cluster": "cards",
    "region": "US",
+   "title": "Chromatic Ascension Booster Box",
+   "url": "https://tcgprices.app/preorders/chromatic-ascension",
+   "cents": 19999,
+   "currency": "USD",
+   "store": "Holo Horse Games LLC",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/710675_200w.jpg",
+   "releaseDate": "2026-11-27"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
    "title": "Starter Deck 25: Rubeusdramon Starter Deck",
    "url": "https://tcgprices.app/preorders/starter-deck-25-rubeusdramon",
    "cents": 1999,
@@ -148,17 +160,6 @@
    "cents": 9499,
    "currency": "USD",
    "store": "Many Realms",
-   "releaseDate": "2026-12-11"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Reach the God Booster Box",
-   "url": "https://tcgprices.app/preorders/reach-the-god",
-   "cents": 14499,
-   "currency": "USD",
-   "store": "The Collection Realm",
    "releaseDate": "2026-12-11"
   }
  ]

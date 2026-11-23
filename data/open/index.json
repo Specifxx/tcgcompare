@@ -1116,7 +1116,7 @@
   {
    "d": "2026-11-23",
    "all": {
-    "n": 3156,
+    "n": 3148,
     "median": 4997,
     "level": 100
    },
@@ -1147,13 +1147,13 @@
      "level": 100
     },
     "digimon-card-game": {
-     "n": 74,
+     "n": 73,
      "median": 1299,
      "level": 100
     },
     "disney-lorcana": {
-     "n": 110,
-     "median": 2923,
+     "n": 109,
+     "median": 2949,
      "level": 100
     },
     "dragon-ball-super-fusion-world": {
@@ -1197,13 +1197,13 @@
      "level": 100
     },
     "hololive": {
-     "n": 28,
+     "n": 29,
      "median": 1799,
      "level": 100
     },
     "magic-the-gathering": {
-     "n": 1075,
-     "median": 6199,
+     "n": 1074,
+     "median": 6172,
      "level": 100
     },
     "one-piece": {
@@ -1217,8 +1217,8 @@
      "level": 100
     },
     "pokemon": {
-     "n": 680,
-     "median": 5387,
+     "n": 677,
+     "median": 5475,
      "level": 100
     },
     "pokemon-japan": {
@@ -1227,8 +1227,8 @@
      "level": 100
     },
     "riftbound": {
-     "n": 32,
-     "median": 3113,
+     "n": 29,
+     "median": 3226,
      "level": 100
     },
     "shadowverse-evolve": {
