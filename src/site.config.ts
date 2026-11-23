@@ -101,7 +101,9 @@ const OWN_CRAWL: Record<string, GameLine["ownCrawl"]> = {
   ygo: { any: ["yu gi oh", "yugioh"] },
   rb: { any: ["riftbound"] },
   lor: { any: ["lorcana"] },
-  gun: { any: ["gundam"], not: ["gunpla", "model kit"] },
+  // Words match whole words, so the plural is its own word ("model kit" never refused "Gundam Model Kits"). Gundam
+  // Assemble is a tabletop game, and its paints and the figures are not cards.
+  gun: { any: ["gundam"], not: ["gunpla", "model kit", "model kits", "kit", "kits", "plastic model", "high grade", "master grade", "real grade", "perfect grade", "assemble", "paints", "figures"] },
   ua: { any: ["union arena"] },
   fw: { any: ["fusion world"] },
   dg: { any: ["digimon"] },
@@ -147,8 +149,9 @@ const SEO: Record<string, GameLine["seo"]> = {
 };
 
 // Sisters' games whose sister lists few stores (BandaiCompare: 318 store entries, about 190 kept products): read at
-// the directory's other stores too, never at one the sister lists (DECISIONS.md 2026-11-18, "Gap crawl").
-const GAP_CRAWL = new Set(["ua", "fw", "dg"]);
+// the directory's other stores too, never at one the sister lists (DECISIONS.md 2026-11-18, "Gap crawl"). Gundam joined
+// on 2026-11-23 (23 of 82 products with no store; Gundam Compare lists 321 shops, 293 US directory shops it does not).
+const GAP_CRAWL = new Set(["ua", "fw", "dg", "gun"]);
 // Shops file Fusion World under a plain "Dragon Ball Super" collection, which DBS Masters' crawl words claim (the
 // 20 Nov crawl refused 88 Fusion World listings there as another game). GameLine.alsoIn: taken only by the product's
 // own TCGplayer id, only at a store Bandai Compare does not list.
