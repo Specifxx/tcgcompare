@@ -641,6 +641,7 @@ function mergeOwnCrawl(a: {
     refused: got.refused,
     ...(got.refusedDetail ? { refusedDetail: got.refusedDetail } : {}),
     ...(got.takenByLine ? { takenByLine: got.takenByLine } : {}),
+    ...(got.lineFunnel ? { lineFunnel: got.lineFunnel } : {}),
     offers: 0,
     carried: carry.carried,
     seen,

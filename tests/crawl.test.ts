@@ -113,6 +113,11 @@ test("GameLine.alsoIn: another game's product in this game's collection is taken
   assert.deepEqual([...got.offers.keys()], [523456]);
   assert.equal(got.alsoTaken, 1);
   assert.equal(got.takenByLine?.fab, 1);
+  // The funnel counts by the game whose collection listed it (swu here), in every market and in the US.
+  const swu = { listings: 2, taken: 1, refused: { "type-differs": 1 } };
+  assert.deepEqual(got.lineFunnel, { swu, "swu@US": swu });
+  const ca = takeCrawl({ ...run, stores: run.stores.map((s) => ({ ...s, market: "CA" as const })) }, allow, new Map([["cards.test|CA", "cards"]]));
+  assert.deepEqual(ca.lineFunnel, { swu: { listings: 2, taken: 1, refused: { "type-differs": 1 } } });
   // Every pickId check still applies once the game is added: a pack title on a box id is refused.
   assert.deepEqual(got.refused, { "type-differs": 1 });
   assert.ok(asked.includes("fab|swu|cards.test"));
