@@ -19,14 +19,16 @@ export const metadata: Metadata = {
   ...canon("/sets"),
 };
 
-/** Sets of a game shown before "Show all": the releases people are buying now. */
-const FIRST = 6;
+/** Sets of a game shown before "Show all": the releases people are buying now (a one-game site shows more). */
+const FIRST_MANY = 6;
+const FIRST_ONE = 30;
 
 // Since 2026-11-23: a set finder, a jump row of the games, and each game folded to its newest sets. It was one table per game,
 // every set open (84,000 px on a phone, the last columns cut off). Every set link is still in the HTML, in release order.
 export default function Sets() {
   const listed = sealedSets();
   const groups = (isMultiGame ? LINES.map((l) => ({ line: l as GameLine | null, list: listed.filter((s) => s.line === l.id) })).filter(({ list }) => list.length > 0) : [{ line: null as GameLine | null, list: listed }]);
+  const FIRST = groups.length > 1 ? FIRST_MANY : FIRST_ONE;
   return (
     <div data-ff-root>
       <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", name: `${SITE.gameShort} sets`, numberOfItems: listed.length, itemListElement: listed.map((s, i) => ({ "@type": "ListItem", position: i + 1, name: s.name, url: abs(`/sets/${s.slug}`) })) }} />
