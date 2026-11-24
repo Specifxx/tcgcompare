@@ -1,10 +1,24 @@
 // Per-game views of the catalogue for multi-game sites (SITE.lines): the
 // /games hubs and the homepage's game tiles. Empty on single-game sites.
 import type { GameLine, Product, SetInfo } from "@/lib/site-types";
-import { byValue, products, refCents, setById, sets } from "@/lib/data";
+import { byValue, products, refCents, setById, sets, summaryOf } from "@/lib/data";
+import { shortName } from "@/lib/names";
+import type { HubItem } from "@/lib/hub-snippet";
 import { LINES } from "@/lib/lines";
 import { SEALED_ORDER, SEALED_PLURAL } from "@/lib/hubs";
 import { slugify } from "@/lib/slug";
+
+/** A product as the hub snippets read it (lib/hub-snippet.ts): its name, type, release, TCGplayer market and best offers. */
+export function hubItem(p: Product): HubItem {
+  const s = setById(p.setId);
+  return { name: shortName(p.name), sealedType: p.sealedType, releasedOn: s?.releasedOn ?? null, upcoming: !!s?.upcoming, tcgCents: refCents(p.id), best: summaryOf(p.id).best };
+}
+
+/** Every sealed product of a game (never an insert), for its hub's snippet. */
+export function gameSealed(line: GameLine): Product[] {
+  const ids = new Set(sets().filter((s) => s.line === line.id && s.productCount > 0).map((s) => s.id));
+  return products().filter((p) => p.kind === "sealed" && p.sealedType !== "Insert" && ids.has(p.setId));
+}
 
 export interface GameView {
   line: GameLine;

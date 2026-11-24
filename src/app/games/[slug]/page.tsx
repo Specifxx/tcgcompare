@@ -7,7 +7,10 @@ import { SITE } from "@/site.config";
 import { canon, abs } from "@/lib/site";
 import { fitTitle } from "@/lib/seo-title";
 import { lineBySlug } from "@/lib/lines";
-import { GAME_TYPE_MIN, gameTypeHubs, gameView } from "@/lib/game-hubs";
+import { GAME_TYPE_MIN, gameSealed, gameTypeHubs, gameView, hubItem } from "@/lib/game-hubs";
+import { gameHubDescription, gameHubTitleLadder } from "@/lib/hub-snippet";
+import { storeName } from "@/lib/share";
+import { todayIso } from "@/lib/preorders";
 import { productsInSet, refCents } from "@/lib/data";
 import { money } from "@/lib/format";
 import { TileGrid } from "@/components/ProductTile";
@@ -23,10 +26,14 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   const line = lineBySlug(params.slug);
   if (!line) return {};
   const v = gameView(line);
-  const title = fitTitle([`${line.name} Booster Box Prices — Every Store`, `${line.name} Booster Box Prices`, `${line.name} Prices`]);
+  // Written from today's data (lib/hub-snippet.ts; page scorecard 2026-11-23): the kinds this game really has, then one real US
+  // store price for its newest released booster box beside TCGplayer's market.
+  const items = gameSealed(line).map(hubItem);
+  const short = line.seo?.name ?? line.short;
+  const title = fitTitle(gameHubTitleLadder(line.name, short, items.map((i) => i.sealedType)));
   return {
     title,
-    description: `${line.name} booster boxes, cases and starter decks compared across TCGplayer, eBay, Amazon and ${SITE.stores.length} stores: ${v.sealed} sealed products in ${v.sets.length} sets, cheapest in stock first, updated daily.`,
+    description: gameHubDescription({ short, items, sets: v.sets.length, stores: SITE.stores.length, today: todayIso(), storeName }),
     ...canon(`/games/${line.slug}`),
     openGraph: { ...canon(`/games/${line.slug}`).openGraph, title: title.absolute },
   };
