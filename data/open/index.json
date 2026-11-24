@@ -1276,7 +1276,7 @@
   {
    "d": "2026-11-24",
    "all": {
-    "n": 3149,
+    "n": 3160,
     "median": 4997,
     "level": 100
    },
@@ -1292,8 +1292,8 @@
      "level": 100
     },
     "cardfight-vanguard": {
-     "n": 73,
-     "median": 4499,
+     "n": 74,
+     "median": 4500,
      "level": 100
     },
     "cookierun-braverse": {
@@ -1317,13 +1317,13 @@
      "level": 100
     },
     "dragon-ball-super-fusion-world": {
-     "n": 25,
-     "median": 12999,
+     "n": 24,
+     "median": 11286,
      "level": 100
     },
     "dragon-ball-super-masters": {
-     "n": 10,
-     "median": 10048,
+     "n": 11,
+     "median": 10000,
      "level": 100
     },
     "elestrals": {
@@ -1347,7 +1347,7 @@
      "level": 100
     },
     "grand-archive": {
-     "n": 40,
+     "n": 41,
      "median": 2999,
      "level": 100
     },
@@ -1362,8 +1362,8 @@
      "level": 100
     },
     "magic-the-gathering": {
-     "n": 1075,
-     "median": 6195,
+     "n": 1079,
+     "median": 6199,
      "level": 100
     },
     "one-piece": {
@@ -1377,7 +1377,7 @@
      "level": 100
     },
     "pokemon": {
-     "n": 677,
+     "n": 679,
      "median": 5475,
      "level": 100
     },
@@ -1388,7 +1388,7 @@
     },
     "riftbound": {
      "n": 29,
-     "median": 3226,
+     "median": 3222,
      "level": 100
     },
     "shadowverse-evolve": {
@@ -1417,8 +1417,8 @@
      "level": 100
     },
     "weiss-schwarz": {
-     "n": 142,
-     "median": 1998,
+     "n": 145,
+     "median": 2000,
      "level": 100
     },
     "wixoss": {
