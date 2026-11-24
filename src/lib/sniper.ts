@@ -318,9 +318,12 @@ export function productUrl(siteUrl: string, slug: string, drop?: string): string
   return `${siteUrl}/card/${slug}?${UTM}${drop ? `&utm_content=${drop}` : ""}`;
 }
 
-/** Riftbound drops name RiftCompare and link it (Rift Google plan, 2026-11-25: brand searches back to 170+ a week by 15 Dec). */
-export function riftCompareUrl(drop?: string): string {
-  return `https://riftcompare.com/?${UTM}${drop ? `&utm_content=${drop}` : ""}`;
+/** Riftbound drops name RiftCompare and link it (Rift Google plan, 2026-11-25, item 4: brand searches back to 170+ a week by
+ * 15 Dec). The Legacy pre-order page until 13 Dec, then the sealed hub; campaign "brand" so the plan reads these apart. */
+export const RIFT_LEGACY_UNTIL = Date.UTC(2026, 11, 14, 0, 0);
+export function riftCompareUrl(now: number, drop?: string): string {
+  const path = now < RIFT_LEGACY_UNTIL ? "/legacy-preorders" : "/sealed";
+  return `https://riftcompare.com${path}?utm_source=discord&utm_medium=social&utm_campaign=brand${drop ? `&utm_content=${drop}` : ""}`;
 }
 
 /** One run is one drop: ONE Discord message holding every checked post (owner's cap: at most 3 drops a day across the
@@ -383,7 +386,7 @@ export function embedFor(e: SniperEvent, liveCents: number, checkedAt: number, s
     e.product.marketCents ? `TCGplayer market: ${money(e.product.marketCents, "USD")}` : null,
     `${e.kind === "preorder" ? "Open for pre-order" : "In stock"} at the store when checked <t:${ts}:R>. Stock can sell out fast; the store's page has the final word.`,
     `[Compare every store](${productUrl(siteUrl, e.product.slug, drop)})`,
-    e.product.line === "rb" ? `Riftbound prices every day: [RiftCompare](${riftCompareUrl(drop)})` : null,
+    e.product.line === "rb" ? `Every Riftbound price, every day, on [RiftCompare](${riftCompareUrl(checkedAt, drop)})` : null,
   ].filter(Boolean);
   return {
     title: `${e.kind === "preorder" ? `${FLAG[e.store.market]} First pre-order` : e.kind === "restock" ? "Back in stock" : "Price drop"}: ${e.product.name}`.slice(0, 250),
