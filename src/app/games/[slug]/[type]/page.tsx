@@ -4,7 +4,11 @@ import Link from "@/components/Link";
 import { SITE } from "@/site.config";
 import { abs, canon } from "@/lib/site";
 import { lineBySlug } from "@/lib/lines";
-import { GAME_TYPE_MIN, gameTypeHub, gameTypeHubs } from "@/lib/game-hubs";
+import { GAME_TYPE_MIN, gameTypeHub, gameTypeHubs, hubItem } from "@/lib/game-hubs";
+import { typeHubDescription, typeHubTitleLadder } from "@/lib/hub-snippet";
+import { fitTitle } from "@/lib/seo-title";
+import { storeName } from "@/lib/share";
+import { todayIso } from "@/lib/preorders";
 import { setById } from "@/lib/data";
 import { FilterGrid } from "@/components/FilterGrid";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -19,8 +23,9 @@ export function generateMetadata({ params }: { params: { slug: string; type: str
   const h = line ? gameTypeHub(line, params.type) : null;
   if (!line || !h) return {};
   return {
-    title: `${line.name} ${h.label.toLowerCase()} — prices for every set`,
-    description: `Compare prices for all ${h.items.length} ${line.name} ${h.label.toLowerCase()} across TCGplayer, eBay and ${SITE.stores.length} stores, most popular first.`,
+    // Written from today's data (lib/hub-snippet.ts; page scorecard 2026-11-23): one real US store price for the newest product.
+    title: fitTitle(typeHubTitleLadder(line.name, line.seo?.name ?? line.short, h.type, h.label, h.items.length)),
+    description: typeHubDescription({ short: line.seo?.name ?? line.short, label: h.label, items: h.items.map(hubItem), stores: SITE.stores.length, today: todayIso(), storeName }),
     ...canon(`/games/${line.slug}/${h.slug}`),
     ...(h.items.length >= GAME_TYPE_MIN ? {} : { robots: { index: false, follow: true } }),
   };

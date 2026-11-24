@@ -1728,3 +1728,21 @@ had one). Not done here: set logos (no licensed source), the one "Get alerts" co
 
 Click guard: eBay and TCGplayer outbound clicks per 100 product views at release+2d (the marketplaces moved down); if they fall
 more than 40% with store clicks flat, the product page's marketplaces block goes back above the stores (owner's call).
+
+## 2026-11-24 — Game hub snippets are written from the data (page scorecard, Job D)
+
+The 23 Nov page scorecard put the game hubs (`/games/yugioh`, `/games/cyberpunk-tcg`, `/games/digimon-card-game`,
+`/games/godzilla-card-game`, `/games/cookierun-braverse`) and three game-type hubs in TCG Prices' bottom 20%: page one in
+Google (positions 5 to 15, for "yugioh prices", "cyberpunk tcg prices", "digimon card value", "godzilla booster box"), 20 to 58
+impressions each over 28 days, no click. Their title and description were one template for all 31 games ("<game> Booster Box
+Prices — Every Store"; "booster boxes, cases and starter decks compared…").
+
+`lib/hub-snippet.ts` now writes both from the page's own products: the title names the game and only the kinds it has ("Yu-Gi-Oh!
+Prices: Booster Boxes, Packs & Decks"; a type hub "Digimon Card Game Booster Pack Prices: All 44 Compared"), and the description
+leads with ONE real price: the newest released product (a booster box on a game hub) that a store has in stock in the US, the
+store's own US-dollar price and name, beside TCGplayer's market price. Never TCGplayer, eBay or Amazon as that price, never a
+pre-order, never an MSRP or a pack count; with no such offer the price sentence is left out. Pages are CDN-cached six hours, so
+the snippet moves with the data, like the set pages' "About this set" lines (2026-11-18). Sister-ranked games' product pages stay
+noindex as before; their hubs were already indexable and get the same snippet. `tests/hub-snippet.test.ts`.
+
+Read: Google clicks and CTR on those eight URLs, 28 days to ~22 Dec vs the scorecard's 0 clicks.
