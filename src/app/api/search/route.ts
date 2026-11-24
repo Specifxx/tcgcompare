@@ -4,6 +4,8 @@ import { money } from "@/lib/format";
 import { shortName } from "@/lib/names";
 import { tokens } from "@/lib/slug";
 import { kitBestByMarket, kitImage, kits } from "@/lib/kits";
+import { expandWords, suggestQuery } from "@/lib/search-fuzzy";
+import { rankProducts } from "@/lib/home-demand";
 
 // A plain function on Vercel caches only through its CDN header (Rift Compare,
 // "Cached pages refresh every 6 to 24 hours"): six hours at the edge.
@@ -17,6 +19,15 @@ function haystacks() {
     const hay = tokens(`${p.name} ${setById(p.setId)?.name ?? ""} ${setById(p.setId)?.code ?? ""} ${p.number ?? ""}`);
     return { hay, set: new Set(hay) };
   }));
+}
+
+let vocab: Map<string, number> | null = null;
+/** Every word the catalogue's names, sets and codes hold, with how many products carry it ("did you mean"). */
+function words() {
+  if (vocab) return vocab;
+  vocab = new Map();
+  for (const { set } of haystacks()) for (const t of set) if (t.length >= 3 && !/^\d+$/.test(t)) vocab.set(t, (vocab.get(t) ?? 0) + 1);
+  return vocab;
 }
 
 let kitIndex: Set<string>[] | null = null;
@@ -45,28 +56,49 @@ export function GET(req: Request) {
     return NextResponse.json({ hits: kitHits(want, limit) }, { headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" } });
   const numQ = q.match(/\d+\s*\/\s*\d+|[A-Z]{1,4}\d{0,2}-\d{2,3}/i)?.[0]?.replace(/\s/g, "").toUpperCase();
   const idQ = /^\s*\d{5,14}\s*$/.test(q) ? q.trim() : null;
-  const scored: { s: number; i: number }[] = [];
   const all = products();
   const idx = want.length ? haystacks() : [];
-  if (want.length) {
+  const run = (ws: string[]) => {
+    const scored: { s: number; i: number }[] = [];
+    if (!ws.length) return scored;
     all.forEach((p, i) => {
       const { hay, set } = idx[i];
       let hit = 0;
-      for (const w of want) if (set.has(w) || hay.some((h) => h.startsWith(w))) hit++;
-      if (numQ && p.number?.toUpperCase() === numQ) hit += want.length;
+      for (const w of ws) if (set.has(w) || hay.some((h) => h.startsWith(w))) hit++;
+      if (numQ && p.number?.toUpperCase() === numQ) hit += ws.length;
       // A barcode or TCGplayer id typed whole finds its product (lib/gtin.ts): exact only, so "2025" matches no id.
-      if (idQ && (p.upc === idQ || (p.upc && p.upc.replace(/^0/, "") === idQ.replace(/^0/, "")) || String(p.id) === idQ)) hit = want.length + 2;
-      if (hit < want.length) return;
+      if (idQ && (p.upc === idQ || (p.upc && p.upc.replace(/^0/, "") === idQ.replace(/^0/, "")) || String(p.id) === idQ)) hit = ws.length + 2;
+      if (hit < ws.length) return;
       const ref = refCents(p.id) ?? 0;
       scored.push({ s: hit * 10 + Math.log10(1 + ref) + (p.kind === "card" ? 0.5 : 0), i });
     });
+    return scored;
+  };
+  // Owner's UX review (2026-11-23, P0 5): the words as typed; then with shorthand spelled out (ETB, UPC, BB…); then each word
+  // that matches nothing swapped for the nearest catalogue word ("charizrd" → charizard), said on the page as "Showing results
+  // for". Nothing at all: the most bought products, marked `popular`, never a dead end.
+  let scored = run(want);
+  let corrected: string | null = null;
+  if (!scored.length && want.length && !idQ) {
+    const expanded = expandWords(want);
+    if (expanded.join(" ") !== want.join(" ")) {
+      scored = run(expanded);
+      if (scored.length) corrected = expanded.join(" ");
+    }
+    if (!scored.length) {
+      const known = (w: string) => idx.some(({ hay, set }) => set.has(w) || hay.some((h) => h.startsWith(w)));
+      const fix = suggestQuery(expanded, words(), known);
+      if (fix) {
+        scored = run(fix.split(" "));
+        if (scored.length) corrected = fix;
+      }
+    }
   }
   scored.sort((a, b) => b.s - a.s);
-  const hits = scored.slice(0, limit).map(({ i }) => {
-    const p = all[i];
-    return { id: p.id, slug: p.slug, href: `/card/${p.slug}`, name: shortName(p.name), set: setById(p.setId)?.name ?? "", image: p.image, price: money(refCents(p.id)), kind: p.kind, number: p.number, rarity: p.rarity };
-  });
+  const shape = (p: (typeof all)[number]) => ({ id: p.id, slug: p.slug, href: `/card/${p.slug}`, name: shortName(p.name), set: setById(p.setId)?.name ?? "", image: p.image, price: money(refCents(p.id)), kind: p.kind, number: p.number, rarity: p.rarity });
+  const hits = scored.slice(0, limit).map(({ i }) => shape(all[i]));
   // Kits fill what the cards leave: "hg aerial" finds the kit, "aerial" the card first.
   const all2 = [...hits, ...kitHits(want, Math.max(0, limit - hits.length))];
-  return NextResponse.json({ hits: all2 }, { headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" } });
+  const popular = !all2.length && want.length ? rankProducts(all.filter((p) => p.kind === "sealed")).slice(0, Math.min(limit, 8)).map(shape) : [];
+  return NextResponse.json({ hits: all2, ...(corrected ? { corrected } : {}), ...(popular.length ? { popular } : {}) }, { headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" } });
 }

@@ -158,12 +158,12 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   return createPortal(
     <div className={`cd-root${open ? " is-open" : ""}`} aria-hidden={!open} {...(open ? {} : { inert: true })}>
       <div className="cd-backdrop" onClick={onClose} />
-      <div ref={panel} className="cd-panel" role="dialog" aria-modal="true" aria-label="Your cart">
+      <div ref={panel} className="cd-panel" role="dialog" aria-modal="true" aria-label="Your shortlist">
         <header className="cd-head">
           <h2>
-            Your cart{units > 0 && <span className="cd-count"> · {units} item{units === 1 ? "" : "s"}</span>}
+            Your shortlist{units > 0 && <span className="cd-count"> · {units} item{units === 1 ? "" : "s"}</span>}
           </h2>
-          <button ref={closeBtn} type="button" className="cd-x" onClick={onClose} aria-label="Close cart">
+          <button ref={closeBtn} type="button" className="cd-x" onClick={onClose} aria-label="Close shortlist">
             ×
           </button>
         </header>
@@ -171,8 +171,9 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         {!lines.length ? (
           <div className="cd-empty">
             <CartIcon size={34} />
-            <p className="cd-strong">Your cart is empty</p>
-            <p>Tap Add to cart beside any store&apos;s price (you pay each store on its own site, never us). Add from as many stores as you like and check out all of them in one go.</p>
+            <p className="cd-strong">Your shortlist is empty</p>
+            <p>Tap Save beside any store&apos;s price to keep it here. We sell nothing: you buy at each store on its own site. Save from as many stores as you like and open all of their checkouts in one go.</p>
+            <a className="cd-btn" href="/tools/deal-finder" onClick={onClose}>See today&apos;s deals</a>
             <button type="button" className="cd-btn" onClick={onClose}>
               Keep browsing
             </button>
@@ -181,7 +182,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
           <>
             <div className="cd-body">
               <div className="cd-handoff" role="note">
-                <p className="cd-handoff-lead">You pay each store on its own site. We never take payment.</p>
+                <p className="cd-handoff-lead">Prices you saved. We sell nothing: you buy and pay at each store, on its own site.</p>
                 <p>{checking ? "Checking prices and stock at each store… " : ""}Each store adds its own postage. Opening a Shopify store&apos;s checkout replaces anything already in your cart there.</p>
               </div>
               {groups.map((g) => {
@@ -288,12 +289,12 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
               )}
               <div className="cd-links2">
                 <a href="/cart" onClick={onClose}>
-                  Full cart page
+                  Full shortlist page
                 </a>
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm("Empty your cart?")) writeCart([]);
+                    if (confirm("Empty your shortlist?")) writeCart([]);
                   }}
                 >
                   Empty cart

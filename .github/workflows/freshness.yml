@@ -1,0 +1,66 @@
+name: Price freshness
+
+# The owner's UX review (2026-11-23, P0 2): "Every page said 'checked 30 hours ago', against the 'twice a day' promise. Add a
+# pipeline alert when data is over 12 hours old."
+#
+# Why it happened: GitHub starts scheduled runs hours late (19-23 Nov: the 09:47 UTC import began 17:00-18:40, the 21:37 one
+# 01:30-02:45), so the two data commits landed 8-9 hours apart and the 12-hour build gate (scripts/vercel-ignore-build.sh)
+# skipped every second one ("Canceled by Ignored Build Step"): the live site took one import a day.
+#
+# The fix keeps one production build per 12 hours and two imports a day, and adds no release of its own: the import is timed to
+# the gate. Every hour this job reads when production last built (scripts/last-build.sh) and, once the gate is about to open
+# (11 hours after that build: the import takes 64-77 minutes) and the prices are 6 hours old or more, starts refresh-prices.yml.
+# Its data commit (which carries [deploy] as always) then lands when the gate builds it. A scheduled run that would land inside
+# the gate's 12 hours stops itself (refresh-prices.yml, job `gate`).
+#
+# Red (GitHub emails the owner): the snapshot on main 14 hours old or more, or the live build 16 hours old or more (one 12-hour
+# cycle plus the import's run time and an hour of slack). Reads git and commit statuses only: no Vercel call, no secret, no
+# database, and it never pushes anything.
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+  statuses: read
+
+concurrency:
+  group: freshness
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 150
+      - name: Snapshot age, live build, start the import when the gate opens
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          now=$(date -u +%s)
+          at=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("data/public/meta.json","utf8")).updatedAt)')
+          data_h=$(( (now - $(date -u -d "$at" +%s)) / 3600 ))
+          built="" built_ts=""
+          read -r built built_ts <<< "$(bash scripts/last-build.sh) " || true
+          live_h=$([ -n "${built_ts:-}" ] && echo $(( (now - built_ts) / 3600 )) || echo 999)
+          echo "Snapshot ${at} (${data_h}h old); live build ${built:0:7} (${live_h}h old)."
+          echo "### Prices: snapshot ${data_h}h old, live build ${live_h}h old" >> "$GITHUB_STEP_SUMMARY"
+          # The import takes 64-77 minutes (19-23 Nov): started 11 hours after the build, its commit lands after the gate opens.
+          opens=$(( ${built_ts:-0} + 11 * 3600 ))
+          if { [ -n "$built_ts" ] && [ "$now" -ge "$opens" ] && [ "$data_h" -ge 6 ]; } || [ "$data_h" -ge 12 ]; then
+            busy=$(( $(gh run list -w refresh-prices.yml -s in_progress --json databaseId -q 'length') + $(gh run list -w refresh-prices.yml -s queued --json databaseId -q 'length') ))
+            if [ "$busy" -eq 0 ]; then gh workflow run refresh-prices.yml --ref main && echo "The gate opens soon: started the price import."; else echo "An import is already running or queued."; fi
+          fi
+          bad=0
+          if [ "$data_h" -ge 14 ]; then echo "::error::The price snapshot is ${data_h} hours old (14 or more)."; bad=1; fi
+          if [ "$live_h" -ge 16 ]; then echo "::error::The live site's prices come from a build ${live_h} hours old (16 or more): check the build gate and the release."; bad=1; fi
+          exit $bad

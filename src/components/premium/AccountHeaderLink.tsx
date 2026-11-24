@@ -14,6 +14,7 @@ export function AccountHeaderLink({ className = "" }: { className?: string }) {
     <a
       href="/account"
       aria-label={signedIn ? (v.status === "member" ? "My account (Premium)" : "My account") : "Sign in or create a free account"}
+      title={signedIn ? "My account" : "Sign in or create a free account"}
       data-account-link
       className={`relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-sm font-semibold transition sm:px-3.5 ${signedIn ? "border border-line bg-surface text-ink hover:border-ink/30" : "bg-brand text-brand-ink shadow-sm hover:brightness-110"} ${className}`}
     >

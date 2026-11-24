@@ -45,10 +45,11 @@ export function ProductTile({ p, deal, lc, folded }: { p: Product; deal?: Deal; 
       {/* The photo on its plate (globals.css .plate): white in light mode, a light plate in dark mode, so a store's white-backed
           photo is never a glaring square on a dark page. */}
       <div className="plate pc-plate">
-        {img ? <img src={img} alt={p.kind === "card" ? `${name} card` : name} loading="lazy" decoding="async" className="pc-img" /> : <div className="pc-noimg">No image yet</div>}
+        {img ? <img src={img} alt={p.kind === "card" ? `${name} card` : name} loading="lazy" decoding="async" width={400} height={400} className="pc-img" /> : <div className="pc-noimg">No image yet</div>}
         {deal && (
-          <span className="pc-badge" title={`${deal.saving}% under TCGplayer's market price`}>
-            −{deal.saving}%
+          // One discount definition (owner's UX review, P1 8): the badge says what it is measured against; the title explains it.
+          <span className="pc-badge" title={`${deal.saving}% under TCGplayer's market price (what this product sold for recently on TCGplayer, in US$)`}>
+            {deal.saving}% under market
           </span>
         )}
       </div>

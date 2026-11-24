@@ -48,16 +48,18 @@ export function navGroups(o: NavOptions = {}): NavGroup[] {
     { href: "/sealed/booster-box", label: "Booster boxes" },
     { href: "/sets", label: "Sets" },
     ...(SITE.kits ? [{ href: "/kits", label: `${SITE.kits.label} kits` }] : []),
-    ...(o.preorder ? [o.preorder] : []),
-    { href: "/preorders", label: "Pre-orders" },
+    // The Deals menu holds five at most (owner's UX review, 2026-11-23, P2 16): the sale in season first, then today's deals, the
+    // movers, the restocks and the pre-order hub (which lists the release on pre-order: its strip keeps its own link). The stores
+    // directory moved to "Guides & news".
     { href: "/tools/deal-finder", label: "Today's deals" },
     { href: "/movers", label: "Price movers" },
     { href: "/restocks", label: "Back in stock" },
-    { href: "/stores", label: "Stores we track" },
+    { href: "/preorders", label: "Pre-orders" },
   ];
   // Three tools and the tools page, not every tool on every page (2026-11-19, "Fewer links on every page").
   const tools: NavLink[] = [...TOOLS.filter((t) => t.href !== "/tools/deal-finder").slice(0, 3).map((t) => ({ href: t.href, label: t.name })), { href: "/tools", label: "All free tools" }];
   const guides: NavLink[] = [
+    { href: "/stores", label: "Stores we track" },
     { href: "/price-report", label: "Monthly price report" },
     { href: "/about", label: "Who runs this site" },
   ];

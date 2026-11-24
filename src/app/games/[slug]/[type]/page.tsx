@@ -37,7 +37,7 @@ export default function GameTypeHub({ params }: { params: { slug: string; type: 
       <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", name: `${line.name} ${h.label.toLowerCase()}`, numberOfItems: items.length, itemListElement: items.slice(0, 30).map((p, i) => ({ "@type": "ListItem", position: i + 1, name: p.name, url: abs(`/card/${p.slug}`) })) }} />
       <header>
         <h1 className="font-display text-3xl font-black">{line.name} {h.label.toLowerCase()}</h1>
-        <p className="mt-2 text-muted">{h.items.length} products, most popular first. Open any one to compare every store and eBay.</p>
+        <p className="mt-2 text-sm text-muted">{h.items.length} products, most popular first. <Link className="link" href="/methodology">How it works</Link></p>
       </header>
       <FilterGrid items={items} noun={h.label.toLowerCase()} />
       <section>

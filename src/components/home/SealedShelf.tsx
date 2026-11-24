@@ -21,8 +21,8 @@ function ShelfCard({ i, market }: { i: HeroItem; market: Market }) {
         {i.image ? <img src={i.image} alt={i.name} width={400} height={400} loading="lazy" decoding="async" className="pc-img" /> : <div className="pc-noimg">No image yet</div>}
         {/* The one badge a photo may carry: a real saving (lib/sealed-hero.ts storeSaving), never a guess. */}
         {pr?.saving && (
-          <span className="pc-badge" title={pr.saving.vs === "tcgplayer" ? `${pr.saving.pct}% under TCGplayer's market price` : `${pr.saving.pct}% under the middle store's price`}>
-            −{pr.saving.pct}%
+          <span className="pc-badge" title={pr.saving.vs === "tcgplayer" ? `${pr.saving.pct}% under TCGplayer's market price` : `${pr.saving.pct}% under the median store price (the middle of the stores that have it)`}>
+            {pr.saving.pct}% under {pr.saving.vs === "tcgplayer" ? "market" : "median"}
           </span>
         )}
       </div>
