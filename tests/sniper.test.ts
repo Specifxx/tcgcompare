@@ -205,3 +205,12 @@ test("one game takes at most MAX_PER_GAME of a run's lead slots while other game
   assert.deepEqual(out.slice(0, MAX_PER_GAME + 2), [1, 2, 3, 6, 7]);
   assert.deepEqual(out.slice(-2), [4, 5], "the rest still follow, so a quiet day fills its slots");
 });
+
+test("a Riftbound deal names RiftCompare and links it, tagged like every link; other games don't", () => {
+  const rb = { kind: "restock" as const, product: { ...box, line: "rb" }, store: au, cents: 15000, ref: "a" };
+  const em = embedFor(rb, 14999, NOW, "https://tcgprices.app", "sniper-2026112021");
+  assert.match(em.description, /\[RiftCompare\]\(https:\/\/riftcompare\.com\/\?utm_source=discord&utm_medium=social&utm_campaign=sealed-sniper&utm_content=sniper-2026112021\)/);
+  assert.match(telegramText([em]), /RiftCompare: https:\/\/riftcompare\.com\/\?utm_source=telegram&/);
+  const other = embedFor({ ...rb, product: { ...box, line: "pkm" } }, 14999, NOW, "https://tcgprices.app");
+  assert.doesNotMatch(other.description, /riftcompare/i);
+});

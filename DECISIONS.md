@@ -1746,3 +1746,10 @@ the snippet moves with the data, like the set pages' "About this set" lines (202
 noindex as before; their hubs were already indexable and get the same snippet. `tests/hub-snippet.test.ts`.
 
 Read: Google clicks and CTR on those eight URLs, 28 days to ~22 Dec vs the scorecard's 0 clicks.
+
+## 2026-11-25 — Riftbound Sniper deals name RiftCompare
+
+Every Riftbound deal in a Sealed Sniper drop (Discord and Telegram) now ends with "Riftbound prices every day: RiftCompare",
+linked to riftcompare.com with the drop's usual utm tags. Rift's Google plan needs brand searches back from about 130 to 170 or more
+a week by 15 Dec, and a drop that names the brand next to a real deal is the cheapest way to put the name in front of Riftbound
+buyers. Same side of the network, one line per Riftbound deal, nothing for other games (`riftCompareUrl`, `tests/sniper.test.ts`).
