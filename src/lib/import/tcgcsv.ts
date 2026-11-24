@@ -55,8 +55,10 @@ const KEEP_ATTRS = new Set([
   "Zone",
 ]);
 
+// "Deck case" is a box to carry a deck in, except "Commander Deck Case" and the like: a sealed case of decks (card
+// coverage fixer, 2026-11-24: the Star Trek and Nauctis Commander Deck Cases had no page).
 const ACCESSORY =
-  /\b(sleeves?|playmats?|play mat|game mat|duel(ist)? mat|deck box(es)?|deck case|card case|binders?|portfolios?|albums?|dice|dice set|life counter|counters?|tokens?|token pack|token card|code cards?|pins?|coins?|stickers?|posters?|plush|figures?|figurines?|keychains?|toploaders?|dividers?|storage box|puzzle|art cards?|art series|oversized|jumbo card|field center|energy markers?|damage counters?|lore card|ink drop|insert|rule ?book|empty (box|tin))\b/i;
+  /\b(sleeves?|playmats?|play mat|game mat|duel(ist)? mat|deck box(es)?|(?<!(?:commander|starter|theme|challenger|structure|precon(?:structed)?) )deck case|card case|binders?|portfolios?|albums?|dice|dice set|life counter|counters?|tokens?|token pack|token card|code cards?|pins?|coins?|stickers?|posters?|plush|figures?|figurines?|keychains?|toploaders?|dividers?|storage box|puzzle|art cards?|art series|oversized|jumbo card|field center|energy markers?|damage counters?|lore card|ink drop|insert|rule ?book|empty (box|tin))\b/i;
 
 /** What kind of sealed product a TCGplayer name is, for every game on the site. "Insert" is anything that is not
  *  sealed product to open (accessories, pack fillers). A site's own SITE.sealedTypes are checked first. */
