@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 import { track } from "@vercel/analytics";
 import { SITE } from "@/site.config";
 import {
-  NUDGE_ARM_KEY, NUDGE_STATE_KEY, isStoreClick, nudgeEligible, nudgeHref, nudgeShows, parseGo, pickArm, pickPaidLinks,
+  NUDGE_ARM_KEY, NUDGE_STATE_KEY, RETURN_NUDGE_ON, isStoreClick, nudgeEligible, nudgeHref, nudgeShows, parseGo, pickArm, pickPaidLinks,
 } from "@/lib/return-nudge";
+import { claimPromptSlot, promptSlotHolder } from "@/lib/prompt-slot";
+import { visitorBusy, watchTyping } from "@/lib/visitor-busy";
 
 const NAMES: Record<string, string> = Object.fromEntries(SITE.stores.map((s) => [s.key, s.name]));
 
@@ -33,6 +35,7 @@ export function ReturnNudge() {
   const [view, setView] = useState<View | null>(null);
 
   useEffect(() => {
+    watchTyping();
     let hiddenAt = 0;
     const onClick = (e: MouseEvent) => {
       const a = (e.target as Element | null)?.closest?.("a[href^='/go?']") as HTMLAnchorElement | null;
@@ -54,7 +57,8 @@ export function ReturnNudge() {
       const now = Date.now();
       const state = {
         arm: arm(), clickedAt: st.t, now, awayMs: hiddenAt ? now - hiddenAt : 0, shownBefore: !!st.shown,
-        blocked: !!document.querySelector("[data-rate-card]"),
+        // The visit's one prompt (lib/prompt-slot.ts) went elsewhere, or they are typing: never this card (owner's UX review, P0 1).
+        blocked: !!document.querySelector("[data-rate-card]") || visitorBusy() || (!!promptSlotHolder() && promptSlotHolder() !== "rn-state"),
         hasLinks: !!(st.e || st.g),
       };
       hiddenAt = 0;
@@ -62,7 +66,7 @@ export function ReturnNudge() {
       write({ ...st, shown: true }); // one eligible return a session, whichever arm
       const props = { arm: state.arm, retailer_key: st.s, product: st.p, site: SITE.key, away_s: Math.round(state.awayMs / 1000) };
       track("nudge_eligible", props);
-      if (nudgeShows(state)) {
+      if (RETURN_NUDGE_ON && nudgeShows(state) && claimPromptSlot("rn-state")) {
         track("nudge_shown", props);
         setView({ store: NAMES[st.s] ?? "that store", e: st.e ? nudgeHref(st.e) : undefined, g: st.g ? nudgeHref(st.g) : undefined });
       }

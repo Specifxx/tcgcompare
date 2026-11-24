@@ -5,6 +5,11 @@
 // never Amazon, never a price or a "best" claim, yields to dialogs, the rating card and the buy bar. Half of the visitors never see it (the
 // control arm, stored in localStorage `rn-arm`): `nudge_eligible` fires for both arms and every later `buy_click` carries `nudge_arm`, so the
 // lift is paid clicks per eligible return, on against off. Pure helpers; the component is components/ReturnNudge.tsx.
+/**
+ * OFF since the owner's UX review (2026-11-23, P0 1: "Ads must never … cover content"): the card floated over the page, so no
+ * visitor sees it now; `nudge_eligible` still fires, so the moment stays measured. The test (2026-11-18) ends here.
+ */
+export const RETURN_NUDGE_ON = false;
 export const NUDGE_WINDOW_MS = 30 * 60 * 1000;
 export const NUDGE_MIN_AWAY_MS = 4000;
 export const NUDGE_ARM_KEY = "rn-arm";

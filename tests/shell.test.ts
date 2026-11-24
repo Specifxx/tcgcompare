@@ -80,11 +80,14 @@ test("every navigation link points at a page of the site, and prices come first"
   const rail = groups.flatMap((g) => g.links).map((l) => l.href);
   assert.equal(new Set(rail).size, rail.length);
   for (const l of phoneNav()) assert.ok(l.href === "/tools" || rail.includes(l.href), `${l.href} is in the phone row but not the menus`);
-  // The release on pre-order (lib/preorder-nav.ts) sits just before the pre-order hub, in the Deals menu's group.
+  // The Deals menu holds five at most (owner's UX review, 2026-11-23, P2 16): the sale first, today's deals, movers, restocks and the
+  // pre-order hub. The release on pre-order keeps its strip and its place on the hub, not a menu line of its own.
   const pre = { href: "/preorders/some-set", label: "Some Set pre-orders" };
-  const deals = navGroups({ preorder: pre, shop: [] }).find((g) => g.title === "Deals & stock")!.links.map((l) => l.href);
-  assert.equal(deals[deals.indexOf("/preorders") - 1], pre.href);
-  assert.ok(!navGroups({ shop: [] }).flatMap((g) => g.links).some((l) => l.href.startsWith("/preorders/")), "no release, no link");
+  const sale = { href: "/black-friday", label: "Black Friday" };
+  const deals = navGroups({ preorder: pre, sale, shop: [] }).find((g) => g.title === "Deals & stock")!.links.map((l) => l.href);
+  assert.ok(deals.length <= 5, `the Deals menu has ${deals.length} entries`);
+  assert.equal(deals[0], sale.href, "the sale in season leads");
+  assert.ok(deals.includes("/preorders") && !deals.some((h) => h.startsWith("/preorders/")));
 });
 
 // The minimal look (owner, 2026-11-13): the hero with no product, ONE tabbed shelf (the deals are one of its lists), the latest

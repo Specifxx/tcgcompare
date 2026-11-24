@@ -38,6 +38,7 @@ import { cardAds } from "@/lib/card-ads";
 import { ReturnBeacon } from "@/components/ReturnBeacon";
 import { SinceLastVisit } from "@/components/SinceLastVisit";
 import { AdRouteGate } from "@/components/AdRouteGate";
+import { ImageFallback } from "@/components/ImageFallback";
 
 // The engine's two faces (DexCompare and MTG Compare: Bricolage Grotesque for headings, Inter for text), bundled as the latin
 // subsets of the variable fonts (OFL, src/app/fonts): no font request at build or at runtime. Display is optional, not swap:
@@ -125,6 +126,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AiReferralTracker />
         <ShareArrival />
         <ReturnBeacon />
+        <ImageFallback />
       </body>
     </html>
   );

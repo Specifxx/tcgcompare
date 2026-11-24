@@ -14,6 +14,7 @@ interface Hit { slug: string; href?: string; name: string; set: string; image: s
 export function SearchBox({ big = false, size, placeholder }: { big?: boolean; size?: "sm"; placeholder?: string }) {
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<Hit[]>([]);
+  const [corrected, setCorrected] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const router = useRouter();
@@ -27,7 +28,10 @@ export function SearchBox({ big = false, size, placeholder }: { big?: boolean; s
       try {
         // Lower-cased so "Dark Magician" and "dark magician" share one CDN entry.
         const r = await fetch(`/api/search?q=${encodeURIComponent(q.trim().toLowerCase())}`);
-        setHits(((await r.json()) as { hits: Hit[] }).hits);
+        const d = (await r.json()) as { hits: Hit[]; corrected?: string; popular?: Hit[] };
+        // A typo finds its nearest words ("charizrd" → charizard); nothing at all shows the popular products (owner's UX review, P0 5).
+        setHits(d.hits.length ? d.hits : d.popular ?? []);
+        setCorrected(d.hits.length ? d.corrected ?? null : d.popular?.length ? "" : null);
         setOpen(true);
       } catch {}
     }, 250);
@@ -82,6 +86,11 @@ export function SearchBox({ big = false, size, placeholder }: { big?: boolean; s
       />
       {listed && (
         <ul id={`${id}-list`} role="listbox" className="absolute left-0 right-0 z-50 mt-2 max-h-96 overflow-auto rounded-2xl border border-line bg-surface p-1 text-left shadow-lift">
+          {corrected != null && (
+            <li role="presentation" className="px-3 pb-1 pt-2 text-xs text-muted">
+              {corrected ? <>Showing results for <b className="text-ink">{corrected}</b></> : <>No match for “{q.trim()}”. Popular right now:</>}
+            </li>
+          )}
           {hits.map((h, i) => (
             <li key={h.href ?? h.slug} id={`${id}-${i}`} role="option" aria-selected={i === active}>
               <a href={hrefOf(h)} className={`flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-raised ${i === active ? "bg-raised" : ""}`} onMouseEnter={() => setActive(i)}>

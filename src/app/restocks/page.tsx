@@ -43,7 +43,7 @@ export default function Restocks() {
       <header>
         <p className="text-xs uppercase tracking-wide text-brand-400">Restock tracker · checked twice a day</p>
         <h1 className="font-display text-3xl font-black">Back in stock</h1>
-        <p className="mt-2 max-w-3xl text-muted">Sealed product an independent store had sold out and now lists in stock again. A row is a store, not a ranking: open the product to compare every store and the TCGplayer price. Stock can sell out between checks.</p>
+        <p className="mt-2 max-w-3xl text-sm text-muted" title="A row is a store, not a ranking: open the product to compare every store and the TCGplayer price. Stock can sell out between checks.">Sealed product a store had sold out and now lists in stock again. <Link className="link" href="/methodology">How it works</Link></p>
       </header>
       <section aria-label="Restock alerts" className="card-surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

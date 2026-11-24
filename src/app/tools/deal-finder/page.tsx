@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "@/components/Link";
 import { SITE } from "@/site.config";
 import { dealRows } from "@/lib/tools";
 import { shortName } from "@/lib/names";
@@ -20,7 +21,7 @@ export default function Page() {
   return (
     <div>
       <h1 className="font-display text-3xl font-black">{SITE.gameShort} Deal Finder</h1>
-      <p className="mt-2 text-muted">{rows.length} in-stock listings 8–60% below TCGplayer market right now. Prices converted to US$ for the comparison; the store charges its own currency.</p>
+      <p className="mt-2 text-sm text-muted" title="Prices are converted to US$ for the comparison; each store charges its own currency.">{rows.length} in-stock listings 8–60% under TCGplayer market right now. <Link className="link" href="/methodology">How it works</Link></p>
       <ShareButton path="/tools/deal-finder" name={`${SITE.gameShort} Deal Finder`} medium="tool" text={`${rows.length} sealed products in stock below TCGplayer market today, on ${SITE.name}`} className="mt-3" />
       <DealFinder rows={rows} />
     </div>

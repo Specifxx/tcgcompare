@@ -18,6 +18,8 @@ import { priceRows } from "@/lib/price-rows";
 import { useMarket } from "./ClientPrefs";
 import { ReportPrice } from "./ReportForms";
 import { StoreVote } from "./StoreVote";
+import { LiveAgo } from "./LiveAgo";
+import { ago } from "@/lib/format";
 
 const NAMES: Record<string, string> = {
   tcgplayer: "TCGplayer",
@@ -46,7 +48,7 @@ export const PIN_OUTLINE = {
 /** Where the phone's sticky buy bar hides (components/CardBuy.tsx). */
 export const PRICE_TABLE_ID = "price-comparison";
 
-export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, compact = false, maxRows, amazon = null, tableId = PRICE_TABLE_ID, product, image = null, cartTitle }: { /** this site's eBay row when the data holds no eBay listing: a tagged search for exactly this product (owner, 2026-11-14: no eBay API here, "but we obviously want to make eBay money") */ ebayQuery?: string; /** TCGplayer's own page for this product: a pinned "Check TCGplayer" row when the data holds no TCGplayer price (owner, 2026-11-14) */ tcgUrl?: string; /** the product's picture, for the cart list (components/cart) */ image?: string | null; offers: Offer[]; fx: Record<string, number>; productId: number; page: string; compact?: boolean; /** the quick view lists at most this many rows (owner, 2026-11-17: 10 stores), pinned paid rows first, then the cheapest; the full page lists all */ maxRows?: number; amazon?: Partial<Record<Market, string | AmazonCell>> | null; /** null in the quick view: the page's own table keeps the id the buy bar watches */ tableId?: string | null; /** the product's name: shows "Report a wrong price" under the table */ product?: string; /** the cart's line title where `product` is left out (the quick view) */ cartTitle?: string }) {
+export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, compact = false, maxRows, amazon = null, tableId = PRICE_TABLE_ID, product, image = null, cartTitle, marketplacesBelow = false, checked }: { /** the product page (owner's UX review, 2026-11-23, P1 10): the stores lead, cheapest first, and eBay, TCGplayer and Amazon sit under a labelled "Marketplaces · Ad" block; the quick view keeps them on top */ marketplacesBelow?: boolean; /** store key → when its price was last read (lib/store-checked.ts), shown on its row (P0 2) */ checked?: Record<string, string>; /** this site's eBay row when the data holds no eBay listing: a tagged search for exactly this product (owner, 2026-11-14: no eBay API here, "but we obviously want to make eBay money") */ ebayQuery?: string; /** TCGplayer's own page for this product: a pinned "Check TCGplayer" row when the data holds no TCGplayer price (owner, 2026-11-14) */ tcgUrl?: string; /** the product's picture, for the cart list (components/cart) */ image?: string | null; offers: Offer[]; fx: Record<string, number>; productId: number; page: string; compact?: boolean; /** the quick view lists at most this many rows (owner, 2026-11-17: 10 stores), pinned paid rows first, then the cheapest; the full page lists all */ maxRows?: number; amazon?: Partial<Record<Market, string | AmazonCell>> | null; /** null in the quick view: the page's own table keeps the id the buy bar watches */ tableId?: string | null; /** the product's name: shows "Report a wrong price" under the table */ product?: string; /** the cart's line title where `product` is left out (the quick view) */ cartTitle?: string }) {
   const { market, setMarket } = useMarket();
   const [showOut, setShowOut] = useState(false);
   // eBay and TCGplayer lead the table (lib/price-rows.ts `display`); no row is
@@ -160,7 +162,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
     <tr data-amazon-row className={`border-t border-line ${PIN_OUTLINE.amazon}`}>
       <td className="px-3 py-2.5">
         <span className="font-medium text-ink">Amazon</span>
-        <StoreVote url={amazonUrl} name="Amazon" className="ml-2 text-muted" />
+        <StoreVote url={amazonUrl} name="Amazon" className="ml-2 hidden text-muted sm:inline-flex" />
         {amazonCart && <span className="block sm:hidden"><CartAddButton {...amazonCart} inline className="text-xs" /></span>}
         <span className="ad-pill ml-2">Ad</span>
       </td>
@@ -186,31 +188,19 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
   };
   // Amazon is the row right under the last pinned row (eBay, then TCGplayer), first when there is none.
   const amazonAfter = shown.reduce((at, o, i) => (pinned.includes(o) ? i : at), -1);
-  return (
-    <div id={tableId ?? undefined} className="card overflow-hidden">
-      {picker}
-      <table className="w-full text-sm">
-        <thead className="bg-raised text-left text-xs uppercase tracking-wide text-muted">
-          <tr>
-            <th className="px-3 py-2">Store</th>
-            <th className="hidden px-3 py-2 sm:table-cell">Details</th>
-            <th className="px-3 py-2 text-right">Price</th>
-            <th className="px-3 py-2"><span className="sr-only">Buy</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          {ebaySearchRow}
-          {/* TCGplayer's link row sits right under eBay; a priced TCGplayer row is already the second pinned row. */}
-          {pinned.some((o) => o.source === "ebay") ? null : tcgSearchRow}
-          {amazonAfter < 0 && amazonRow}
-          {shown.map((o, i) => {
+  // Below mode: ONE order for the stores (cheapest in stock first, then the folded out-of-stock rows), and every eBay, TCGplayer and
+  // Amazon row in the marketplaces block, the pinned pair first. No marketplace row sits among the stores (owner's UX review, P0 4).
+  const isMarketplace = (o: Offer) => o.source === "ebay" || o.source === "tcgplayer" || o.source === "amazon";
+  const storeRowsBelow = shown.filter((o) => !isMarketplace(o));
+  const pinnedBelow = [...shown.filter((o) => pinned.includes(o)), ...shown.filter((o) => isMarketplace(o) && !pinned.includes(o))];
+  const renderRow = (o: Offer, i: number, pos: number, below: boolean) => {
             const c = conv(o);
             return (
               <Fragment key={i}>
                 <tr className={`border-t border-line ${o.inStock ? "" : "opacity-60"} ${o.source === "ebay" && pinned.includes(o) ? PIN_OUTLINE.ebay : ""}`}>
                   <td className="px-3 py-2.5">
                     <span className="font-medium text-ink">{sourceName(o)}</span>
-                    <StoreVote url={o.url} name={sourceName(o)} className="ml-2 text-muted" />
+                    <StoreVote url={o.url} name={sourceName(o)} className="ml-2 hidden text-muted sm:inline-flex" />
                     {/* Phones: the cart list's add button as a line under the store, where the row has no width to spare. */}
                     {o.inStock && (
                       <span className="block sm:hidden"><CartAddButton href={tagged(o.url, subId(o.market, `${page}_cart`, productId), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={product ?? cartTitle ?? o.title} detail={o.printing && o.printing !== "Normal" ? o.printing : null} priceCents={o.cents} currency={o.currency} image={image} inline className="text-xs" /></span>
@@ -222,6 +212,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
                     {o.preorder && <span className="tag mr-1 border-pre text-pre">Pre-order</span>}
                     {!o.inStock && <span className="tag mr-1">Out of stock</span>}
                     {o.source === "tcgplayer" && <span>Lowest listing</span>}
+                    {checked?.[o.source] && <span className="mr-1 whitespace-nowrap">Checked <LiveAgo iso={checked[o.source]} initial={ago(checked[o.source])} /></span>}
                     {o.shippingCents != null && <span>+{money(o.shippingCents, o.currency)} shipping</span>}
                     {o.shippingCents != null && o.shippingCents > 0 && <span className="ml-1 font-semibold text-ink">· ≈ {money(o.cents + o.shippingCents, o.currency)} total</span>}
                   </td>
@@ -235,16 +226,52 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
                     {o.inStock && (
                       <CartAddButton href={tagged(o.url, subId(o.market, `${page}_cart`, productId), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={product ?? cartTitle ?? o.title} detail={o.printing && o.printing !== "Normal" ? o.printing : null} priceCents={o.cents} currency={o.currency} image={image} className="hidden text-muted sm:inline-flex" />
                     )}
-                    <a href={goHref(o, productId, pinned.includes(o) ? `${page}_pinned` : page, { pos: i + 1 + rowsAbove + (amazonAfter >= 0 && i > amazonAfter && amazonRow ? 1 : 0), gapPct: gapOf(o) })} rel="sponsored nofollow noopener" target="_blank" className={`min-h-10 whitespace-nowrap ${o.source === "tcgplayer" && o.inStock ? "btn-tcg px-3 py-1.5" : pinned.includes(o) && o.inStock ? "btn-primary px-3 py-1.5" : o.inStock ? "btn-soft px-3 py-1.5" : "btn-ghost px-3 py-1.5 opacity-80"}`}>
+                    <a href={goHref(o, productId, pinned.includes(o) ? `${page}_pinned` : page, { pos, gapPct: gapOf(o) })} rel="sponsored nofollow noopener" target="_blank" className={`min-h-10 whitespace-nowrap ${o.source === "tcgplayer" && o.inStock ? "btn-tcg px-3 py-1.5" : pinned.includes(o) && o.inStock ? "btn-primary px-3 py-1.5" : o.inStock ? (below ? "btn-primary px-3 py-1.5" : "btn-soft px-3 py-1.5") : "btn-ghost px-3 py-1.5 opacity-80"}`}>
                       {o.inStock ? "View deal" : "View"} <span aria-hidden="true">↗</span>
                     </a>
                     </span>
                   </td>
                 </tr>
-                {i === amazonAfter && amazonRow}
+                {!below && i === amazonAfter && amazonRow}
               </Fragment>
             );
-          })}
+  };
+  return (
+    <div id={tableId ?? undefined} className="card overflow-hidden">
+      {picker}
+      <table className="w-full text-sm">
+        <thead className="bg-raised text-left text-xs uppercase tracking-wide text-muted">
+          <tr>
+            <th className="px-3 py-2">Store</th>
+            <th className="hidden px-3 py-2 sm:table-cell">Details</th>
+            <th className="px-3 py-2 text-right">Price</th>
+            <th className="px-3 py-2"><span className="sr-only">Buy</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {marketplacesBelow ? (
+            <>
+              {storeRowsBelow.map((o, i) => renderRow(o, shown.indexOf(o), i + 1, true))}
+              {/* The marketplaces (owner's UX review, P1 10): labelled, under the stores, each still its own tagged row. */}
+              <tr data-marketplaces className="border-t border-line bg-raised">
+                <th colSpan={4} scope="rowgroup" className="px-3 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-muted">
+                  Marketplaces <span className="ad-pill ml-1">Ad</span>
+                </th>
+              </tr>
+              {ebaySearchRow}
+              {pinned.some((o) => o.source === "ebay") ? null : tcgSearchRow}
+              {pinnedBelow.map((o, i) => renderRow(o, shown.indexOf(o), storeRowsBelow.length + i + 1, true))}
+              {amazonRow}
+            </>
+          ) : (
+            <>
+              {ebaySearchRow}
+              {/* TCGplayer's link row sits right under eBay; a priced TCGplayer row is already the second pinned row. */}
+              {pinned.some((o) => o.source === "ebay") ? null : tcgSearchRow}
+              {amazonAfter < 0 && amazonRow}
+              {shown.map((o, i) => renderRow(o, i, i + 1 + rowsAbove + (amazonAfter >= 0 && i > amazonAfter && amazonRow ? 1 : 0), false))}
+            </>
+          )}
         </tbody>
       </table>
       {amazonLive && <p className="border-t border-ink-800 px-3 py-2 text-[11px] text-muted">* Amazon price: {AMAZON_PRICE_DISCLAIMER}</p>}

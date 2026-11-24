@@ -21,7 +21,43 @@ permissions:
   contents: write
 
 jobs:
+  # The import is timed to the build gate (owner's UX review, 2026-11-23, P0 2; freshness.yml says why). A SCHEDULED run whose
+  # data commit would land inside the 12 hours after the last production build would be skipped by the gate, so it stops here,
+  # unless the prices are already 12 hours old; freshness.yml starts the import once the gate is about to open. A manual or
+  # freshness-started run always imports.
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    outputs:
+      run: ${{ steps.age.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 150
+      - id: age
+        env:
+          EVENT: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          now=$(date -u +%s)
+          at=$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync("data/public/meta.json","utf8")).updatedAt||"")}catch{console.log("")}')
+          age=$([ -n "$at" ] && echo $(( (now - $(date -u -d "$at" +%s)) / 3600 )) || echo 999)
+          built="" built_ts=""
+          read -r built built_ts <<< "$(bash scripts/last-build.sh) " || true
+          lands=$(( now + 60 * 60 ))  # the quickest import (19-23 Nov) took 64 minutes
+          if [ "$EVENT" = "schedule" ] && [ "$age" -lt 12 ] && [ -n "${built_ts:-}" ] && [ "$lands" -lt $(( built_ts + 12 * 3600 )) ]; then
+            echo "Prices ${age}h old; the last build (${built:0:7}) was under 12 hours before this import would land, so the gate would skip it. freshness.yml starts the import when the gate opens."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Prices ${age}h old: importing."
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
   import:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 220
     steps:

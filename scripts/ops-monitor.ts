@@ -54,8 +54,9 @@ async function main() {
         ? { status: "ok", detail: `${r.status} → ${to.replace(site, "")}` }
         : { status: "fail", detail: `/card/${slugs[0]} answered HTTP ${r.status}${to ? ` → ${to}` : ""}, not a permanent redirect to its set` };
     }),
+    // Twice a day, timed to the build gate (freshness.yml; owner's UX review 2026-11-23: "an alert when data is over 12 hours old").
     check("Daily price import", async () =>
-      ageH < 30 ? { status: "ok", detail: `${ageH.toFixed(1)}h old` } : { status: ageH < 54 ? "warn" : "fail", detail: `data is ${ageH.toFixed(0)}h old — check the Refresh prices workflow` },
+      ageH < 14 ? { status: "ok", detail: `${ageH.toFixed(1)}h old` } : { status: ageH < 20 ? "warn" : "fail", detail: `data is ${ageH.toFixed(0)}h old — check the Price freshness and Refresh prices workflows` },
     ),
     // Back in stock (scripts/restocks.ts, after every import): amber if the file is missing or stale, never red (display only).
     check("Restock tracker", async () => {

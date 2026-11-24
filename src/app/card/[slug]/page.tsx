@@ -46,6 +46,8 @@ import { cardTitleCandidates, fitTitle } from "@/lib/seo-title";
 import { namesGame, productTitleLadder, setPhrase } from "@/lib/game-seo";
 import { cardIndexable, priceValidUntil } from "@/lib/indexing";
 import { gtinLabel, gtinLd } from "@/lib/gtin";
+import { storeCheckedMap } from "@/lib/store-checked";
+import { JumpLinks } from "@/components/JumpLinks";
 
 export const dynamic = "force-dynamic"; // one CDN copy per URL (next.config.js CDN_PAGES), never ISR
 
@@ -123,6 +125,8 @@ export default function CardPage({ params }: { params: { slug: string } }) {
     marketName: (mk) => (mk === "US" || mk === "UK" ? `the ${MARKET_LABEL[mk as Market]}` : MARKET_LABEL[mk as Market] ?? String(mk)),
   });
   // Sealed only: the markets' tagged searches, upgraded to the item's own page and this build's price where the API found them.
+  // When each store's price was read (owner's UX review, P0 2): the row says "Checked 3 hours ago".
+  const checked = storeCheckedMap(m, SITE.stores, e.offers.map((o) => o.source));
   const amazon = p.kind === "sealed" && amazonCarries(p) ? amazonCells(p.id, amazonSearchUrls(`${SITE.game} ${name}`)) : null;
   return (
     <article className="flex flex-col gap-8">
@@ -157,11 +161,19 @@ export default function CardPage({ params }: { params: { slug: string } }) {
       )}
       {/* Game, then set, then product (Cardmarket's hierarchy, DECISIONS.md 2026-11-18): each crumb is a real hub. */}
       <Breadcrumbs items={[(set && lineOfSet(set)) ? { name: lineOfSet(set)!.short, href: `/games/${lineOfSet(set)!.slug}` } : { name: "Sealed", href: "/sealed" }, ...(set ? [{ name: set.name, href: `/sets/${set.slug}` }] : []), { name }]} />
+      {/* Sticky jump links (owner's UX review, P1 13: the page was ~9,500px tall). */}
+      <JumpLinks links={[{ id: "prices", label: "Prices" }, { id: "history", label: "History" }, { id: "facts", label: "Facts" }, { id: "faq", label: "Is it worth it?" }]} />
       <div className="grid gap-8 md:grid-cols-[minmax(0,320px)_1fr]">
         {/* Phones: the name, price and Buy come first; the big image and the
             details follow the prices (RiftCompare's card page, 2026-09-26). */}
         <div className="order-2 flex flex-col gap-4 md:order-1">
           {p.image && <img src={imageAt(p.image, "400w")!} alt={`${name} ${SITE.gameShort} card`} className="hidden w-full rounded-xl md:block" width={400} height={560} />}
+          {/* Price history beside the best price (P1 13): the left column on a desktop, right under the prices on a phone. */}
+          <section id="history" className="card-surface scroll-mt-28 p-4">
+            <h2 className="mb-2 text-lg font-bold">Price history</h2>
+            <PriceHistory tcg={series} lows={storeLowsOf(p)} fx={m?.fx} through={historyThrough()} days={365} />
+          </section>
+          <h2 id="facts" className="sr-only scroll-mt-28">Product facts</h2>
           <dl className="card-surface grid grid-cols-2 gap-x-3 gap-y-1.5 p-4 text-sm">
             {set && (<><dt className="text-muted">Set</dt><dd><Link className="link" href={`/sets/${set.slug}`}>{set.name}</Link></dd></>)}
             {p.number && (<><dt className="text-muted">Number</dt><dd>{p.number}</dd></>)}
@@ -199,12 +211,12 @@ export default function CardPage({ params }: { params: { slug: string } }) {
             {SITE.priceAlerts && <WatchPrice site={SITE.key} productId={p.id} prices={lowestByMarket(e.offers)} />}
             {SITE.priceAlerts && <SeenPrice productId={p.id} prices={lowestByMarket(e.offers)} />}
           </header>
-          <section>
+          <section id="prices" className="scroll-mt-28">
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4">
               <h2 className="text-lg font-bold">Compare prices</h2>
               <CheckedAgo at={m?.updatedAt} />
             </div>
-            <PriceTable ebayQuery={ebayQuery} tcgUrl={p.tcgUrl || undefined} offers={e.offers} fx={m?.fx ?? { USD: 1 }} productId={p.id} page="card" amazon={amazon} image={p.image ? imageAt(p.image, "200w") : null} product={`${name}${p.number ? ` ${p.number}` : ""}`} />
+            <PriceTable ebayQuery={ebayQuery} tcgUrl={p.tcgUrl || undefined} offers={e.offers} fx={m?.fx ?? { USD: 1 }} productId={p.id} page="card" amazon={amazon} image={p.image ? imageAt(p.image, "200w") : null} product={`${name}${p.number ? ` ${p.number}` : ""}`} marketplacesBelow checked={checked} />
             {SITE.priceAlerts && <PriceAlert site={SITE.key} productId={p.id} prices={lowestByMarket(e.offers)} />}
             {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the price table, 22 Nov to 1 Dec, labelled Ad. */}
             <TcgplayerCyberBanner
@@ -221,11 +233,7 @@ export default function CardPage({ params }: { params: { slug: string } }) {
             {cyberBannerState(Date.now()) === "off" && <ExtensionCta className="mt-4" from="card" />}
           </section>
           <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CARD} />
-          <section className="card-surface p-4">
-            <h2 className="mb-2 text-lg font-bold">Price history</h2>
-            <PriceHistory tcg={series} lows={storeLowsOf(p)} fx={m?.fx} through={historyThrough()} days={365} />
-          </section>
-          <section className="prose-site max-w-none text-sm">
+          <section id="faq" className="prose-site max-w-none scroll-mt-28 text-sm">
             <h2>Is {name} worth it?</h2>
             {/* Written from this product's own prices, stock and history (lib/buyer-read.ts, 2026-11-23 SEO quality pass). */}
             {read.map((t, k) => <p key={k}>{t}</p>)}

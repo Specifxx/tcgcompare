@@ -1684,3 +1684,47 @@ bigger thumbnails, one slim alerts bar, phone rows with 44px targets, and click 
 - Clicks keep going through `/go` with `from=<page>_list` (and `_list_ebay`); `bf_section` counts each section's first view
   (scroll depth), `bf_filter` each filter used. The weekly email box became the alerts bar after the fifth row (email, Discord,
   Telegram).
+
+## 2026-11-24: The owner's UX review, site-wide (P0, P1, P2)
+
+The owner reviewed DexCompare on desktop (AU) on 23 Nov and asked for the same fixes on every site, urgently. On TCG Prices
+(the sale pages' items shipped in #173 and #174):
+
+**P0**
+1. **No interrupting ads.** `lib/visitor-busy.ts`: a focused text field or a key in the last 5 s means nothing self-opens. The
+   sign-in slide, the rating card and the return nudge ask it. The return nudge (the floating eBay/TCGplayer card, A/B since
+   2026-11-18) covered the page, so it is OFF (`RETURN_NUDGE_ON`); `nudge_eligible` still fires. It also now takes the visit's
+   one prompt slot (`lib/prompt-slot.ts`). The leave nudge and the phone dock were already off.
+2. **Fresh prices.** Pages said "checked 30 hours ago". Cause: GitHub started `refresh-prices.yml` 4-9 hours late, so its two
+   data commits landed 8-9 hours apart and the 12-hour gate skipped every second one (19-23 Nov, every early-UTC data commit:
+   "Canceled by Ignored Build Step"). Now the import is timed to the gate, with no release of its own: `freshness.yml` (hourly)
+   reads the last production build from its GitHub commit status (`scripts/last-build.sh`) and starts the import 11 hours after it
+   (the import takes 64-77 min), so its usual `[deploy]` data commit lands when the gate opens; a scheduled run that would land
+   inside the 12 hours stops itself (job `gate`). Red alerts: snapshot 14 h old, live build 16 h old (one cycle plus run time);
+   the ops monitor's import check went from 30/54 h to 14/20 h. Each store row says when its price was read
+   (`lib/store-checked.ts`: the crawl's last full read, else its sister site's data time).
+3. **Sort and filter on every listing** (`ListControls`): price both ways, % under market, newest, most stores; set, release year
+   and price band, beside game and stock. No price-per-pack sort (no pack counts in the catalogue; never guessed) and no language
+   filter (the catalogue is English).
+4. **One visible order.** The product table's stores are one cheapest-first run; every eBay, TCGplayer and Amazon row sits in the
+   marketplaces block (item 10). The listing grids had no interruption.
+5. **Typo-tolerant search** (`lib/search-fuzzy.ts`): exact words; then shorthand (ETB, UPC, BB, SPC…); then each unmatched word
+   swapped for the nearest catalogue word (1 edit for 4-6 letters, 2 for 7+, none for codes), said as "Showing results for";
+   nothing at all shows the most popular sealed products. `search_none` and `search_corrected` are tracked (P2 24).
+6. **Less above the title.** The one promo line under the header (sale or pre-order) closes with ✕ for 7 days (`StripClose`).
+
+**P1**: product page stores first with eBay, TCGplayer and Amazon under a labelled "Marketplaces · Ad" block (reverses the
+2026-11-17 eBay-first order on the product page only; the quick view keeps it), store rows' View deal is the primary button, the
+thumbs are hidden on phones and the cart button is a quiet "Save"; the cart is the **Shortlist** everywhere, and says "We sell
+nothing" whenever it opens (URL `/cart` unchanged); sticky jump links (Prices, History, Facts, Is it worth it?) and the price
+history moved beside the price (left column on a desktop); every discount badge says what it is measured against ("N% under
+market" or "N% under median") with the definition on hover; one-line intros with "How it works" on listing, deals and restocks;
+a failed product photo is retried once after 1.5 s, then shows the site mark (`ImageFallback`). Not done: delivered price by
+default (P1 9), since no store row carries shipping in the data yet.
+
+**P2**: the Deals menu holds five (the sale, today's deals, movers, restocks, pre-orders; the release on pre-order keeps its strip
+and its place on the hub, the stores directory moved to Guides); the account link has a tooltip (theme, region and shortlist
+had one). Not done here: set logos (no licensed source), the one "Get alerts" component, the 390px template pass.
+
+Click guard: eBay and TCGplayer outbound clicks per 100 product views at release+2d (the marketplaces moved down); if they fall
+more than 40% with store clicks flat, the product page's marketplaces block goes back above the stores (owner's call).
