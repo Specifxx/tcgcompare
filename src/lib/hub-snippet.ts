@@ -82,3 +82,20 @@ export function typeHubDescription(i: { short: string; label: string; items: Hub
   const lead = h ? priceLine(h, i.storeName, "Newest in stock in the US: ") + " " : "";
   return `${lead}Prices for all ${i.items.length.toLocaleString("en-US")} ${i.short} ${i.label.toLowerCase()} across ${i.stores.toLocaleString("en-US")} stores, TCGplayer and eBay, newest set first.`;
 }
+
+// /sealed, the all-games sealed index (page scorecard 2026-11-23: 50 impressions at position 9.4, no clicks; its title was
+// "TCG booster box prices — cheapest sealed product", the words of a one-game site). It now names the kinds people search
+// ("booster case preorder" was its top query) and how many games, and its description leads with real counts.
+export function sealedIndexTitleLadder(games: number, types: (string | null)[]): string[] {
+  const hasCase = types.some((t) => t === "Case");
+  const kinds = hasCase ? "Booster Box, Case & Pre-order Prices" : "Booster Box & Pre-order Prices";
+  return [...new Set([`${kinds}: ${games} Card Games`, `Sealed TCG Prices: ${games} Card Games`, "Sealed TCG Prices"])];
+}
+
+export function sealedIndexDescription(i: { items: HubItem[]; games: number; stores: number; today: string; storeName: (o: Offer) => string }): string {
+  const boxes = i.items.filter((x) => x.sealedType === "Booster Box");
+  const h = headlineItem(boxes, i.today);
+  const lead = h ? priceLine(h, i.storeName, "Newest box in stock in the US: ") + " " : "";
+  const n = i.items.length.toLocaleString("en-US");
+  return `${lead}Compare ${n} sealed products from ${i.games} card games across ${i.stores.toLocaleString("en-US")} stores and TCGplayer: booster boxes, cases, ETBs, decks and pre-orders.`;
+}

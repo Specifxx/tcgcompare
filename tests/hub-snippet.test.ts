@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fitTitle, TITLE_MAX } from "@/lib/seo-title";
-import { gameHubDescription, gameHubTitleLadder, headlineItem, kindsPhrase, typeHubDescription, typeHubTitleLadder, usStoreLow, type HubItem } from "@/lib/hub-snippet";
+import { sealedIndexDescription, sealedIndexTitleLadder, gameHubDescription, gameHubTitleLadder, headlineItem, kindsPhrase, typeHubDescription, typeHubTitleLadder, usStoreLow, type HubItem } from "@/lib/hub-snippet";
 import type { Offer } from "@/lib/site-types";
 
 // Page scorecard 2026-11-23 (Job D): game hubs rank on page one and are not clicked; the snippet is now written from the data.
@@ -49,4 +49,13 @@ test("a type hub says how many it compares and the newest one in stock", () => {
   }
   const d = typeHubDescription({ short: "Digimon", label: "Cases", items: [item("Timeless Bonds Booster Box Case", "2026-10-01", [o("a", 80000)], { sealedType: "Case", tcgCents: 74725 })], stores: 1350, today, storeName });
   assert.equal(d, "Newest in stock in the US: Timeless Bonds Booster Box Case from $800.00 at Shop A (TCGplayer market $747.25). Prices for all 1 Digimon cases across 1,350 stores, TCGplayer and eBay, newest set first.");
+});
+
+test("/sealed names its kinds and games, and leads with the newest box a US store has", () => {
+  assert.equal(fitTitle(sealedIndexTitleLadder(31, ["Booster Box", "Case"])).absolute, "Booster Box, Case & Pre-order Prices: 31 Card Games");
+  assert.equal(fitTitle(sealedIndexTitleLadder(31, ["Booster Box"])).absolute, "Booster Box & Pre-order Prices: 31 Card Games | TCG Prices");
+  const d = sealedIndexDescription({ items: [item("Old Box", "2025-01-01", [o("a", 8000)]), item("New Box", "2026-11-01", [o("b", 8500)]), item("New Pack", "2026-11-20", [o("a", 499)], { sealedType: "Booster Pack" })], games: 31, stores: 1350, today, storeName });
+  assert.equal(d, "Newest box in stock in the US: New Box from $85.00 at Shop B (TCGplayer market $90.00). Compare 3 sealed products from 31 card games across 1,350 stores and TCGplayer: booster boxes, cases, ETBs, decks and pre-orders.");
+  assert.ok(d.length <= 230, String(d.length));
+  assert.ok(!/msrp|ebay|cheapest/i.test(d));
 });

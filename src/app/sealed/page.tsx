@@ -8,13 +8,24 @@ import { adSearch, cardAds } from "@/lib/card-ads";
 import { SEALED_ORDER as ORDER, SEALED_PLURAL as PLURAL, sealedHref } from "@/lib/hubs";
 import Link from "@/components/Link";
 import { TileGrid } from "@/components/ProductTile";
+import { fitTitle } from "@/lib/seo-title";
+import { gameViews, hubItem } from "@/lib/game-hubs";
+import { sealedIndexDescription, sealedIndexTitleLadder } from "@/lib/hub-snippet";
+import { storeName } from "@/lib/share";
+import { todayIso } from "@/lib/preorders";
 
 export const revalidate = 86400; // data only changes with a release (DECISIONS.md, "Vercel cost")
-export const metadata: Metadata = {
-  title: `${SITE.gameShort} booster box prices — cheapest sealed product`,
-  description: `Compare ${SITE.game} booster box, booster pack, starter deck and sealed product prices across TCGplayer, eBay and ${SITE.stores.length} stores.`,
-  ...canon("/sealed"),
-};
+// Written from today's data (lib/hub-snippet.ts; page scorecard 2026-11-23: position 9.4, no clicks on the old template).
+export function generateMetadata(): Metadata {
+  const items = products().filter((p) => p.kind === "sealed").map(hubItem);
+  const title = fitTitle(sealedIndexTitleLadder(gameViews().length, items.map((i) => i.sealedType)));
+  return {
+    title,
+    description: sealedIndexDescription({ items, games: gameViews().length, stores: SITE.stores.length, today: todayIso(), storeName }),
+    ...canon("/sealed"),
+    openGraph: { ...canon("/sealed").openGraph, title: title.absolute },
+  };
+}
 
 
 // The minimal look (2026-11-13): the headline, one line, the product types as a row of chips (the page's filters: each goes to its
@@ -27,7 +38,7 @@ export default function Sealed() {
     <div className="flex flex-col gap-12 sm:gap-16">
       <header>
         <h1 className="font-display text-3xl font-bold tracking-tight sm:text-5xl">{SITE.gameShort} booster box and sealed prices</h1>
-        <p className="mt-3 text-sm text-muted">The most popular products of each type, from every game. Open any product to compare every store, or a type for all of it.</p>
+        <p className="mt-3 text-sm text-muted">The most popular products of each type, from every game. Open any product to compare every store, or a type for all of it. Upcoming sets are on the <Link href="/preorders" className="underline">pre-orders</Link> page.</p>
         {types.length > 1 && (
           <nav aria-label="Product types" className="mt-5">
             {/* One row that scrolls sideways at every width: a wrapping row changes its line count when the web font arrives. */}
