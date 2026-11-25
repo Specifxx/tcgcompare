@@ -432,12 +432,24 @@ export interface CrawlTake {
   listings: number;
 }
 
-/** One game's crawl funnel: listings read in its collections, taken, and refused by reason (the 8 commonest). */
+/**
+ * One game's crawl funnel: listings read in its collections, taken, and refused by reason (the 10 commonest). A
+ * catch-all reason is split by its detail ("unconfirmed: out of stock", "unconfirmed: no match"), so the share a rule
+ * could still win is readable apart from the share that is real (out of stock). The US funnel ("dbs@US") also keeps
+ * up to three listings (store host and title, both public on the store's own site) for each of its three commonest
+ * refusals, so the next fix starts from real titles instead of an Actions run.
+ */
 export interface LineFunnel {
   listings: number;
   taken: number;
   refused: Record<string, number>;
+  samples?: Record<string, string[]>;
 }
+
+/** Reasons that only say "not taken"; their detail is what tells the refusals apart. */
+const SPLIT_BY_DETAIL = new Set(["unconfirmed", "listing"]);
+const funnelReason = (why: string, detail?: string): string => (SPLIT_BY_DETAIL.has(why) && detail ? `${why}: ${detail.slice(0, 40)}` : why);
+const SAMPLES_PER_REASON = 3;
 
 /** Funnel keys of a listing: each game it was crawled for, and that game in the US. */
 const funnelKeys = (lines: readonly string[], market: Market): string[] => [...new Set(lines)].flatMap((line) => (market === "US" ? [line, `${line}@US`] : [line]));
@@ -478,11 +490,18 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
   const detail: Record<string, number> = {};
   const byLine: Record<string, number> = {};
   const funnel: Record<string, LineFunnel> = {};
-  const stage = (l: CrawlListing, market: Market, what: "listings" | "taken" | string) => {
+  const samples: Record<string, Record<string, string[]>> = {};
+  const stage = (l: CrawlListing, market: Market, what: "listings" | "taken" | string, host?: string) => {
     for (const k of funnelKeys(l.lines, market)) {
       const f = (funnel[k] ??= { listings: 0, taken: 0, refused: {} });
       if (what === "listings" || what === "taken") f[what]++;
-      else f.refused[what] = (f.refused[what] ?? 0) + 1;
+      else {
+        f.refused[what] = (f.refused[what] ?? 0) + 1;
+        if (host && k.endsWith("@US")) {
+          const list = ((samples[k] ??= {})[what] ??= []);
+          if (list.length < SAMPLES_PER_REASON) list.push(`${host} | ${l.title.slice(0, 120)}`);
+        }
+      }
     }
   };
   let taken = 0;
@@ -496,7 +515,7 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
     const dk = `${why}: ${(d ?? "").slice(0, 40)}`;
     detail[dk] = (detail[dk] ?? 0) + 1;
   };
-  const held: { key: string; market: Market; id: number; l: CrawlListing; refuse: Refused; detail?: string }[] = [];
+  const held: { key: string; host: string; market: Market; id: number; l: CrawlListing; refuse: Refused; detail?: string }[] = [];
   for (const s of run.stores) {
     // A partial read still yields the collections it read to the end.
     if (!s.ok && !s.partial) continue;
@@ -532,17 +551,17 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
       if ("refuse" in r) {
         // Refused by its price band alone, on an upcoming product: judged again once every store's price is known.
         if (r.held != null && ctx.launch?.upcoming(r.held) && l.inStock && !PLACEHOLDER_CENTS.test(String(l.cents))) {
-          held.push({ key, market: s.market, id: r.held, l, refuse: r.refuse, detail: r.detail });
+          held.push({ key, host: s.host, market: s.market, id: r.held, l, refuse: r.refuse, detail: r.detail });
           continue;
         }
         refuse(r.refuse, r.detail);
-        stage(l, s.market, r.refuse);
+        stage(l, s.market, funnelReason(r.refuse, r.detail), s.host);
         continue;
       }
       // A placeholder price ($999.99, $9,999) is no price: never shown, whoever sells it.
       if (PLACEHOLDER_CENTS.test(String(l.cents))) {
         refused.placeholder = (refused.placeholder ?? 0) + 1;
-        stage(l, s.market, "placeholder");
+        stage(l, s.market, "placeholder", s.host);
         continue;
       }
       taken++;
@@ -580,7 +599,7 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
       const usd = launch!.usd(h.l.cents, h.market);
       if (market == null || ref == null || ref >= market || usd < ref * 0.4 || usd > market * 2.5) {
         refuse(h.refuse, h.detail);
-        stage(h.l, h.market, h.refuse);
+        stage(h.l, h.market, funnelReason(h.refuse, h.detail), h.host);
         continue;
       }
       taken++;
@@ -600,7 +619,12 @@ export function takeCrawl(run: CrawlRun, ctx: PickContext, keyOf: ReadonlyMap<st
     }
   }
   const refusedDetail = Object.fromEntries(Object.entries(detail).sort((a, b) => b[1] - a[1]).slice(0, 40));
-  for (const f of Object.values(funnel)) f.refused = Object.fromEntries(Object.entries(f.refused).sort((a, b) => b[1] - a[1]).slice(0, 8));
+  for (const [k, f] of Object.entries(funnel)) {
+    const top = Object.entries(f.refused).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    f.refused = Object.fromEntries(top);
+    const kept = top.slice(0, 3).flatMap(([why]) => (samples[k]?.[why]?.length ? [[why, samples[k][why]] as const] : []));
+    if (kept.length) f.samples = Object.fromEntries(kept);
+  }
   const lineFunnel = Object.fromEntries(Object.entries(funnel).sort(([a], [b]) => a.localeCompare(b)));
   return { offers, fresh, taken, refused, refusedDetail, takenByLine: byLine, lineFunnel, listings, titled, aiTaken, alsoTaken, launchTaken };
 }
