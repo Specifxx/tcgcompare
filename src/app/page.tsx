@@ -202,7 +202,7 @@ export default function Home() {
   ];
 
   return (
-    <div>
+    <div className="home-tidy">
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Organization", "@id": `${SITE_URL}/#org`, name: SITE.name, url: SITE_URL, logo: `${SITE_URL}/icon.svg` }} />
       <JsonLd data={{ "@context": "https://schema.org", "@type": "WebSite", name: SITE.name, url: SITE_URL, publisher: { "@id": `${SITE_URL}/#org` } }} />
       {/* The products on this page, by their own URLs: the shelf and the newest set's sealed (SEO audit, 2026-11-03). */}

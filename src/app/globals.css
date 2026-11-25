@@ -1762,3 +1762,34 @@ html[data-adlook="b"] [data-leave-nudge]::before {
 html[data-nav] .nav-line { opacity: 1; animation: nav-line 2.4s cubic-bezier(0.1, 0.7, 0.2, 1) 120ms both; }
 @keyframes nav-line { from { transform: scaleX(0); } to { transform: scaleX(0.92); } }
 @media (prefers-reduced-motion: reduce) { html[data-nav] .nav-line { animation: none; transform: none; } }
+
+/* ── The phone's home page, tidied (owner, 2026-11-26: "there's just too much going on, especially for mobile phone"). On a phone
+   the page is one path: the headline, the search, the games drifting past as the one row of ways in, then the products. What
+   repeats is hidden below 640px: the six game tiles (the marquee under them carries every game, the same five first), the
+   sub-line, the line of counts, the pre-order pill while the sale strip under the header is the page's one promo, the shelf's
+   first note, and the games after the tenth (the button under them goes to all of them). The same HTML at every width: nothing
+   leaves the page for a crawler or a desktop, no URL, heading or JSON-LD changes, and no ad moves. The 2050 layer is untouched.
+   Reverts by deleting this block. DECISIONS.md, 2026-11-26. ── */
+@media (max-width: 639.98px) {
+  .home-tidy .hero-sub,
+  .home-tidy .hero-meta,
+  .home-tidy .ways {
+    display: none;
+  }
+  /* One promo per page: the pill waits while the sale strip shows (a visitor who closed the strip gets the pill back). */
+  html:has([data-promo-strip]:not([style*="display: none"])) .home-tidy .hero-pill {
+    display: none;
+  }
+  /* With the tiles gone the hero ends at the search, and the games follow it closely. */
+  .home-tidy .hero-in {
+    padding-bottom: 1.25rem;
+  }
+  /* The shelf: one note, not two. */
+  .home-tidy .home-shelf [role="tabpanel"] > p.text-muted:has(+ p.text-muted) {
+    display: none;
+  }
+  /* Pick your game: the first ten, then the button to all of them. */
+  .home-games > :nth-child(n + 11) {
+    display: none;
+  }
+}

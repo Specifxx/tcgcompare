@@ -12,7 +12,7 @@ export function GameRows() {
   return (
     <section aria-labelledby="games-h">
       <h2 id="games-h" className="mb-3 text-xl font-bold">Pick your game</h2>
-      <ul className="card grid grid-cols-2 overflow-hidden sm:block sm:divide-y sm:divide-line">
+      <ul className="home-games card grid grid-cols-2 overflow-hidden sm:block sm:divide-y sm:divide-line">
         {views.map((v) => {
           const hubs = gameTypeHubs(v.line).filter((h) => h.items.length >= GAME_TYPE_MIN).slice(0, 5);
           return (
@@ -41,6 +41,15 @@ export function GameRows() {
           );
         })}
       </ul>
+      {/* A phone shows the first ten games (globals.css, "The phone's home page, tidied", 2026-11-26); this is the way to the rest.
+          From sm up every game is in the list above, so the button is not drawn. */}
+      {views.length > 10 && (
+        <p className="mt-6 flex justify-center sm:hidden">
+          <Link href="/games" className="btn-ghost min-h-11 px-5">
+            All {views.length} games <span aria-hidden="true">→</span>
+          </Link>
+        </p>
+      )}
     </section>
   );
 }

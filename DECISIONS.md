@@ -1820,3 +1820,33 @@ DexCompare (CompareEmpire #369), MTG Compare (#278) and YGO Compare (#269), whos
   store's shipping, the one-store order) is returned by `/api/basket` only when RiftCompare's sister-premium status says the
   token is Premium right now. It is withheld in the response, not hidden with CSS.
 - **Placement:** one link on `/cart` once the list holds two or more products. There is no pop-up.
+
+## 2026-11-26: the phone's home page, tidied (one path: the headline, the search, the games in one row, the products)
+
+**Owner, 2026-11-26:** "we should still tidy up the landing page for our sites a little bit, because I think there's just too
+much going on, especially for mobile phone." The 19 Nov pass made the shelf one sideways row and the game list two columns; he
+still finds the page busy.
+
+**Measured at 390px before:** 5,343px tall. Above the first product: the sale strip, the pre-order pill, the headline, four
+lines of sub-text, the search, six game tiles in three rows, the line of counts, the game marquee (the same games again), the
+shelf's title, tabs and two notes. The first product began at about 1,150px, on the second screen, and "Pick your game" was
+thirty games in fifteen rows, about 1,300px.
+
+**Now, below 640px only:** the headline, the search, the games drifting past as the ONE row of ways in, then the shelf, the
+first ten games with a button to all of them, the ad block, the guides and the questions. 3,994px (25% shorter), and the first
+products begin at about 590px, on the first screen. Hidden on a phone: the six game tiles (the marquee right under them
+carries every game, the same five first, and "All games" is the button under "Pick your game"), the sub-line, the line of
+counts, the pre-order pill while the sale strip under the header shows (one promo per page; a visitor who closes the strip
+gets the pill back, and the shelf's Pre-orders tab is on the same screen), the shelf's first note where it has two, and the
+games after the tenth.
+
+**Unchanged:** the 2050 layer and the marquee, untouched. The HTML is the same at every width, so a crawler, find-in-page and
+a desktop see every block; no URL, title, heading or JSON-LD changes; from 640px up the page is pixel-identical (compared at
+700px and 1280px). No ad moves: the one ad block is still under the game list, as it was. One element is new in the HTML: the
+"All 30 games" button under the game list (`sm:hidden`, a plain link to `/games`, which the hero and the menu already link).
+CSS only otherwise, in one block at the end of `globals.css` ("The phone's home page, tidied"); the hooks are `home-tidy` (the
+page) and `home-games` (the list). Reverts by deleting the block.
+
+**Read:** phone bounce (non-Reddit) and buy clickers per 100 phone visitors on the home page, and phone visits to
+`/games/<game>` from the home page, the week after release against the week before. If game-page visits from a phone fall,
+the six tiles come back as one sideways row and the marquee is the one that hides.
