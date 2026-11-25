@@ -1779,3 +1779,11 @@ the same reason (collapsing it shifts the watch test). A ratings block on the ho
 Owner, 2026-11-26: "I don't really like the Christmas lights on the very top." The string of lights hanging under the header
 (2026-11-20) is removed on every Compare site: the `.xmas-garland::after` rule is gone from the `xmas-logo` block in `globals.css`
 and the class is off the header. The Santa hat on the logo stays, and nothing else of the Christmas layer changes.
+
+## 2026-11-26 — Trustpilot business profile: domain meta tag
+
+The Fiverr tester asked for an outside trust signal. Bill opened a free Trustpilot business account for TCG Prices
+(bill.jyang101 login, no tcgprices.app mailbox), so the domain is verified with Trustpilot's one-time meta tag in the
+root layout's `<head>`. It carries no tracking and stays harmless after verification. No Trustpilot widget or script is
+added (UX guard: no extra prompts or third-party scripts); a plain "Review us on Trustpilot" link may follow once the
+profile is live.
