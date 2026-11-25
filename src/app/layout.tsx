@@ -31,10 +31,11 @@ import { ADFREE_BOOT_SCRIPT } from "@/lib/premium-member";
 import { AiReferralTracker } from "@/components/AiReferralTracker";
 import { ShareArrival } from "@/components/ShareArrival";
 import { DockAds } from "@/components/DockAds";
+import { GutterAds } from "@/components/GutterAds";
 import { BottomNav } from "@/components/BottomNav";
 import { NavBoost } from "@/components/NavBoost";
 import { AskSheet } from "@/components/AskSheet";
-import { cardAds } from "@/lib/card-ads";
+import { adSearch, cardAds } from "@/lib/card-ads";
 import { ReturnBeacon } from "@/components/ReturnBeacon";
 import { SinceLastVisit } from "@/components/SinceLastVisit";
 import { AdRouteGate } from "@/components/AdRouteGate";
@@ -105,8 +106,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               its menus down the left of every desktop page is gone; the page is one centred column (tailwind.config.ts max-w-page). */}
           {/* Retention lever 2 (2026-11-18): a returning visitor's first page of a day, only when something they looked at is cheaper. */}
           {SITE.priceAlerts && <SinceLastVisit wrap="page" />}
-          <main id="main" className="min-w-0 flex-1">
+          <main id="main" className="relative min-w-0 flex-1">
             <div className="page py-6">{children}</div>
+            {/* The gutter ads (owner, 2026-11-25): a labelled TCGplayer column in the empty right side of a wide window, from 1440px. */}
+            <AdRouteGate>
+              <GutterAds ads={cardAds({ limit: 14 })} search={adSearch()} sides="right" />
+            </AdRouteGate>
           </main>
           <Footer />
           <QuickView />
