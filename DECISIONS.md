@@ -1787,3 +1787,15 @@ The Fiverr tester asked for an outside trust signal. Bill opened a free Trustpil
 root layout's `<head>`. It carries no tracking and stays harmless after verification. No Trustpilot widget or script is
 added (UX guard: no extra prompts or third-party scripts); a plain "Review us on Trustpilot" link may follow once the
 profile is live.
+
+## 2026-11-25: A TCGplayer column in the empty right side of a wide window (owner)
+
+The owner, 2026-11-25, on a desktop: "Why are the display ads at the very bottom of the site? … there's so much space on the left and the
+right side of the website." (YGO Compare #267 and the sister sites.) The home page's one ad block already sits after the games and sets,
+before the reading matter, so it stays. New: `components/GutterAds.tsx` (YGO Compare's) with `sides="right"`, from 1440px wide: one
+labelled TCGplayer column in the right-hand gutter, never eBay (this site has no eBay keyset, so an eBay column would be searches with
+no price). Sized to the gutter beside the page's 1152px content (about 110px at 1440, 180px at most), 14px clear of it and of the
+window; absolutely inside `<main>` with a sticky card, so it never covers or narrows the page, the header or the footer. Browser only
+(CLS 0), labelled Ad, rel sponsored through /go under `gutter-tcg`, never Amazon, never on the ad-free pages (`AdRouteGate`) or for
+ad-free members. Tiles start after the block's own three. Read: gutter clicks per 100 desktop visitors; if desktop buy clicks per
+visitor fall 10%, it goes.
