@@ -115,9 +115,16 @@ test("GameLine.alsoIn: another game's product in this game's collection is taken
   assert.equal(got.takenByLine?.fab, 1);
   // The funnel counts by the game whose collection listed it (swu here), in every market and in the US.
   const swu = { listings: 2, taken: 1, refused: { "type-differs": 1 } };
-  assert.deepEqual(got.lineFunnel, { swu, "swu@US": swu });
+  // The US funnel also keeps the refused listing itself (host and title), so the next fix starts from a real title.
+  assert.deepEqual(got.lineFunnel, { swu, "swu@US": { ...swu, samples: { "type-differs": ["cards.test | Flesh and Blood Rosetta Booster Pack"] } } });
   const ca = takeCrawl({ ...run, stores: run.stores.map((s) => ({ ...s, market: "CA" as const })) }, allow, new Map([["cards.test|CA", "cards"]]));
   assert.deepEqual(ca.lineFunnel, { swu: { listings: 2, taken: 1, refused: { "type-differs": 1 } } });
+  // A catch-all refusal is split by its detail in the funnel: out of stock (real) apart from a title no rule placed.
+  const gone = crawled(listing({ id: 3, title: "Star Wars Unlimited Legends of the Force Booster Box", variants: [{ id: 31, title: "Default Title", price: "129.99", available: false, sku: "" }] }));
+  const odd = crawled(listing({ id: 4, title: "Star Wars Unlimited Legends of the Force", handle: "swu-lof" }));
+  const split = takeCrawl({ ...run, stores: [{ ...run.stores[0], own: true, listings: [gone, odd] }] }, { ...ctx, inBand: () => true }, keyOf).lineFunnel?.["swu@US"];
+  assert.deepEqual(split?.refused, { "unconfirmed: out of stock": 1, "unconfirmed: no product type": 1 });
+  assert.deepEqual(Object.keys(split?.samples ?? {}).sort(), ["unconfirmed: no product type", "unconfirmed: out of stock"]);
   // Every pickId check still applies once the game is added: a pack title on a box id is refused.
   assert.deepEqual(got.refused, { "type-differs": 1 });
   assert.ok(asked.includes("fab|swu|cards.test"));
