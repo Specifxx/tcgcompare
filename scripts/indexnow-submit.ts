@@ -13,6 +13,7 @@ import { posts } from "@/lib/posts";
 import { cardIndexable } from "@/lib/indexing";
 import { indexSignals, priceOf, products, setById } from "@/lib/data";
 import { sealedSets } from "@/lib/hubs";
+import { indexNowKey } from "@/lib/indexnow-key";
 
 export const MOVE_PCT = 5;
 export const MAX_URLS = 1000;
@@ -39,8 +40,7 @@ function cheapestStore(id: number): number | null {
 }
 
 async function main() {
-  const key = process.env.INDEXNOW_KEY;
-  if (!key) return console.log("[indexnow] INDEXNOW_KEY not set — skipped");
+  const key = indexNowKey();
   const file = path.join(process.cwd(), "data/state/indexnow.json");
   let state: IndexNowState = { sent: {}, at: "" };
   try { state = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}

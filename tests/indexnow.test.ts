@@ -38,3 +38,15 @@ test("the IndexNow commit step is a no-op when no record was written (no key)", 
   assert.ok(guard > 0, "the step must skip when the file does not exist");
   assert.ok(guard < step.indexOf("git add data/state/indexnow.json"), "the guard must run before git add");
 });
+
+test("IndexNow always has a key: the route and the script share indexNowKey()", async () => {
+  const { indexNowKey, INDEXNOW_PUBLIC_KEY } = await import("../src/lib/indexnow-key");
+  const saved = process.env.INDEXNOW_KEY;
+  delete process.env.INDEXNOW_KEY;
+  assert.match(INDEXNOW_PUBLIC_KEY, /^[0-9a-f]{32}$/);
+  assert.equal(indexNowKey(), INDEXNOW_PUBLIC_KEY);
+  if (saved !== undefined) process.env.INDEXNOW_KEY = saved;
+  const fs = await import("node:fs");
+  assert.match(fs.readFileSync("src/app/indexnow-key.txt/route.ts", "utf8"), /indexNowKey\(\)/);
+  assert.doesNotMatch(fs.readFileSync("scripts/indexnow-submit.ts", "utf8"), /INDEXNOW_KEY not set/);
+});
