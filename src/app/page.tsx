@@ -227,7 +227,7 @@ export default function Home() {
           <span className="text-brand">{SITE.gameShort}</span> Booster Box Prices
         </h1>
         <p className="hero-sub rise" style={riseAt(1)}>
-          Buy {SITE.gameShort} sealed at the best price: today&rsquo;s prices from TCGplayer, eBay and {storeCount.toLocaleString("en")} stores, in your own currency.
+          Buy {SITE.gameShort} sealed at the best price: today&rsquo;s prices from TCGplayer, eBay and {storeCount.toLocaleString("en")} stores, in your own currency. Every store we track is listed, paid or not, in price order.
         </p>
         <div className="hero-search rise" style={riseAt(2)}>
           <SearchBox big />

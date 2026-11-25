@@ -1753,3 +1753,23 @@ Every Riftbound deal in a Sealed Sniper drop (Discord and Telegram) now ends wit
 linked to riftcompare.com/legacy-preorders until 13 Dec and /sealed after, tagged utm_campaign=brand (plan item 4). Rift's Google plan needs brand searches back from about 130 to 170 or more
 a week by 15 Dec, and a drop that names the brand next to a real deal is the cheapest way to put the name in front of Riftbound
 buyers. Same side of the network, one line per Riftbound deal, nothing for other games (`riftCompareUrl`, `tests/sniper.test.ts`).
+
+## 2026-11-25 — Fiverr usability review (owner's paid tester): search, trust line, a shorter product page top
+
+A paid tester recorded a nine-minute think-aloud on tcgprices.app (UK, then US; transcript in the project files,
+`fiverr-review-2026-11-25/`). Verdict: clear, not confusing, would click View deal; asks: make search stand out, say we
+compare every store and not only the paying ones, show ratings, and declutter the product page's top. Done here:
+
+- Home hero: the art is dimmer (peak 0.55 to 0.30) and the search box carries a brand edge, solid ground and glow at rest.
+  The intro line adds "Every store we track is listed, paid or not, in price order" (true: most stores pay us nothing).
+- Product page: the same sentence under the price table, linked to /methodology; the About page's copy brought up to the
+  stores-first order of 2026-11-24. "I own this", "Share deal" and the watch button share one row (the collection hint is a
+  tooltip, the group-chat share a two-word label). On a phone the price history now comes right after the prices, before
+  the alert form (the columns are `contents` below md and their parts ordered).
+- Phone price table: a long one-word store name ("LegendsSportsGames") held the table 29 px wider than a 390 px screen, so
+  every View deal button was cut off. Names now wrap anywhere, cells and buttons are tighter below sm, the ↗ hides there.
+
+Not done, on purpose: Add to cart/Shortlist and the "Watch this price · free email" wording are A/B arms frozen until 2 Dec
+(the tester said they would not use the shortlist; that goes into those verdicts); the alert form stays open under the prices for
+the same reason (collapsing it shifts the watch test). A ratings block on the home page is one the owner cut on 2026-11-13
+(`tests/minimal-look.test.ts`); a Trustpilot profile needs the owner. Longer history ranges come as the data grows.

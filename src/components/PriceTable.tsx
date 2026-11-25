@@ -98,18 +98,18 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
   const tcgCart = tcgUrl ? searchCart(tcgUrl, "TCGplayer") : null;
   const ebaySearchRow = ebayQuery && !pinned.some((o) => o.source === "ebay") ? (
     <tr data-ebay-search-row className="border-t border-line">
-      <td className="px-3 py-2.5">
-        <span className="font-medium text-ink">{ebayMarket === "US" ? "eBay" : `eBay ${ebayMarket}`}</span>
+      <td className="px-2 py-2.5 sm:px-3">
+        <span className="font-medium text-ink [overflow-wrap:anywhere]">{ebayMarket === "US" ? "eBay" : `eBay ${ebayMarket}`}</span>
         <span className="ad-pill ml-2">Ad</span>
         {ebayCart && <span className="block sm:hidden"><CartAddButton {...ebayCart} inline className="text-xs" /></span>}
       </td>
       <td className="hidden px-3 py-2.5 text-xs text-muted sm:table-cell">New and sealed listings, cheapest first</td>
-      <td className="px-3 py-2.5 text-right text-xs text-muted">See prices</td>
-      <td className="px-3 py-2.5 text-right">
+      <td className="px-2 py-2.5 sm:px-3 text-right text-xs text-muted">See prices</td>
+      <td className="px-2 py-2.5 sm:px-3 text-right">
         <span className="inline-flex items-center justify-end gap-2">
           {ebayCart && <CartAddButton {...ebayCart} className="hidden text-muted sm:inline-flex" />}
-          <a href={goHref({ url: ebaySearchUrl(ebayQuery, ebayMarket), source: "ebay", market }, productId, `${page}_pinned_search`, { pos: 1 })} rel="sponsored nofollow noopener" target="_blank" className="btn-primary min-h-10 whitespace-nowrap px-3 py-1.5">
-            Check eBay <span aria-hidden="true">↗</span>
+          <a href={goHref({ url: ebaySearchUrl(ebayQuery, ebayMarket), source: "ebay", market }, productId, `${page}_pinned_search`, { pos: 1 })} rel="sponsored nofollow noopener" target="_blank" className="btn-primary min-h-10 whitespace-nowrap px-2.5 py-1.5 sm:px-3">
+            Check eBay <span aria-hidden="true" className="hidden sm:inline">↗</span>
           </a>
         </span>
       </td>
@@ -119,17 +119,17 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
   // with no price claimed (owner, 2026-11-14: "Same for tcgplayer").
   const tcgSearchRow = tcgUrl && !pinned.some((o) => o.source === "tcgplayer") ? (
     <tr data-tcg-search-row className="border-t border-line">
-      <td className="px-3 py-2.5">
-        <span className="font-medium text-ink">TCGplayer</span>
+      <td className="px-2 py-2.5 sm:px-3">
+        <span className="font-medium text-ink [overflow-wrap:anywhere]">TCGplayer</span>
         {tcgCart && <span className="block sm:hidden"><CartAddButton {...tcgCart} inline className="text-xs" /></span>}
       </td>
       <td className="hidden px-3 py-2.5 text-xs text-muted sm:table-cell">Sealed listings on TCGplayer</td>
-      <td className="px-3 py-2.5 text-right text-xs text-muted">See prices</td>
-      <td className="px-3 py-2.5 text-right">
+      <td className="px-2 py-2.5 sm:px-3 text-right text-xs text-muted">See prices</td>
+      <td className="px-2 py-2.5 sm:px-3 text-right">
         <span className="inline-flex items-center justify-end gap-2">
           {tcgCart && <CartAddButton {...tcgCart} className="hidden text-muted sm:inline-flex" />}
-          <a href={goHref({ url: tcgUrl, source: "tcgplayer", market }, productId, `${page}_pinned_search`, { pos: ebaySearchRow ? 2 : 1 })} rel="sponsored nofollow noopener" target="_blank" className="btn-tcg min-h-10 whitespace-nowrap px-3 py-1.5">
-            Check TCGplayer <span aria-hidden="true">↗</span>
+          <a href={goHref({ url: tcgUrl, source: "tcgplayer", market }, productId, `${page}_pinned_search`, { pos: ebaySearchRow ? 2 : 1 })} rel="sponsored nofollow noopener" target="_blank" className="btn-tcg min-h-10 whitespace-nowrap px-2.5 py-1.5 sm:px-3">
+            Check TCGplayer <span aria-hidden="true" className="hidden sm:inline">↗</span>
           </a>
         </span>
       </td>
@@ -141,7 +141,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
         {picker}
         {(ebaySearchRow || tcgSearchRow) && <table className="w-full text-sm"><tbody>{ebaySearchRow}{tcgSearchRow}</tbody></table>}
         <p className="p-4 text-sm text-muted">No store listings in {MARKET_LABEL[market]} right now. Try another market above{ebaySearchRow || tcgSearchRow ? ", or check the links above" : ""}.</p>
-        {product && <div className="px-4 pb-3"><ReportPrice product={product} region={market} buttonClassName="btn-ghost px-3 py-1.5" /></div>}
+        {product && <div className="px-4 pb-3"><ReportPrice product={product} region={market} buttonClassName="btn-ghost px-2.5 py-1.5 sm:px-3" /></div>}
       </div>
     );
   const live = [...inStock, ...refs];
@@ -160,19 +160,19 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
   const amazonCart = amazonUrl && amazonLive?.cents ? { href: tagged(amazonUrl, subId(market, `${page}_cart`, productId)), productUrl: amazonUrl, storeName: "Amazon", title: product ?? "", priceCents: amazonLive.cents, currency: amazonLive.currency ?? cur, image } : null;
   const amazonRow = amazonUrl && amazonLive ? (
     <tr data-amazon-row className={`border-t border-line ${PIN_OUTLINE.amazon}`}>
-      <td className="px-3 py-2.5">
-        <span className="font-medium text-ink">Amazon</span>
+      <td className="px-2 py-2.5 sm:px-3">
+        <span className="font-medium text-ink [overflow-wrap:anywhere]">Amazon</span>
         <StoreVote url={amazonUrl} name="Amazon" className="ml-2 hidden text-muted sm:inline-flex" />
         {amazonCart && <span className="block sm:hidden"><CartAddButton {...amazonCart} inline className="text-xs" /></span>}
         <span className="ad-pill ml-2">Ad</span>
       </td>
       <td className="hidden px-3 py-2.5 text-xs text-muted sm:table-cell">New, in stock on Amazon</td>
-      <td className="px-3 py-2.5 text-right font-semibold tabular-nums"><AmazonPrice {...amazonLive} /></td>
-      <td className="px-3 py-2.5 text-right">
+      <td className="px-2 py-2.5 sm:px-3 text-right font-semibold tabular-nums"><AmazonPrice {...amazonLive} /></td>
+      <td className="px-2 py-2.5 sm:px-3 text-right">
         <span className="inline-flex items-center justify-end gap-2">
           {amazonCart && <CartAddButton {...amazonCart} className="hidden text-muted sm:inline-flex" />}
-          <a href={goHref({ url: amazonUrl, source: "amazon", market }, productId, `${page}_pinned`)} rel="sponsored nofollow noopener" target="_blank" className="btn-amazon min-h-10 whitespace-nowrap px-3 py-1.5">
-            View deal <span aria-hidden="true">↗</span>
+          <a href={goHref({ url: amazonUrl, source: "amazon", market }, productId, `${page}_pinned`)} rel="sponsored nofollow noopener" target="_blank" className="btn-amazon min-h-10 whitespace-nowrap px-2.5 py-1.5 sm:px-3">
+            View deal <span aria-hidden="true" className="hidden sm:inline">↗</span>
           </a>
         </span>
       </td>
@@ -198,8 +198,8 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
             return (
               <Fragment key={i}>
                 <tr className={`border-t border-line ${o.inStock ? "" : "opacity-60"} ${o.source === "ebay" && pinned.includes(o) ? PIN_OUTLINE.ebay : ""}`}>
-                  <td className="px-3 py-2.5">
-                    <span className="font-medium text-ink">{sourceName(o)}</span>
+                  <td className="px-2 py-2.5 sm:px-3">
+                    <span className="font-medium text-ink [overflow-wrap:anywhere]">{sourceName(o)}</span>
                     <StoreVote url={o.url} name={sourceName(o)} className="ml-2 hidden text-muted sm:inline-flex" />
                     {/* Phones: the cart list's add button as a line under the store, where the row has no width to spare. */}
                     {o.inStock && (
@@ -216,18 +216,18 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
                     {o.shippingCents != null && <span>+{money(o.shippingCents, o.currency)} shipping</span>}
                     {o.shippingCents != null && o.shippingCents > 0 && <span className="ml-1 font-semibold text-ink">· ≈ {money(o.cents + o.shippingCents, o.currency)} total</span>}
                   </td>
-                  <td className="px-3 py-2.5 text-right font-semibold tabular-nums">
+                  <td className="px-2 py-2.5 sm:px-3 text-right font-semibold tabular-nums">
                     {money(o.cents, o.currency)}
                     {c != null && <span className="block text-xs font-normal text-muted">{o.source === "tcgplayer" ? "" : "≈ "}{money(c, cur)}</span>}
                   </td>
-                  <td className="px-3 py-2.5 text-right">
+                  <td className="px-2 py-2.5 sm:px-3 text-right">
                     {/* The cart list (components/cart, owner 2026-11-06): an in-stock store row, beside its button. */}
                     <span className="inline-flex items-center justify-end gap-2">
                     {o.inStock && (
                       <CartAddButton href={tagged(o.url, subId(o.market, `${page}_cart`, productId), { checkout: true })} productUrl={o.url} storeName={sourceName(o)} title={product ?? cartTitle ?? o.title} detail={o.printing && o.printing !== "Normal" ? o.printing : null} priceCents={o.cents} currency={o.currency} image={image} className="hidden text-muted sm:inline-flex" />
                     )}
-                    <a href={goHref(o, productId, pinned.includes(o) ? `${page}_pinned` : page, { pos, gapPct: gapOf(o) })} rel="sponsored nofollow noopener" target="_blank" className={`min-h-10 whitespace-nowrap ${o.source === "tcgplayer" && o.inStock ? "btn-tcg px-3 py-1.5" : pinned.includes(o) && o.inStock ? "btn-primary px-3 py-1.5" : o.inStock ? (below ? "btn-primary px-3 py-1.5" : "btn-soft px-3 py-1.5") : "btn-ghost px-3 py-1.5 opacity-80"}`}>
-                      {o.inStock ? "View deal" : "View"} <span aria-hidden="true">↗</span>
+                    <a href={goHref(o, productId, pinned.includes(o) ? `${page}_pinned` : page, { pos, gapPct: gapOf(o) })} rel="sponsored nofollow noopener" target="_blank" className={`min-h-10 whitespace-nowrap ${o.source === "tcgplayer" && o.inStock ? "btn-tcg px-2.5 py-1.5 sm:px-3" : pinned.includes(o) && o.inStock ? "btn-primary px-2.5 py-1.5 sm:px-3" : o.inStock ? (below ? "btn-primary px-2.5 py-1.5 sm:px-3" : "btn-soft px-2.5 py-1.5 sm:px-3") : "btn-ghost px-2.5 py-1.5 sm:px-3 opacity-80"}`}>
+                      {o.inStock ? "View deal" : "View"} <span aria-hidden="true" className="hidden sm:inline">↗</span>
                     </a>
                     </span>
                   </td>
@@ -242,10 +242,10 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
       <table className="w-full text-sm">
         <thead className="bg-raised text-left text-xs uppercase tracking-wide text-muted">
           <tr>
-            <th className="px-3 py-2">Store</th>
+            <th className="px-2 py-2 sm:px-3">Store</th>
             <th className="hidden px-3 py-2 sm:table-cell">Details</th>
-            <th className="px-3 py-2 text-right">Price</th>
-            <th className="px-3 py-2"><span className="sr-only">Buy</span></th>
+            <th className="px-2 py-2 text-right sm:px-3">Price</th>
+            <th className="px-2 py-2 sm:px-3"><span className="sr-only">Buy</span></th>
           </tr>
         </thead>
         <tbody>
@@ -254,7 +254,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
               {storeRowsBelow.map((o, i) => renderRow(o, shown.indexOf(o), i + 1, true))}
               {/* The marketplaces (owner's UX review, P1 10): labelled, under the stores, each still its own tagged row. */}
               <tr data-marketplaces className="border-t border-line bg-raised">
-                <th colSpan={4} scope="rowgroup" className="px-3 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-muted">
+                <th colSpan={4} scope="rowgroup" className="px-2.5 py-1.5 sm:px-3 text-left text-[11px] font-semibold uppercase tracking-wide text-muted">
                   Marketplaces <span className="ad-pill ml-1">Ad</span>
                 </th>
               </tr>
@@ -283,7 +283,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
       )}
       {product && !compact && (
         <div className="border-t border-line px-3 pb-3 text-muted">
-          <ReportPrice product={product} region={market} buttonClassName="btn-ghost px-3 py-1.5" stores={rows.filter((o) => o.source !== "ebay" && o.source !== "tcgplayer").map((o) => ({ name: sourceName(o), price: money(o.cents, o.currency) }))} />
+          <ReportPrice product={product} region={market} buttonClassName="btn-ghost px-2.5 py-1.5 sm:px-3" stores={rows.filter((o) => o.source !== "ebay" && o.source !== "tcgplayer").map((o) => ({ name: sourceName(o), price: money(o.cents, o.currency) }))} />
         </div>
       )}
     </div>
