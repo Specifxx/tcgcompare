@@ -20,6 +20,8 @@ name: Price freshness
 on:
   schedule:
     - cron: "23 * * * *"
+    # A second minute: GitHub dropped most of the :23 runs (24-25 Nov: 3 runs in 28 hours).
+    - cron: "53 * * * *"
   workflow_dispatch:
 
 permissions:

@@ -79,3 +79,13 @@ test("prices are timed to the build gate: the freshness job starts the import wh
   const r = src(".github/workflows/refresh-prices.yml");
   assert.match(r, /needs: gate/);
 });
+
+test("a scheduled import that would land inside the gate waits for it instead of stopping (GitHub drops hourly runs)", () => {
+  const f = src(".github/workflows/freshness.yml");
+  assert.ok((f.match(/- cron:/g) ?? []).length >= 2, "freshness runs on two minutes an hour");
+  const r = src(".github/workflows/refresh-prices.yml");
+  assert.match(r, /sleep "\$wait_s"/);
+  assert.match(r, /330 \* 60/, "waits at most 5 h 30 min");
+  const t = Number(/gate:\n(?:.*\n)*?\s+timeout-minutes: (\d+)/.exec(r)?.[1]);
+  assert.ok(t > 330 && t <= 360, "the gate job outlives the wait and stays under GitHub's 6-hour job limit");
+});

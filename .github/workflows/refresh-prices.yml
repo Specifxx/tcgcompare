@@ -25,9 +25,15 @@ jobs:
   # data commit would land inside the 12 hours after the last production build would be skipped by the gate, so it stops here,
   # unless the prices are already 12 hours old; freshness.yml starts the import once the gate is about to open. A manual or
   # freshness-started run always imports.
+  #
+  # GitHub also starts the hourly freshness.yml far less often than hourly (24-25 Nov: 3 runs in 28 hours), so a scheduled run that
+  # only stopped left the site with no import at all (25 Nov: the 04:32 UTC run stopped, nothing started one, prices 17 hours old).
+  # So a scheduled run that would land early now WAITS here until 11 hours after the last build (when freshness.yml would have
+  # started it), if that is at most 5 h 30 min away, then checks the gate again and imports. Waiting costs no build: the data
+  # commit still lands only once the gate is open.
   gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 345
     outputs:
       run: ${{ steps.age.outputs.run }}
     steps:
@@ -48,6 +54,17 @@ jobs:
           built="" built_ts=""
           read -r built built_ts <<< "$(bash scripts/last-build.sh) " || true
           lands=$(( now + 60 * 60 ))  # the quickest import (19-23 Nov) took 64 minutes
+          opens=$(( ${built_ts:-0} + 11 * 3600 ))
+          if [ "$EVENT" = "schedule" ] && [ "$age" -lt 12 ] && [ -n "${built_ts:-}" ] && [ "$lands" -lt $(( built_ts + 12 * 3600 )) ] \
+            && [ $(( opens - now )) -le $(( 330 * 60 )) ]; then
+            wait_s=$(( opens - now ))
+            echo "Prices ${age}h old; the gate opens 12 hours after the last build (${built:0:7}). Waiting $(( wait_s / 60 )) minutes, then importing."
+            sleep "$wait_s"
+            git fetch -q --depth=150 origin main && git checkout -q FETCH_HEAD
+            now=$(date -u +%s)
+            read -r built built_ts <<< "$(bash scripts/last-build.sh) " || true
+            lands=$(( now + 60 * 60 ))
+          fi
           if [ "$EVENT" = "schedule" ] && [ "$age" -lt 12 ] && [ -n "${built_ts:-}" ] && [ "$lands" -lt $(( built_ts + 12 * 3600 )) ]; then
             echo "Prices ${age}h old; the last build (${built:0:7}) was under 12 hours before this import would land, so the gate would skip it. freshness.yml starts the import when the gate opens."
             echo "run=false" >> "$GITHUB_OUTPUT"
