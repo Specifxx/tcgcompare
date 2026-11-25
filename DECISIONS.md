@@ -1799,3 +1799,24 @@ window; absolutely inside `<main>` with a sticky card, so it never covers or nar
 (CLS 0), labelled Ad, rel sponsored through /go under `gutter-tcg`, never Amazon, never on the ad-free pages (`AdRouteGate`) or for
 ad-free members. Tiles start after the block's own three. Read: gutter clicks per 100 desktop visitors; if desktop buy clicks per
 visitor fall 10%, it goes.
+
+## 2026-11-25: Best Basket as a Premium plan with shipping borrowed from the sister sites
+
+The owner (2026-11-25): Best Basket "on all the sites as premium", after users asked for it. `/tools/best-basket` (noindex, never in the sitemap) takes the shortlist's products and splits them across
+stores for the lowest total with shipping. It runs RiftCompare's solver unchanged (`lib/basket-optimize.ts`), the same port as
+DexCompare (CompareEmpire #369), MTG Compare (#278) and YGO Compare (#269), whose files these are.
+
+- **Shipping is borrowed, never guessed.** This site measures no store's postage. DexCompare and MTG Compare measure it every
+  week at each Shopify store's own checkout. A shop's postage does not depend on the game, so
+  `scripts/borrow-shipping.ts` (in `refresh-prices.yml`, never fatal) copies those measurements onto our stores. A store is
+  matched by host AND market, never by name, and only in its market's own currency. The result is written to
+  `data/shipping/borrowed.json`, which covered 924 of 1,346 stores on the first run. A store with no measurement is left out of
+  a basket and counted, never priced at zero. The ops monitor's "Best Basket shipping" check watches the file's age and
+  coverage.
+- **Rows:** in stock, from a store whose last good read (`meta.stores[key].at`) is under 48 hours old. Never a pre-order (an
+  unreleased set, the offer's `preorder` flag, or "pre-order" in the title or link). Never TCGplayer, eBay or Amazon. These are
+  Rift's rules after the Sprite Fountain report (TCGEmpire #653).
+- **Free vs Premium:** everyone gets the delivered total and the saving. The store-by-store plan (`/go` buy links, each
+  store's shipping, the one-store order) is returned by `/api/basket` only when RiftCompare's sister-premium status says the
+  token is Premium right now. It is withheld in the response, not hidden with CSS.
+- **Placement:** one link on `/cart` once the list holds two or more products. There is no pop-up.

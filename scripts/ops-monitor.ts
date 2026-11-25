@@ -55,6 +55,18 @@ async function main() {
         : { status: "fail", detail: `/card/${slugs[0]} answered HTTP ${r.status}${to ? ` → ${to}` : ""}, not a permanent redirect to its set` };
     }),
     // Twice a day, timed to the build gate (freshness.yml; owner's UX review 2026-11-23: "an alert when data is over 12 hours old").
+    // Best Basket's borrowed store shipping (scripts/borrow-shipping.ts, 2026-11-25): stale or thin means baskets leave stores out.
+    check("Best Basket shipping", async () => {
+      try {
+        const f = JSON.parse(fs.readFileSync(path.join(process.cwd(), "data/shipping/borrowed.json"), "utf8")) as { generatedAt: string; stores: Record<string, unknown> };
+        const age = (Date.now() - new Date(f.generatedAt).getTime()) / 3_600_000;
+        const n = Object.keys(f.stores).length;
+        if (age > 24 * 9) return { status: "fail", detail: `borrowed.json is ${(age / 24).toFixed(0)} days old — check the Refresh prices workflow's "Borrow measured shipping" step` };
+        return { status: age > 72 || n < SITE.stores.length / 2 ? "warn" : "ok", detail: `${n} of ${SITE.stores.length} stores measured, ${age.toFixed(0)}h old` };
+      } catch {
+        return { status: "warn", detail: "data/shipping/borrowed.json missing — Best Basket has no store shipping" };
+      }
+    }),
     check("Daily price import", async () =>
       ageH < 14 ? { status: "ok", detail: `${ageH.toFixed(1)}h old` } : { status: ageH < 20 ? "warn" : "fail", detail: `data is ${ageH.toFixed(0)}h old — check the Price freshness and Refresh prices workflows` },
     ),
