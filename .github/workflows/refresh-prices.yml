@@ -253,6 +253,12 @@ jobs:
         if: ${{ !cancelled() }}
         continue-on-error: true
         run: DEMAND_WRITE_ONLY=1 bash scripts/pull-demand.sh tcgprices data/demand.json
+      # Best Basket's store shipping (lib/borrowed-shipping.ts, 2026-11-25): DexCompare's and MTG Compare's weekly checkout
+      # measurements of the same shops, matched by host and market. Never fatal: a sister it cannot read keeps yesterday's rows.
+      - name: Borrow measured shipping
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: npx tsx scripts/borrow-shipping.ts
       - name: Commit data (this commit is the daily release)
         run: |
           set -euo pipefail
