@@ -163,18 +163,19 @@ export default function CardPage({ params }: { params: { slug: string } }) {
       <Breadcrumbs items={[(set && lineOfSet(set)) ? { name: lineOfSet(set)!.short, href: `/games/${lineOfSet(set)!.slug}` } : { name: "Sealed", href: "/sealed" }, ...(set ? [{ name: set.name, href: `/sets/${set.slug}` }] : []), { name }]} />
       {/* Sticky jump links (owner's UX review, P1 13: the page was ~9,500px tall). */}
       <JumpLinks links={[{ id: "prices", label: "Prices" }, { id: "history", label: "History" }, { id: "facts", label: "Facts" }, { id: "faq", label: "Is it worth it?" }]} />
-      <div className="grid gap-8 md:grid-cols-[minmax(0,320px)_1fr]">
-        {/* Phones: the name, price and Buy come first; the big image and the
-            details follow the prices (RiftCompare's card page, 2026-09-26). */}
-        <div className="order-2 flex flex-col gap-4 md:order-1">
+      {/* Phones: the two columns are `contents`, so their parts interleave by `order`: the name and price, the prices, the price
+          history, the price alert, the facts, the read (Fiverr usability review, 2026-11-25: "the price history should really be
+          above" the email form). From md the columns are boxes again and the orders reset. */}
+      <div className="grid gap-6 md:grid-cols-[minmax(0,320px)_1fr] md:gap-8">
+        <div className="contents md:order-1 md:flex md:flex-col md:gap-4">
           {p.image && <img src={imageAt(p.image, "400w")!} alt={`${name} ${SITE.gameShort} card`} className="hidden w-full rounded-xl md:block" width={400} height={560} />}
           {/* Price history beside the best price (P1 13): the left column on a desktop, right under the prices on a phone. */}
-          <section id="history" className="card-surface scroll-mt-28 p-4">
+          <section id="history" className="card-surface order-3 scroll-mt-28 p-4 md:order-none">
             <h2 className="mb-2 text-lg font-bold">Price history</h2>
             <PriceHistory tcg={series} lows={storeLowsOf(p)} fx={m?.fx} through={historyThrough()} days={365} />
           </section>
-          <h2 id="facts" className="sr-only scroll-mt-28">Product facts</h2>
-          <dl className="card-surface grid grid-cols-2 gap-x-3 gap-y-1.5 p-4 text-sm">
+          <h2 id="facts" className="sr-only order-5 scroll-mt-28 md:order-none">Product facts</h2>
+          <dl className="card-surface order-5 grid md:order-none grid-cols-2 gap-x-3 gap-y-1.5 p-4 text-sm">
             {set && (<><dt className="text-muted">Set</dt><dd><Link className="link" href={`/sets/${set.slug}`}>{set.name}</Link></dd></>)}
             {p.number && (<><dt className="text-muted">Number</dt><dd>{p.number}</dd></>)}
             {p.rarity && (<><dt className="text-muted">Rarity</dt><dd>{rarityHref(p.rarity) ? <Link className="link" href={rarityHref(p.rarity)!}>{p.rarity}</Link> : p.rarity}</dd></>)}
@@ -184,8 +185,8 @@ export default function CardPage({ params }: { params: { slug: string } }) {
             {Object.entries(p.attrs).slice(0, 8).map(([k, v]) => { const hubs = attrHref(k, v); return (<Fragment key={k}><dt className="text-muted">{k.replace(/([a-z])([A-Z])/g, "$1 $2")}</dt><dd>{hubs ? hubs.map((l, i) => <Fragment key={l.label}>{i > 0 ? ", " : ""}{l.href ? <Link className="link" href={l.href}>{l.label}</Link> : l.label}</Fragment>) : v}</dd></Fragment>); })}
           </dl>
         </div>
-        <div className="order-1 flex min-w-0 flex-col gap-6 md:order-2">
-          <header>
+        <div className="contents md:order-2 md:flex md:min-w-0 md:flex-col md:gap-6">
+          <header className="order-1 min-w-0 md:order-none">
             <div className="flex items-start gap-3">
               {p.image && <img src={imageAt(p.image, "200w")!} alt={name} className="w-20 shrink-0 rounded-md md:hidden" width={80} height={112} />}
               <h1 className="min-w-0 flex-1 font-display text-2xl font-bold tracking-tight md:text-3xl">{name} {p.number && <span className="text-muted">{p.number}</span>} price</h1>
@@ -199,8 +200,17 @@ export default function CardPage({ params }: { params: { slug: string } }) {
             {pack && packCents != null && (
               <p className="mt-2 text-sm text-muted">Single pack: <b className="tabular text-ink">{money(packCents)}</b> TCGplayer market · <Link className="link" href={`/card/${pack.slug}`}>compare single pack prices</Link></p>
             )}
-            <VaultOwn id={p.id} name={`${name}${p.number ? ` ${p.number}` : ""}`} href={`/card/${p.slug}`} image={p.image ? imageAt(p.image, "200w") : null} prices={lowestByMarket(e.offers)} className="mt-3" />
-            <DropShare path={`/card/${p.slug}`} name={`${name}${p.number ? ` ${p.number}` : ""}`} offers={e.offers} className="mt-2" />
+            {/* One short row of actions (Fiverr usability review, 2026-11-25: "a lot of the buttons have a lot of text"). */}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <VaultOwn id={p.id} name={`${name}${p.number ? ` ${p.number}` : ""}`} href={`/card/${p.slug}`} image={p.image ? imageAt(p.image, "200w") : null} prices={lowestByMarket(e.offers)} hint={false} />
+              <DropShare path={`/card/${p.slug}`} name={`${name}${p.number ? ` ${p.number}` : ""}`} offers={e.offers} short />
+              {/* The watch A/B's button (frozen until 2 Dec) sits in the same row; opened, its form takes the full width. */}
+              {SITE.priceAlerts && (
+                <div className="[&>button]:mt-0 has-[form]:basis-full">
+                  <WatchPrice site={SITE.key} productId={p.id} prices={lowestByMarket(e.offers)} />
+                </div>
+              )}
+            </div>
             {Object.keys(e.tcg).length > 1 && (
               <p className="mt-2 flex flex-wrap gap-2 text-xs">
                 {Object.entries(e.tcg).map(([k, v]) => (
@@ -208,15 +218,21 @@ export default function CardPage({ params }: { params: { slug: string } }) {
                 ))}
               </p>
             )}
-            {SITE.priceAlerts && <WatchPrice site={SITE.key} productId={p.id} prices={lowestByMarket(e.offers)} />}
             {SITE.priceAlerts && <SeenPrice productId={p.id} prices={lowestByMarket(e.offers)} />}
           </header>
-          <section id="prices" className="scroll-mt-28">
+          <section id="prices" className="order-2 min-w-0 scroll-mt-28 md:order-none">
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4">
               <h2 className="text-lg font-bold">Compare prices</h2>
               <CheckedAgo at={m?.updatedAt} />
             </div>
             <PriceTable ebayQuery={ebayQuery} tcgUrl={p.tcgUrl || undefined} offers={e.offers} fx={m?.fx ?? { USD: 1 }} productId={p.id} page="card" amazon={amazon} image={p.image ? imageAt(p.image, "200w") : null} product={`${name}${p.number ? ` ${p.number}` : ""}`} marketplacesBelow checked={checked} />
+            {/* Fiverr usability review, 2026-11-25: "is this looking at all the pricing, or only the sites you get a commission from?" */}
+            <p className="mt-2 text-xs text-muted">
+              Every store we track is listed, whether it pays us or not, in price order. <Link className="link" href="/methodology">How we compare</Link>
+            </p>
+          </section>
+          {/* The alert and the promos: after the price history on a phone, under the prices on a desktop. */}
+          <div className="order-4 min-w-0 md:order-none">
             {SITE.priceAlerts && <PriceAlert site={SITE.key} productId={p.id} prices={lowestByMarket(e.offers)} />}
             {/* TCGplayer's Cyber Weekend banner (lib/tcgplayer-cyber.ts): under the price table, 22 Nov to 1 Dec, labelled Ad. */}
             <TcgplayerCyberBanner
@@ -231,16 +247,16 @@ export default function CardPage({ params }: { params: { slug: string } }) {
             <DiscordCta href={SITE.discordInvite} className="mt-4" />
             {/* Page budget rule 4 (one promo per page; Noor, 22 Nov): the extension card waits until the Cyber banner has gone. */}
             {cyberBannerState(Date.now()) === "off" && <ExtensionCta className="mt-4" from="card" />}
-          </section>
-          <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CARD} />
-          <section id="faq" className="prose-site max-w-none scroll-mt-28 text-sm">
+          </div>
+          <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CARD} className="order-6 md:order-none" />
+          <section id="faq" className="prose-site order-6 max-w-none scroll-mt-28 text-sm md:order-none">
             <h2>Is {name} worth it?</h2>
             {/* Written from this product's own prices, stock and history (lib/buyer-read.ts, 2026-11-23 SEO quality pass). */}
             {read.map((t, k) => <p key={k}>{t}</p>)}
             <p className="text-muted">Prices from {SITE.stores.length} stores and TCGplayer are checked twice a day.</p>
           </section>
           {/* Which RiftCompare tool to build here next: a one-tap demand test, low on the page, never by a price (2026-11-18). */}
-          <ToolInterest page="card" />
+          <ToolInterest page="card" className="order-6 md:order-none" />
         </div>
       </div>
       {related.length > 0 && (

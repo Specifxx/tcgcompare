@@ -19,7 +19,7 @@ export default function About() {
       <p>A program reads every price, from each store&rsquo;s own catalogue and TCGplayer, and a listing is only taken when it can be tied to one exact product; stores that look too cheap to be real are left out. AI tools help us build the site and draft guides, and a person reads every guide before it goes live.</p>
       {SITE.disclaimer && <p>{SITE.disclaimer}</p>}
       <h2>How we make money</h2>
-      <p>Some buy links are affiliate links (eBay Partner Network, TCGplayer, Amazon): if you buy, the store may pay us a small commission at no cost to you. Amazon, eBay and TCGplayer, our affiliate partners, head each price table whatever their price. No row is marked as the cheapest. The stores below them are ranked by price only — a store that pays us nothing ranks exactly where its price puts it.</p>
+      <p>Some buy links are affiliate links (eBay Partner Network, TCGplayer, Amazon): if you buy, the store may pay us a small commission at no cost to you. Every store we track is listed, whether it pays us or not, and the stores come first, ranked by price only: a store that pays us nothing ranks exactly where its price puts it. Amazon, eBay and TCGplayer, our affiliate partners, sit in their own labelled block below the stores. No row is marked as the cheapest.</p>
       <h2>What it costs</h2>
       <p>Hosting, the twice-daily price runs, domains and tools are shared across our sites and cost about A$790 a month in all (our own books, 30 days to 15 November 2026). The affiliate commission above pays that bill. No store pays to be listed or to rank.</p>
       <h2>Contact</h2>

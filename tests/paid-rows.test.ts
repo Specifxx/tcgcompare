@@ -27,7 +27,7 @@ test("the dock, the inline block and the photo strip carry eBay and TCGplayer on
 
 test("TCGplayer's pinned button is blue (owner, 2026-11-12)", () => {
   const src = readFileSync(new URL("../src/components/PriceTable.tsx", import.meta.url), "utf8");
-  assert.match(src, /"btn-tcg px-3 py-1\.5"/);
+  assert.match(src, /"btn-tcg px-2\.5 py-1\.5 sm:px-3"/);
 });
 
 test("TCGplayer's converted price carries no ≈ mark (owner, 2026-11-13)", () => {

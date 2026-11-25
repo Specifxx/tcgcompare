@@ -22,7 +22,7 @@ export default function Methodology() {
       <h2>Who is behind it</h2>
       <p>{SITE.name} is edited by Bill, who owns the site, chooses which stores are listed and reviews how matching and ranking rules change. Questions and corrections go to <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a> or <a href="/contact">the contact page</a>. This page was last reviewed on 17 November 2026.</p>
       <h2>How we make money</h2>
-      <p>Some buy links are affiliate links (eBay Partner Network, TCGplayer, Amazon). If you buy through one the retailer may pay us a commission at no cost to you. Commission never decides the order of the stores: they are ranked by price alone, and an affiliate row is always labelled and never called the cheapest. {SITE.name} is not affiliated with, endorsed by or sponsored by any game publisher.</p>
+      <p>Some buy links are affiliate links (eBay Partner Network, TCGplayer, Amazon). If you buy through one the retailer may pay us a commission at no cost to you. Most of the stores we list pay us nothing, and we list every store we track whether it pays us or not. Commission never decides the order of the stores: they are ranked by price alone, and an affiliate row is always labelled and never called the cheapest. {SITE.name} is not affiliated with, endorsed by or sponsored by any game publisher.</p>
     </StaticPage>
   );
 }
