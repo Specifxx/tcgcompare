@@ -23,12 +23,7 @@ export function VaultAddButton({ className = "", hint = true, ...item }: Omit<Va
     if (premium.status === "member" || premium.status === "free") startVaultSync();
   }, [premium.status]);
   const add = () => {
-    // My collection needs an account (owner, 2026-11-19): signed out, the tap goes to sign-in and comes back to this page.
-    if (premium.status === "out") {
-      track("vault_signin", {});
-      location.href = `/account?src=own&next=${encodeURIComponent(location.pathname)}`;
-      return;
-    }
+    // Try first, sign in to sync (owner, 2026-11-26): signed out, the item is kept in this browser; signing in keeps it everywhere.
     writeVault(addItem(readVault(), item));
     track("vault_add", { market: item.market, value: item.addedCents / 100, currency: item.currency });
   };
@@ -37,10 +32,10 @@ export function VaultAddButton({ className = "", hint = true, ...item }: Omit<Va
   if (!qty)
     return (
       <div className={`ce-vault-add ${className}`}>
-        <button type="button" className="ce-vault-btn" onClick={add} title="Track what your collection is worth. Free with an account.">
+        <button type="button" className="ce-vault-btn" onClick={add} title="Track what your collection is worth. Free, no sign-up needed.">
           <span aria-hidden="true">+</span> I own this
         </button>
-        {hint && <span className="ce-vault-hint">Track what your collection is worth. Free with an account.</span>}
+        {hint && <span className="ce-vault-hint">Track what your collection is worth. Free, no sign-up needed.</span>}
       </div>
     );
   return (

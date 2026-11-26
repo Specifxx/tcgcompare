@@ -20,6 +20,7 @@ import {
   shareText,
   sinceAdded,
   totalsByMarket,
+  track,
   valueItems,
   writeDays,
   writeVault,
@@ -155,22 +156,16 @@ function CostEdit({ cents, currency, onSave }: { cents: number; currency: string
   );
 }
 
-/** Signed out: what the collection does, and the way in. */
-function CollectionSignIn() {
+/** Signed out: the list works here at once, kept in this browser; signing in keeps it on every device. A line, never a prompt. */
+function GuestNote() {
   return (
-    <div className="ce-vault-empty">
-      <p>
-        <strong>Sign in to start your collection.</strong> Add every box, tin and single card you own (any game), or import your list from
-        another app, and see what it is worth today and how much it has made or lost against what you paid.
-      </p>
-      <p className="ce-vault-muted">
-        A free account, no password: Google, Discord or an emailed link. Your collection follows you to every device, and you can get its value by
-        email once a week. Nothing to install: add it to your home screen and it opens like an app. Premium adds a year of value history and a spreadsheet export, 14 days free.
-      </p>
-      <a className="ce-vault-btn" href="/account?src=collection&next=/collection">
-        Sign in or create a free account
-      </a>
-    </div>
+    <p className="ce-vault-guest">
+      Kept in this browser for now.{" "}
+      <a href="/account?src=collection&next=/collection" onClick={() => track("vault_signin", { from: "collection" })}>
+        Sign in free
+      </a>{" "}
+      to keep it on every device and get its value by email once a week.
+    </p>
   );
 }
 
@@ -218,10 +213,10 @@ export function VaultView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file, member, cards.ready]);
 
-  // My collection needs an account (owner, 2026-11-19: "you can only use my collection if you are signed in"). The list itself still
-  // lives in this browser; signing in is what opens it.
-  if (premium.status === "loading" || items == null) return <p className="ce-vault-muted">Loading your collection…</p>;
-  if (premium.status === "out") return <CollectionSignIn />;
+  // Try first, sign in to sync (owner, 2026-11-26, reversing 2026-11-19's sign-in gate): signed out, the list works at once and
+  // lives in this browser; signing in merges it into the account (a union the first time, lib/vault-sync.ts).
+  const guest = premium.status === "out";
+  if (items == null) return <p className="ce-vault-muted">Loading your collection…</p>;
   if (!items.length)
     return (
       <div className="ce-vault-empty">
@@ -229,7 +224,7 @@ export function VaultView() {
           <strong>Your collection is empty.</strong> Add single cards below, search a sealed product, or import the list you keep in another app.
           This page then shows what everything is worth today, and what it has made or lost against what you paid.
         </p>
-        <p className="ce-vault-muted">It is saved to your account, so it follows you to your phone and computer.</p>
+        {guest ? <GuestNote /> : <p className="ce-vault-muted">It is saved to your account, so it follows you to your phone and computer.</p>}
         <VaultCards />
         <VaultSearch file={file} />
         <VaultImport />
@@ -267,6 +262,7 @@ export function VaultView() {
 
   return (
     <div className="ce-vault">
+      {guest && <GuestNote />}
       {(failed || cards.failed) && <p className="ce-vault-muted">Some of today&apos;s prices didn&apos;t load. Your list is safe; try again in a moment.</p>}
       <VaultInstall items={items.length} />
       {file &&

@@ -23,7 +23,8 @@ function useSyncStatus(): SyncStatus {
 export function VaultSyncBadge() {
   const premium = usePremium();
   const s = useSyncStatus();
-  if (premium.status === "loading" || premium.status === "out") return <span className="ce-vault-sync">Sign in to save it to your account.</span>;
+  // Signed out, the page's own guest line (VaultView) says where the list is kept and links sign-in: one line, not two.
+  if (premium.status === "loading" || premium.status === "out") return null;
   const [cls, text] =
     s.phase === "offline"
       ? ["is-warn", "Saved on this device. It will reach your account when you're back online."]
