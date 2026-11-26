@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-25T16:31:13.279Z",
+ "generatedAt": "2026-11-26T05:00:51.147Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -99,9 +99,9 @@
    "region": "US",
    "title": "Chromatic Ascension Booster Box",
    "url": "https://tcgprices.app/preorders/chromatic-ascension",
-   "cents": 19999,
+   "cents": 12000,
    "currency": "USD",
-   "store": "Holo Horse Games LLC",
+   "store": "Dark Vassal Gaming",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/710675_200w.jpg",
    "releaseDate": "2026-11-27"
   },
@@ -131,6 +131,18 @@
    "kind": "preorder",
    "cluster": "cards",
    "region": "US",
+   "title": "Glorious Victors Booster Box",
+   "url": "https://tcgprices.app/preorders/glorious-victors",
+   "cents": 5999,
+   "currency": "USD",
+   "store": "Double Box Games",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/713238_200w.jpg",
+   "releaseDate": "2026-12-04"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
    "title": "Gift of the Rift Bundle Bundle",
    "url": "https://tcgprices.app/preorders/gift-of-the-rift-bundle",
    "cents": 20000,
@@ -149,17 +161,6 @@
    "currency": "USD",
    "store": "Topspot Cards",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/723027_200w.jpg",
-   "releaseDate": "2026-12-11"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
-   "title": "Ignition of X Booster Box",
-   "url": "https://tcgprices.app/preorders/ignition-of-x",
-   "cents": 9499,
-   "currency": "USD",
-   "store": "Many Realms",
    "releaseDate": "2026-12-11"
   }
  ]
