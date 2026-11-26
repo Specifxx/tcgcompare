@@ -1912,3 +1912,14 @@ every card's tally after render (riftcompare.com/api/deal-votes, CDN six hours) 
 that drop's fresh count. No page gains a function or a build step. Votes order nothing: no price, row, badge, feed or
 alert reads them. GA gets `drop_view` (a card 60% in view, once a page view), `drop_vote` and `drop_click`, for votes per
 100 drop views and the click-through.
+
+## 2026-11-26: AI shadow match runs as a half-price batch, and Haiku 5.5 is trialled beside Sonnet
+
+Claude Haiku 5.5 costs US$0.10 / US$0.50 per million tokens, a twentieth of Sonnet 5.5 (US$2 / US$10), and Message
+Batches halve either. `ai-shadow-match.yml` takes `batch` (one Message Batch per run, admitted only while a cautious cost
+estimate fits `max_usd`; cancelled after 45 minutes, unanswered titles asked next run; a failed batch fails the run and
+counts its reserve as spent) and `model` (Sonnet 5.5 or Haiku 5.5 only). Sonnet stays the live model: only it writes
+`cache.json`, the file `pickByAi` reads. Haiku is a TRIAL: it writes `cache-claude-haiku-5-5.json` and a summary whose
+`vsReference` counts agreement with Sonnet on the same titles, and a trial never publishes without the live cache on the
+branch. Haiku goes live only if it agrees with Sonnet's guarded matches as well as Sonnet's own 99.5% pilot precision
+(scripts/ai-title-pilot.ts); a wrong match is worse than none.

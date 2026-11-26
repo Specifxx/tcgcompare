@@ -55,6 +55,9 @@ jobs:
           MODEL: ${{ inputs.model }}
         run: |
           mkdir -p out
+          case "$MODEL" in claude-sonnet-5-5|claude-haiku-5-5) ;; *) echo "model must be claude-sonnet-5-5 or claude-haiku-5-5 (add a price in scripts/ai-shadow-match.ts first)"; exit 1 ;; esac
+          # A trial compares against the live cache and must never publish without it.
+          if [ "$MODEL" != "claude-sonnet-5-5" ] && [ ! -f shadow/cache.json ]; then echo "trial needs the live shadow/cache.json (ai-shadow checkout failed?)"; exit 1; fi
           # The live cache (cache.json, read by the import) belongs to Sonnet 5.5. Any other model is a trial with its own file.
           if [ "$MODEL" = "claude-sonnet-5-5" ]; then cache=cache.json; summary=summary.json; ref=""; else cache="cache-$MODEL.json"; summary="summary-$MODEL.json"; ref="$GITHUB_WORKSPACE/shadow/cache.json"; fi
           echo "cache=$cache" >> "$GITHUB_OUTPUT"; echo "summary=$summary" >> "$GITHUB_OUTPUT"; echo "ref=$ref" >> "$GITHUB_OUTPUT"
@@ -69,6 +72,11 @@ jobs:
           AI_SHADOW_REFERENCE: ${{ steps.names.outputs.ref }}
           AI_SHADOW_CACHE: ${{ github.workspace }}/out/ai-shadow-cache.json
       - name: Publish the cache to the ai-shadow branch
+        # Also after a failed batch: the script saves whatever it read before failing the run.
+        if: ${{ !cancelled() && steps.names.outcome == 'success' }}
+        env:
+          CACHE_NAME: ${{ steps.names.outputs.cache }}
+          SUMMARY_NAME: ${{ steps.names.outputs.summary }}
         run: |
           set -e
           [ -f out/ai-shadow-cache.json ] || { echo "no cache written (no key or no crawl): nothing to publish"; exit 0; }
@@ -77,8 +85,10 @@ jobs:
           git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
           # Keep every other file on the branch (the live cache during a trial, the trial files during a live run).
           cp ../shadow/*.json . 2>/dev/null || true
-          cp ../out/ai-shadow-cache.json "${{ steps.names.outputs.cache }}"
-          cp ../out/ai-shadow-summary.json "${{ steps.names.outputs.summary }}"
+          cp ../out/ai-shadow-cache.json "$CACHE_NAME"
+          if [ -f ../out/ai-shadow-summary.json ]; then cp ../out/ai-shadow-summary.json "$SUMMARY_NAME"; fi
+          # Never publish a branch without the live cache the import reads, unless this run wrote it.
+          [ -f cache.json ] || { echo "cache.json missing: not publishing"; exit 1; }
           git config user.name "ai-shadow"
           git config user.email "ai-shadow@users.noreply.github.com"
           git add *.json

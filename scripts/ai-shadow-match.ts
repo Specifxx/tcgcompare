@@ -152,9 +152,9 @@ async function ask(l: CrawlListing, cands: Prod[]): Promise<Answer | "budget" | 
   return readReply((await res.json()) as Reply, cands);
 }
 
-/** Upper bound of one question's cost, so a batch never starts past the ceiling (about 4 characters a token). */
+/** Cautious estimate of one question's cost, so a batch never starts past the ceiling (counts 1 token per 2 characters). */
 function worstCaseUsd(l: CrawlListing, cands: Prod[]): number {
-  const inTok = Math.ceil(promptFor(l, cands).length / 3) + 20;
+  const inTok = Math.ceil(promptFor(l, cands).length / 2) + 20;
   return ((inTok * PRICE[MODEL].in + 80 * PRICE[MODEL].out) / 1e6) * RATE;
 }
 
@@ -165,7 +165,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * If the batch has not ended within BATCH_MINUTES it is cancelled (unprocessed requests are not billed) and whatever
  * finished is still read; titles without an answer stay undecided and are asked next run.
  */
-async function askBatch(items: { key: string; l: CrawlListing; cands: Prod[] }[]): Promise<{ answers: Map<string, Answer | "error">; admitted: number }> {
+async function askBatch(items: { key: string; l: CrawlListing; cands: Prod[] }[]): Promise<{ answers: Map<string, Answer | "error">; admitted: number; failed?: string }> {
   const answers = new Map<string, Answer | "error">();
   const admitted: typeof items = [];
   let reserve = 0;
@@ -183,7 +183,7 @@ async function askBatch(items: { key: string; l: CrawlListing; cands: Prod[] }[]
     body: JSON.stringify({ requests: [...byCustom].map(([custom_id, it]) => ({ custom_id, params: params(it.l, it.cands) })) }),
     signal: AbortSignal.timeout(120_000),
   }).catch(() => null);
-  if (!create || !create.ok) { console.log(`[ai-shadow] batch create failed: HTTP ${create?.status ?? "none"}`); return { answers, admitted: 0 }; }
+  if (!create || !create.ok) return { answers, admitted: 0, failed: `batch create HTTP ${create?.status ?? "none"}` };
   const batch = (await create.json()) as { id: string };
   console.log(`[ai-shadow] batch ${batch.id}: ${admitted.length} questions, worst case US$${reserve.toFixed(4)}`);
   const deadline = Date.now() + BATCH_MINUTES * 60_000;
@@ -199,11 +199,16 @@ async function askBatch(items: { key: string; l: CrawlListing; cands: Prod[] }[]
       console.log(`[ai-shadow] batch not done after ${BATCH_MINUTES} min: cancelling, unanswered titles wait for the next run`);
       await fetch(`${API}/messages/batches/${batch.id}/cancel`, { method: "POST", headers: headers(), signal: AbortSignal.timeout(30_000) }).catch(() => null);
     }
-    if (cancelled && Date.now() > deadline + 10 * 60_000) { console.log("[ai-shadow] batch did not end after cancel: reading nothing"); return { answers, admitted: admitted.length }; }
+    if (cancelled && Date.now() > deadline + 10 * 60_000) { spent += reserve; return { answers, admitted: admitted.length, failed: `batch ${batch.id} did not end after cancel (reserve counted as spent)` }; }
   }
-  if (!status.results_url) return { answers, admitted: admitted.length };
-  const res = await fetch(status.results_url, { headers: headers(), signal: AbortSignal.timeout(120_000) }).catch(() => null);
-  if (!res || !res.ok) { console.log(`[ai-shadow] batch results failed: HTTP ${res?.status ?? "none"}`); return { answers, admitted: admitted.length }; }
+  if (!status.results_url) return { answers, admitted: admitted.length, failed: `batch ${batch.id} ended without results` };
+  let res: Response | null = null;
+  for (let attempt = 0; attempt < 4 && !res?.ok; attempt++) {
+    if (attempt) await sleep(15_000 * attempt);
+    res = await fetch(status.results_url, { headers: headers(), signal: AbortSignal.timeout(120_000) }).catch(() => null);
+  }
+  // Paid but unread: count the reserve so the summary never shows a free run, and name the batch so its results can be fetched by hand.
+  if (!res || !res.ok) { spent += reserve; return { answers, admitted: admitted.length, failed: `batch ${batch.id} results HTTP ${res?.status ?? "none"} after 4 tries (reserve counted as spent)` }; }
   for (const line of (await res.text()).split("\n")) {
     if (!line.trim()) continue;
     let row: { custom_id: string; result: { type: string; message?: Reply } };
@@ -238,6 +243,7 @@ async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>) {
 }
 
 async function main() {
+  if (!PRICE[MODEL]) { console.error(`[ai-shadow] no price for model "${MODEL}": add it to PRICE before asking it anything`); process.exit(1); }
   if (!process.env.AI_TEAM_ANTHROPIC_KEY) { console.log("[ai-shadow] AI_TEAM_ANTHROPIC_KEY is not set: nothing to do"); return; }
   const runPath = path.join(ROOT, "data/crawl/listings.json");
   if (!fs.existsSync(runPath)) { console.log("[ai-shadow] data/crawl/listings.json missing: run scripts/crawl-uncovered.ts first"); return; }
@@ -270,6 +276,7 @@ async function main() {
   console.log(`[ai-shadow] ${seen.size} id-less listings, ${reused} already decided, ${todo.length} to ask (${MODEL}${BATCH ? ", batch" : ""}, ceiling US$${MAX_USD})`);
 
   let asked = 0, matched = 0, guarded = 0, stopped = false;
+  let batchFailed: string | undefined;
   const record = (key: string, l: CrawlListing, r: Answer) => {
     asked++;
     if (r.id === null) { cache[key] = { id: null, at: new Date().toISOString(), model: MODEL, why: r.why }; return; }
@@ -285,8 +292,10 @@ async function main() {
     withCands.push({ key, l, cands });
   }
   if (BATCH) {
-    const { answers, admitted } = await askBatch(withCands);
-    if (admitted < withCands.length) stopped = true;
+    const { answers, admitted, failed } = await askBatch(withCands);
+    batchFailed = failed;
+    if (failed) console.log(`[ai-shadow] ${failed}`);
+    else if (admitted < withCands.length) stopped = true;
     for (const it of withCands) {
       const r = answers.get(it.key);
       if (r && r !== "error") record(it.key, it.l, r);
@@ -306,11 +315,13 @@ async function main() {
   if (REFERENCE) {
     try { vsReference = compare(cache, JSON.parse(fs.readFileSync(REFERENCE, "utf8"))); } catch { console.log("[ai-shadow] reference cache unreadable: no comparison"); }
   }
-  const summary = { at: new Date().toISOString(), model: MODEL, batch: BATCH, idLess: seen.size, reused, asked, matched, passedGuards: guarded, stoppedAtCeiling: stopped, calls, spentUsd: Number(spent.toFixed(4)), cacheEntries: Object.keys(cache).length, vsReference };
+  const summary = { at: new Date().toISOString(), model: MODEL, batch: BATCH, idLess: seen.size, reused, asked, matched, passedGuards: guarded, stoppedAtCeiling: stopped, batchFailed, calls, spentUsd: Number(spent.toFixed(4)), cacheEntries: Object.keys(cache).length, vsReference };
   const summaryPath = process.env.AI_SHADOW_SUMMARY ?? path.join(ROOT, "out/ai-shadow-summary.json");
   fs.mkdirSync(path.dirname(summaryPath), { recursive: true });
   fs.writeFileSync(summaryPath, JSON.stringify(summary, null, 2));
   console.log("[ai-shadow] " + JSON.stringify(summary));
+  // A failed batch still saves what it could (above), then fails the run so it is seen.
+  if (batchFailed) process.exit(1);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
