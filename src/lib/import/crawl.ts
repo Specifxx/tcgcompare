@@ -14,9 +14,9 @@
 // against that game alone, either agrees or says nothing. The matcher only ever refuses; it never supplies an id.
 //
 // Everything here is pure: tests/crawl.test.ts pins it with fixtures.
-import type { GameLine, Market, Meta, Offer, Product, StoreConfig } from "@/lib/site-types";
+import type { GameLine, Market, Meta, Offer, Product, SetInfo, StoreConfig } from "@/lib/site-types";
 import { CURRENCY } from "@/lib/site-types";
-import { handleOf, isForeign, isMulti, isPreorder, isUnfitListing, matchSealed, type MatchIndex } from "./match";
+import { buildIndex, handleOf, isForeign, isMulti, isPreorder, isUnfitListing, matchSealed, type IndexOptions, type MatchIndex, type NumberStyle } from "./match";
 import { sealedTypeOf } from "./tcgcsv";
 import { launchReferenceCents } from "./sanity";
 import { tokens } from "@/lib/slug";
@@ -211,6 +211,18 @@ export function toListing(p: ShopifyListing, base: string, lines: string[]): Cra
 }
 
 // ── Which product, if any ───────────────────────────────────────────────────
+
+/**
+ * The store matcher's index of ONE game's products, as the crawl reads it. TCGplayer puts a release code in front of
+ * most set names of some games ("UE25BT: My Hero Academia Special Booster", "DZ-LBT02: Lyrical Monasterio Season of
+ * Wonders": every Union Arena, Cardfight!! Vanguard and Shadowverse: Evolve set), and the set's name is a set of words
+ * every title must carry, so a shop title that does not spell the code could never match. The code is read as one
+ * more code of the set instead (IndexOptions.stripSetCodes, as the Amazon matcher does since 2026-11-14): a title that
+ * names it still lands on that set, and one that names another set's code is still refused. DECISIONS.md 2026-11-26.
+ */
+export function crawlIndex(products: Product[], sets: SetInfo[], style: NumberStyle, opts: IndexOptions = {}): MatchIndex {
+  return buildIndex(products, sets, style, { ...opts, stripSetCodes: true });
+}
 
 export interface PickContext {
   /** Every catalogue product (all games), by id. */
