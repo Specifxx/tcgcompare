@@ -1912,3 +1912,21 @@ every card's tally after render (riftcompare.com/api/deal-votes, CDN six hours) 
 that drop's fresh count. No page gains a function or a build step. Votes order nothing: no price, row, badge, feed or
 alert reads them. GA gets `drop_view` (a card 60% in view, once a page view), `drop_vote` and `drop_click`, for votes per
 100 drop views and the click-through.
+
+## 2026-11-26 — My collection follows a signed-in member, with an opt-in weekly value email
+
+Owner, 2026-11-26 (move 5 of the deal-site study: a sealed stash tracker with a weekly "your stash moved" email; "designed in a very, very
+nice way … tested"). The list still lives in the browser (`ce_vault_v1`) and every page still values it from `/prices.json`; for a
+signed-in member it is now also kept with their account on RiftCompare (`/api/sister-premium/stash`, TCGEmpire DECISIONS.md, same day).
+
+- `lib/vault-sync.ts` syncs once on `/collection` and on a product page, then 1.2 s after any change, when the tab comes back and when
+  the connection returns; one sync at a time. It is a three-way merge against the last list both sides agreed on, and every write
+  names the server's revision (a stale one is refused and merged again): an item added on the phone and one removed on the laptop both
+  survive, a quantity changed on both keeps the larger, never the sum. A browser that last synced another account takes the new
+  account's list and never copies the old one into it. `tests/vault-sync.test.ts`.
+- The weekly value email is a switch on `/collection` (`VaultAccount.tsx`), off until the member turns it on, to the account's own
+  address. It is a control on the page, never a prompt (the one-prompt-per-visit rule is untouched). The email links only to this site.
+- The page: a sync line under the title, a hero card with the total, change pills, a filled value line (members), "Items / Up most /
+  Not counted" and the share and spreadsheet buttons together; rows on a grid that keeps name, value and quantity tidy at 360 px; the
+  backup file folded away now that the account carries the list between devices. Privacy page updated.
+

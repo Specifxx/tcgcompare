@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { VaultView } from "@/components/vault/VaultView";
+import { VaultSyncBadge } from "@/components/vault/VaultAccount";
 import { SITE } from "@/site.config";
 
-// MY COLLECTION (competitor scan, 2026-11-08; src/lib/vault.ts). The list lives in the visitor's browser, so this
-// page is the same static shell for everyone: no session, no database, nothing cached per user.
+// MY COLLECTION (competitor scan, 2026-11-08; src/lib/vault.ts). The list lives in the visitor's browser (and, signed in, with
+// their account through the browser: lib/vault-sync.ts), so this page is the same static shell for everyone: no session, no
+// database, nothing cached per user.
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
@@ -18,7 +20,10 @@ export default function CollectionPage() {
   return (
     <div className="mx-auto w-full max-w-3xl py-6 sm:py-10">
       <h1 className="text-2xl font-bold sm:text-3xl">My collection</h1>
-      <p className="mt-2 text-sm opacity-75">What everything you own is worth at today&apos;s store prices. Saved in this browser only.</p>
+      <p className="mt-2 text-sm opacity-75">What everything you own is worth at today&apos;s store prices.</p>
+      <p className="mt-2">
+        <VaultSyncBadge />
+      </p>
       <VaultView />
     </div>
   );

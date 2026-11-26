@@ -52,3 +52,72 @@
 .ce-vault-hits button { display: block; width: 100%; text-align: left; padding: 0.6rem 0.8rem; border: 0; background: transparent; color: inherit; font: inherit; font-size: 0.875rem; cursor: pointer; }
 .ce-vault-hits button:hover { background: color-mix(in srgb, var(--cart-accent) 10%, transparent); }
 :where(.ce-vault-backup) { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* ── 2026-11-26: the collection page's polish (sync line, hero card, weekly email switch, rows that sit on a phone) ───── */
+.ce-vault-sync { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.8rem; opacity: 0.85; }
+.ce-vault-dot { width: 0.5rem; height: 0.5rem; border-radius: 999px; background: color-mix(in srgb, currentColor 45%, transparent); flex: none; }
+.ce-vault-sync.is-ok .ce-vault-dot { background: #16a34a; box-shadow: 0 0 0 3px color-mix(in srgb, #16a34a 22%, transparent); }
+.ce-vault-sync.is-warn .ce-vault-dot { background: #d97706; }
+.ce-vault-sync.is-busy .ce-vault-dot { background: var(--cart-accent); animation: ce-vault-pulse 1.2s ease-in-out infinite; }
+@keyframes ce-vault-pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .ce-vault-sync.is-busy .ce-vault-dot { animation: none; } }
+
+.ce-vault-total { position: relative; overflow: hidden; grid-template-columns: minmax(0, 1fr); justify-items: stretch; gap: 0.6rem; padding: 1.4rem 1.4rem 1.2rem;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--cart-accent) 13%, transparent), color-mix(in srgb, var(--cart-accent) 3%, transparent) 60%); }
+.ce-vault-change.is-pill { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.8rem;
+  background: color-mix(in srgb, currentColor 12%, transparent); }
+.ce-vault-spark { width: 100%; height: 4.5rem; margin-top: 0.25rem; }
+.ce-vault-spark.is-up { color: #16a34a; }
+.ce-vault-spark.is-down { color: #dc2626; }
+.ce-vault-stats { display: flex; flex-wrap: wrap; gap: 0.75rem 1.75rem; margin: 0.25rem 0 0; width: 100%; padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.ce-vault-stats div { min-width: 0; }
+.ce-vault-stats dt { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.6; }
+.ce-vault-stats div { max-width: 100%; }
+.ce-vault-stats dd { display: flex; align-items: baseline; gap: 0.4rem; margin: 0.1rem 0 0; font-size: 0.9rem; font-weight: 700; max-width: 26rem; }
+.ce-vault-stats dd a { color: inherit; text-decoration: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ce-vault-stats dd .ce-vault-change { flex: none; }
+.ce-vault-big, .ce-vault-label, .ce-vault-moves, .ce-vault-actions { justify-self: start; }
+.ce-vault-stats dd a:hover { text-decoration: underline; }
+.ce-vault-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem; }
+.ce-vault-btn.is-primary { background: var(--cart-accent); border-color: var(--cart-accent); color: var(--cart-on-accent); }
+.ce-vault-btn.is-primary:hover { color: var(--cart-on-accent); filter: brightness(1.08); }
+
+.ce-vault-weekly { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.9rem; padding: 1rem 1.25rem; border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent); transition: border-color 0.2s, background-color 0.2s; }
+.ce-vault-weekly.is-on { border-color: color-mix(in srgb, var(--cart-accent) 55%, transparent); background: color-mix(in srgb, var(--cart-accent) 6%, transparent); }
+.ce-vault-weekly-icon { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; color: var(--cart-accent);
+  background: color-mix(in srgb, var(--cart-accent) 14%, transparent); }
+.ce-vault-weekly-body { min-width: 0; }
+.ce-vault-weekly h2 { margin: 0; font-size: 0.95rem; font-weight: 800; }
+.ce-vault-weekly p { margin: 0.15rem 0 0; font-size: 0.85rem; line-height: 1.45; }
+.ce-vault-error { color: #dc2626; font-weight: 700; }
+.ce-vault-switch { position: relative; width: 3rem; height: 1.75rem; border-radius: 999px; border: 0; padding: 0; cursor: pointer; flex: none;
+  background: color-mix(in srgb, currentColor 22%, transparent); transition: background-color 0.2s; }
+.ce-vault-switch[aria-checked="true"] { background: var(--cart-accent); }
+.ce-vault-switch:disabled { cursor: progress; opacity: 0.6; }
+.ce-vault-switch:focus-visible { outline: 2px solid var(--cart-accent); outline-offset: 3px; }
+.ce-vault-knob { position: absolute; top: 0.2rem; left: 0.2rem; width: 1.35rem; height: 1.35rem; border-radius: 999px; background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); transition: transform 0.2s cubic-bezier(.3,.7,.4,1); }
+.ce-vault-switch[aria-checked="true"] .ce-vault-knob { transform: translateX(1.25rem); }
+@media (prefers-reduced-motion: reduce) { .ce-vault-knob, .ce-vault-switch, .ce-vault-weekly { transition: none; } }
+
+/* Rows: image, name and value on one line; quantity under the value on a phone, beside it from 640px. */
+.ce-vault-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; grid-template-areas: "img name price" "img meta qty"; align-items: center; gap: 0.25rem 0.85rem; }
+.ce-vault-row > img, .ce-vault-row > .ce-vault-ph { grid-area: img; align-self: start; }
+.ce-vault-row .ce-vault-name { grid-area: name / name / meta / name; }
+.ce-vault-row .ce-vault-price { grid-area: price; }
+.ce-vault-row .ce-vault-qty { grid-area: qty; justify-self: end; }
+.ce-vault-row .ce-vault-name a { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
+.ce-vault-row:hover { background: color-mix(in srgb, currentColor 3%, transparent); }
+@media (min-width: 640px) {
+  .ce-vault-row { grid-template-columns: 56px minmax(0, 1fr) auto auto; grid-template-areas: "img name price qty"; gap: 0.75rem 1rem; }
+  .ce-vault-row .ce-vault-name { grid-area: name; }
+  .ce-vault-row > img, .ce-vault-row > .ce-vault-ph { align-self: center; }
+}
+
+.ce-vault-details summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+.ce-vault-details summary::-webkit-details-marker { display: none; }
+.ce-vault-details summary::after { content: "+"; font-size: 1rem; opacity: 0.7; }
+.ce-vault-details[open] summary::after { content: "−"; }
+.ce-vault-details[open] summary { margin-bottom: 0.4rem; }

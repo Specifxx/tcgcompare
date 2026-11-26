@@ -1,6 +1,7 @@
 "use client";
 
-// Add a product from the collection page, and move the list between devices as a file (no account, nothing sent to us).
+// Add a product from the collection page, and save or load the list as a file (the account keeps it in step between devices;
+// the file is a copy the visitor owns).
 import { useRef, useState } from "react";
 import { addItem, backupText, mergeItems, parseBackup, readVault, writeVault, track, type PriceFile } from "@/lib/vault";
 import { useMarket } from "@/components/ClientPrefs";
@@ -82,15 +83,15 @@ export function VaultBackup() {
     setNote(`Loaded ${items.length} item${items.length === 1 ? "" : "s"}; anything already in your list kept its larger quantity.`);
   };
   return (
-    <div className="ce-vault-tools">
-      <div className="ce-vault-label">Move it to another device</div>
+    <details className="ce-vault-tools ce-vault-details">
+      <summary className="ce-vault-label">Backup file</summary>
       <div className="ce-vault-backup">
         <button type="button" className="ce-vault-btn" onClick={save}>Save a backup file</button>
         <button type="button" className="ce-vault-btn" onClick={() => input.current?.click()}>Load a backup file</button>
         <input ref={input} type="file" accept="application/json,.json" hidden onChange={(e) => { load(e.target.files?.[0]); e.target.value = ""; }} />
       </div>
-      <p className="ce-vault-muted">Your list lives in this browser. The file is yours: it holds only the items and quantities, and loading it never sends anything to us.</p>
+      <p className="ce-vault-muted">A copy of your list to keep: only the items and quantities. Loading one adds its items to your collection.</p>
       {note && <p className="ce-vault-muted" role="status">{note}</p>}
-    </div>
+    </details>
   );
 }
