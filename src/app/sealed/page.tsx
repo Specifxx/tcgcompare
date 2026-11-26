@@ -8,6 +8,7 @@ import { adSearch, cardAds } from "@/lib/card-ads";
 import { SEALED_ORDER as ORDER, SEALED_PLURAL as PLURAL, sealedHref } from "@/lib/hubs";
 import Link from "@/components/Link";
 import { TileGrid } from "@/components/ProductTile";
+import { SealedSearch } from "@/components/SealedSearch";
 import { fitTitle } from "@/lib/seo-title";
 import { gameViews, hubItem } from "@/lib/game-hubs";
 import { sealedIndexDescription, sealedIndexTitleLadder } from "@/lib/hub-snippet";
@@ -53,6 +54,9 @@ export default function Sealed() {
             </ul>
           </nav>
         )}
+        <div className="mt-5">
+          <SealedSearch placeholder={`Search sealed: a set, a code or “booster box”`} />
+        </div>
       </header>
       {groups.map((g) => {
         const href = sealedHref(g.t);
