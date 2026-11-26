@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ACCOUNT_SITE as S } from "@/lib/account-site";
+import { CommunityNameCard } from "@/components/account/CommunityNameCard";
 import { loadWatches, readStored, untilLine, writeStored, PREMIUM_PRICE_LINE, trackPremium, type StoredPremium, type Watch } from "@/lib/premium-member";
 import { formatMoney, readVault, totalsByMarket, valueItems, type PriceFile, type VaultItem } from "@/lib/vault";
 // TCG Prices runs no giveaway (ACCOUNT_SITE.giveaway is null), so the giveaway parts of this shared component never render here.
@@ -212,6 +213,8 @@ export function ProfileHub({ info }: { info: StoredPremium }) {
           )}
         </section>
       )}
+
+      <CommunityNameCard token={info.t} />
 
       {left > 0 && (
         <section className="card mt-4 p-5 sm:p-6" aria-labelledby="steps-h">
