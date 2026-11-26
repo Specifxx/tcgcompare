@@ -17,6 +17,12 @@ on:
       wide:
         description: "1 = also ask about titles with no product type word (not single cards)"
         default: "0"
+      model:
+        description: "Model. Anything but claude-sonnet-5-5 is a TRIAL: it writes cache-<model>.json beside the live cache.json, never cache.json, and reports agreement with it"
+        default: "claude-sonnet-5-5"
+      batch:
+        description: "1 = one Message Batch at half price (answers within the run, else cancelled and asked next run)"
+        default: "0"
 
 permissions:
   contents: write
@@ -44,14 +50,23 @@ jobs:
           CRAWL_BUDGET: ${{ inputs.crawl_budget }}
           CRAWL_MAX_MINUTES: "75"
       - name: Start from yesterday's decisions
+        id: names
+        env:
+          MODEL: ${{ inputs.model }}
         run: |
           mkdir -p out
-          if [ -f shadow/cache.json ]; then cp shadow/cache.json out/ai-shadow-cache.json; fi
+          # The live cache (cache.json, read by the import) belongs to Sonnet 5.5. Any other model is a trial with its own file.
+          if [ "$MODEL" = "claude-sonnet-5-5" ]; then cache=cache.json; summary=summary.json; ref=""; else cache="cache-$MODEL.json"; summary="summary-$MODEL.json"; ref="$GITHUB_WORKSPACE/shadow/cache.json"; fi
+          echo "cache=$cache" >> "$GITHUB_OUTPUT"; echo "summary=$summary" >> "$GITHUB_OUTPUT"; echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          if [ -f "shadow/$cache" ]; then cp "shadow/$cache" out/ai-shadow-cache.json; fi
       - run: npx tsx scripts/ai-shadow-match.ts
         env:
           AI_TEAM_ANTHROPIC_KEY: ${{ secrets.AI_TEAM_ANTHROPIC_KEY }}
           AI_SHADOW_MAX_USD: ${{ inputs.max_usd }}
           AI_POOL_WIDE: ${{ inputs.wide }}
+          AI_SHADOW_MODEL: ${{ inputs.model }}
+          AI_SHADOW_BATCH: ${{ inputs.batch }}
+          AI_SHADOW_REFERENCE: ${{ steps.names.outputs.ref }}
           AI_SHADOW_CACHE: ${{ github.workspace }}/out/ai-shadow-cache.json
       - name: Publish the cache to the ai-shadow branch
         run: |
@@ -60,11 +75,13 @@ jobs:
           rm -rf pub && mkdir pub && cd pub
           git init -q -b ai-shadow
           git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
-          cp ../out/ai-shadow-cache.json cache.json
-          cp ../out/ai-shadow-summary.json summary.json
+          # Keep every other file on the branch (the live cache during a trial, the trial files during a live run).
+          cp ../shadow/*.json . 2>/dev/null || true
+          cp ../out/ai-shadow-cache.json "${{ steps.names.outputs.cache }}"
+          cp ../out/ai-shadow-summary.json "${{ steps.names.outputs.summary }}"
           git config user.name "ai-shadow"
           git config user.email "ai-shadow@users.noreply.github.com"
-          git add cache.json summary.json
+          git add *.json
           git commit -q -m "AI shadow decisions $(date -u +%F)"
           git push -q --force origin ai-shadow
       - uses: actions/upload-artifact@v4
