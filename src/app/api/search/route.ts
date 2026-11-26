@@ -58,6 +58,8 @@ export function GET(req: Request) {
   const u = new URL(req.url);
   const q = (u.searchParams.get("q") ?? "").slice(0, 80);
   const bulkUnwanted = !asksBulk(q);
+  // /sealed's keyword box (SealedSearch.tsx) asks for sealed product only.
+  const onlySealed = u.searchParams.get("kind") === "sealed";
   const limit = Math.min(60, Number(u.searchParams.get("limit") ?? 8) || 8);
   const want = tokens(q);
   if (u.searchParams.get("kind") === "kit")
@@ -70,6 +72,7 @@ export function GET(req: Request) {
     const scored: { s: number; i: number }[] = [];
     if (!ws.length) return scored;
     all.forEach((p, i) => {
+      if (onlySealed && p.kind !== "sealed") return;
       const { hay, set } = idx[i];
       let hit = 0;
       for (const w of ws) if (set.has(w) || hay.some((h) => h.startsWith(w))) hit++;
