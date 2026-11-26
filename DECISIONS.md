@@ -2033,3 +2033,14 @@ keep the list in this browser (`lib/vault.ts`, as it always was underneath); one
 links sign-in, never a pop-up or a second prompt. Signing in merges the browser's list into the account: the first sync has an empty
 base, so it is a union and nothing is lost (`lib/vault-sync.ts`). The weekly email and Premium history stay account-only.
 `tests/card-collection.test.ts` pins that neither page sends a signed-out visitor to sign-in.
+
+## 2026-11-26: Sealed Sniper drops lead with one real price gap through the TCGplayer sale
+
+The Cluely growth study (move 1, strategy/cluely-2026-11-26) wants every Discord and Telegram drop to lead with one live,
+surprising number. Until `PRICE_GAP_UNTIL` (1 Dec 04:00 UTC, the end of TCGplayer's sale) each drop opens with the biggest
+spread among the products it posts: "<product> ranges $low to $high across n <market> stores today. Same product." The low
+is the price just checked at the store; the high is the dearest in-stock independent store in the same market in today's
+data (what the product page shows). A spread needs 3+ stores, the high 15%+ and 10+ above the low, and no store cheaper
+than the one posted; otherwise no hook (never a made-up or converted number, and the dear store is never named). Every
+product link in the drop is tagged `utm_campaign=price-gap` while it runs, so its clicks read apart from `sealed-sniper`.
+Game-room copies (TCGEmpire discord-publish.ts) carry the embeds only, so the hook stays in #sealed-sniper and Telegram.

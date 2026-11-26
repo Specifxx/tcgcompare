@@ -20,6 +20,11 @@ import {
   preorderEvents,
   dropId,
   dropMessage,
+  biggestGap,
+  gapLine,
+  priceGap,
+  PRICE_GAP_UNTIL,
+  type PriceGap,
   type DiscordEmbed,
   embedFor,
   emptySniperState,
@@ -57,8 +62,8 @@ const readJson = <T>(f: string): T | null => {
 const BASE = process.env.SNIPER_BASE || "HEAD";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function post(hook: string, embeds: DiscordEmbed[]): Promise<boolean> {
-  const body = JSON.stringify(dropMessage(embeds));
+async function post(hook: string, embeds: DiscordEmbed[], lead: string | null): Promise<boolean> {
+  const body = JSON.stringify(dropMessage(embeds, Date.now(), lead));
   for (let i = 0; i < 2; i++) {
     const r = await fetch(`${hook}?wait=true`, { method: "POST", headers: { "Content-Type": "application/json" }, body });
     if (r.status === 429) {
@@ -153,6 +158,7 @@ async function main() {
   const embeds: DiscordEmbed[] = [];
   const drop = dropId(Date.now());
   const why: Record<string, number> = {};
+  const gaps: (PriceGap | null)[] = [];
   // restocks first, but a few slots kept for drops: at most MAX_RESTOCKS restocks, the rest drops (or restocks, when no drop)
   const drops = ranked.filter((e) => e.kind === "drop").length;
   const restockCap = Math.max(MAX_RESTOCKS, MAX_POSTS - drops);
@@ -185,12 +191,17 @@ async function main() {
     if (dry) console.log(`[dry] ${embed.title}\n${embed.description}\n`);
     embeds.push(embed);
     posted.push({ ...e, cents: v.cents });
+    gaps.push(priceGap(e, v.cents, cur[String(e.product.id)]?.o ?? [], stores, meta.fx));
   }
   // one run, one message (one drop) to each channel: nothing is recorded as posted unless one of them took it
-  if (dry && embeds.length) console.log(`[dry] telegram:\n${telegramText(embeds)}\n`);
+  // the price-gap hook (lib/sniper.ts): the biggest real spread among this drop's posts, only through the sale
+  const gap = Date.now() < PRICE_GAP_UNTIL ? biggestGap(gaps) : null;
+  const lead = gap ? gapLine(gap, SITE_URL, drop, Date.now()) : null;
+  console.log(`sniper: price-gap hook ${lead ?? "none (no spread worth leading with)"}`);
+  if (dry && embeds.length) console.log(`[dry] telegram:\n${telegramText(embeds, Date.now(), lead)}\n`);
   if (!dry && embeds.length) {
-    const sentDiscord = discordOk ? await post(hook!, embeds) : false;
-    const sentTelegram = tgToken ? await postTelegram(tgToken, tgChat, telegramText(embeds)) : false;
+    const sentDiscord = discordOk ? await post(hook!, embeds, lead) : false;
+    const sentTelegram = tgToken ? await postTelegram(tgToken, tgChat, telegramText(embeds, Date.now(), lead)) : false;
     if (!sentDiscord && !sentTelegram) posted.length = 0;
   }
   console.log(`sniper: ${posted.length} posted${dry ? " (dry run)" : ""}; not posted: ${JSON.stringify(why)}`);
