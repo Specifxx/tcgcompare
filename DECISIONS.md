@@ -2091,8 +2091,8 @@ buyers for reviews.
 A visitor wrote to Compare Empire asking us to "hire a graphic designer so it wasn't giving claudeslop", and the owner asked
 for a design agent to lift every site. The tells were ours: a glow and a perspective grid behind a centred hero, a pill above
 the headline, gradient words and wordmark, a spinning ring of light round the search, glass tiles with a pointer spotlight, a
-breathing gradient button, a pulsing dot. The `empire-ds` block at the end of `globals.css` (the same block on Dex, MTG and
-YGO; rules in the project's `design-system/README.md`) takes those off and sets a price guide's type and rules: the brand
+breathing gradient button, a pulsing dot. The `empire-ds` block at the end of `globals.css` (the same block on Dex and MTG;
+rules in the project's `design-system/README.md`) takes those off and sets a price guide's type and rules: the brand
 colour solid, a left-aligned masthead hero from 640px (centred on phones), a hairline between sections, 10px radius on cards,
 inputs and buttons and 6px on badges, hover as a firmer edge. CSS only: no markup, words, order, URL or heading changes. The
 paintings behind the hero (owner, 2026-11-14) and the Santa hat stay.
