@@ -1899,3 +1899,16 @@ Digimon: 357 products to BandaiCompare's 219) and already took BandaiCompare's s
 **Read:** Google clicks on `/games/union-arena`, `/games/dragon-ball-super-fusion-world` and `/games/digimon-card-game`
 and the three guides, 28 days to ~24 Dec, against 0; GSC's page indexing for bandaicompare.com should show the 301s
 by mid-December.
+
+## 2026-11-26 — Sealed Sniper drops on /restocks, with hot, cold and expired
+
+**Asked:** the COO's OzBargain study, move 1: phase one of a TCG deal board. Visitors vote a Sniper drop hot or cold or
+flag it expired, inline, with no sign-in and no prompt, stored on RiftCompare's backend.
+
+**Now:** `scripts/sniper.ts` appends every drop it really posted (Discord or Telegram took it) to
+`data/public/sniper-drops.json` (`lib/sniper-board.ts`: id, time, kind, product, store, price; 14 days, 120 at most;
+nothing private). `/restocks` shows the newest 20 as cards above the restock list, each with `DropVotes`: one GET of
+every card's tally after render (riftcompare.com/api/deal-votes, CDN six hours) and a POST per tap that answers with
+that drop's fresh count. No page gains a function or a build step. Votes order nothing: no price, row, badge, feed or
+alert reads them. GA gets `drop_view` (a card 60% in view, once a page view), `drop_vote` and `drop_click`, for votes per
+100 drop views and the click-through.

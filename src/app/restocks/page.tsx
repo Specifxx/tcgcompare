@@ -8,6 +8,8 @@ import { CURRENCY } from "@/lib/site-types";
 import { money } from "@/lib/format";
 import { shortName } from "@/lib/names";
 import { TELEGRAM_URL } from "@/components/DiscordCta";
+import { readDropLog } from "@/lib/sniper-board";
+import { DropVotes, DropViewBeacon } from "@/components/DropVotes";
 
 export const revalidate = 86400;
 export const metadata: Metadata = {
@@ -27,6 +29,11 @@ export default function Restocks() {
   const cut = (file ? Date.parse(file.updatedAt) : 0) - DAY * 2;
   const recent = rows.filter((r) => Date.parse(r.e.t) >= cut);
   const earlier = rows.filter((r) => Date.parse(r.e.t) < cut);
+  const drops = (readDropLog()?.drops ?? [])
+    .map((d) => ({ d, p: productById(d.p), s: stores.get(d.s) }))
+    .filter((r): r is { d: typeof r.d; p: NonNullable<typeof r.p>; s: NonNullable<typeof r.s> } => !!r.p && !!r.s)
+    .slice(0, 20);
+  const label = (d: (typeof drops)[number]["d"]) => (d.kind === "drop" ? `${d.pct}% lower` : d.kind === "preorder" ? "First pre-order" : "Back in stock");
   const list = (items: typeof rows) => (
     <ol className="card-surface divide-y divide-ink-800">
       {items.slice(0, 60).map((r) => (
@@ -55,6 +62,28 @@ export default function Restocks() {
           <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center rounded-lg bg-[#229ED9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1C8BC0]">Telegram</a>
         </div>
       </section>
+      {drops.length > 0 && (
+        <section aria-labelledby="sniper-drops">
+          <h2 id="sniper-drops" className="mb-1 text-xl font-bold">Sealed Sniper drops</h2>
+          <p className="mb-2 text-sm text-muted">What the Sniper posted to Discord and Telegram, each checked at the store just before. Grabbed one, or found it gone? Vote it hot or cold, or flag it expired.</p>
+          <ol className="card-surface divide-y divide-ink-800">
+            {drops.map((r) => (
+              <li key={r.d.id} data-drop-card={r.d.id} className="flex flex-col gap-2 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted"><span className="font-semibold text-brand-400">{label(r.d)}</span> · {r.s.name} · {new Date(r.d.at).toUTCString().slice(5, 22)} UTC</p>
+                  <p className="flex items-baseline gap-2">
+                    <Link className="min-w-0 truncate font-medium hover:underline" href={`/card/${r.p.slug}`}>{shortName(r.p.name)}</Link>
+                    <span className="shrink-0 tabular-nums">{money(r.d.c, CURRENCY[r.s.market])}</span>
+                    {r.d.was && <s className="shrink-0 text-xs text-muted tabular-nums">{money(r.d.was, CURRENCY[r.s.market])}</s>}
+                  </p>
+                </div>
+                <DropVotes id={r.d.id} />
+                <DropViewBeacon id={r.d.id} />
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
       {rows.length === 0 && <p className="card-surface p-4 text-sm text-muted">No restocks recorded yet. They appear after the next price check.</p>}
       {recent.length > 0 && <section><h2 className="mb-2 text-xl font-bold">Last 2 days</h2>{list(recent)}</section>}
       {earlier.length > 0 && <section><h2 className="mb-2 text-xl font-bold">Earlier this week</h2>{list(earlier)}</section>}
