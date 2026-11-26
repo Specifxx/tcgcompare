@@ -24,6 +24,7 @@ export default function About() {
       <p>Hosting, the twice-daily price runs, domains and tools are shared across our sites and cost about A$790 a month in all (our own books, 30 days to 15 November 2026). The affiliate commission above pays that bill. No store pays to be listed or to rank.</p>
       <h2>Contact</h2>
       <p>Spotted a wrong price, or run a store that sells {SITE.gameShort}? <a href="/contact">Get in touch</a> or email <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>.</p>
+      <p>Used {SITE.name}? <a href="https://www.trustpilot.com/review/tcgprices.app" rel="noopener">Review us on Trustpilot</a>. Every review, good or bad, stays up.</p>
     </StaticPage>
   );
 }
