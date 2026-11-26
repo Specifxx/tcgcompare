@@ -1,0 +1,37 @@
+name: Hub announce (Telegram)
+
+# The Telegram half of TCGEmpire's hub-announce.yml: TELEGRAM_BOT_TOKEN lives in this repo, not TCGEmpire. Reads the
+# prepared post (social/hub-posts/<post>/) and the script from the public TCGEmpire repo and sends it to
+# t.me/tcgdealsrestocks, then pins it. Dispatch only; each run posts once.
+
+on:
+  workflow_dispatch:
+    inputs:
+      post:
+        description: "Folder under TCGEmpire's social/hub-posts/"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: Specifxx/TCGEmpire
+          sparse-checkout: |
+            scripts/hub-announce.ts
+            social/hub-posts
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Post and pin
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          POST: ${{ inputs.post }}
+          ONLY: telegram
+        run: npx -y tsx scripts/hub-announce.ts
