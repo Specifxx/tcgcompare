@@ -206,3 +206,11 @@ test("the app: manifest opens on My collection with PNG icons; the service worke
   assert.match(view, /claimPromptSlot\("app-install"\)/); // the visit's one prompt
   assert.doesNotMatch(view, /window\.open|position:\s*fixed/);
 });
+
+test("try first, sign in to sync (owner, 2026-11-26): no sign-in gate on My collection or I own this", () => {
+  const view = readFileSync("src/components/vault/VaultView.tsx", "utf8");
+  const add = readFileSync("src/components/vault/VaultAddButton.tsx", "utf8");
+  assert.doesNotMatch(view, /status === "out"\) return/);
+  assert.doesNotMatch(add, /location\.href\s*=/);
+  assert.match(view, /GuestNote/);
+});

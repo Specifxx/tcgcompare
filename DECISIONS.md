@@ -2023,3 +2023,13 @@ website, on your phone". My collection (the sealed stash tracker, entry above) b
   browser that can install, and silent 30 days after a close. A failed sync request offline is now an "offline" answer, not an
   uncaught error.
 - Signing in still opens My collection (owner, 2026-11-19); the cheapest price is never behind Premium.
+
+## 2026-11-26: My collection: try first, sign in to sync
+
+Owner, 26 Nov (decision card "Let people try My collection before signing in?": "Yes, try first, sign in to sync"), reversing
+2026-11-19's "you can only use my collection if you are signed in". Collectr makes you install an app before you start; a sign-in
+wall is the same hurdle, and the collection app's pitch is no friction. Signed out, `/collection` and "I own this" work at once and
+keep the list in this browser (`lib/vault.ts`, as it always was underneath); one quiet line on the page (`GuestNote`) says so and
+links sign-in, never a pop-up or a second prompt. Signing in merges the browser's list into the account: the first sync has an empty
+base, so it is a union and nothing is lost (`lib/vault-sync.ts`). The weekly email and Premium history stay account-only.
+`tests/card-collection.test.ts` pins that neither page sends a signed-out visitor to sign-in.

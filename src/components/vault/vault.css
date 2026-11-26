@@ -165,3 +165,8 @@
 /* A grid item is as wide as its widest child unless told otherwise: the sideways game chips stretched the page on a phone. */
 .ce-vault, .ce-vault-empty, .ce-vault-tools { grid-template-columns: minmax(0, 1fr); }
 .ce-vault-empty > *, .ce-vault-tools > * { min-width: 0; max-width: 100%; }
+
+/* 2026-11-26: try first, sign in to sync. One quiet line, never a prompt. */
+.ce-vault-guest { margin: 0; padding: 0.6rem 0.8rem; border-radius: 0.7rem; font-size: 0.875rem; line-height: 1.45;
+  background: color-mix(in srgb, var(--cart-accent) 8%, transparent); }
+.ce-vault-guest a { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
