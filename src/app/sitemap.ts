@@ -1,3 +1,4 @@
+import { boardRows } from "@/lib/drop-board-data";
 import type { MetadataRoute } from "next";
 import { editions } from "@/lib/spread-store";
 import { SPREAD_PATH } from "@/lib/spread";
@@ -25,7 +26,7 @@ const PROSE_PAGES = new Set(["/about", "/methodology", "/list-your-store", "/how
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const at = meta()?.updatedAt ? new Date(meta()!.updatedAt) : new Date();
-  const fixed = ["", "/sealed", "/sets", "/preorders", "/tools/deal-finder", "/tools/is-this-a-good-price", "/price-report", "/black-friday", "/cyber-monday", ...withoutOffSeasonSales(["/boxing-day", "/january-sales"], new Date().toISOString().slice(0, 10)), "/daily", ...(posts().length ? ["/blog"] : []), "/stores", "/about", "/methodology", "/data", ...(editions().length ? [SPREAD_PATH, ...editions().map((e) => `${SPREAD_PATH}/${e.id}`)] : []), "/list-your-store", ...(creatorsOn() ? ["/creators"] : [])];
+  const fixed = ["", "/sealed", "/sets", "/preorders", "/tools/deal-finder", ...(boardRows().length ? ["/drops"] : []), "/tools/is-this-a-good-price", "/price-report", "/black-friday", "/cyber-monday", ...withoutOffSeasonSales(["/boxing-day", "/january-sales"], new Date().toISOString().slice(0, 10)), "/daily", ...(posts().length ? ["/blog"] : []), "/stores", "/about", "/methodology", "/data", ...(editions().length ? [SPREAD_PATH, ...editions().map((e) => `${SPREAD_PATH}/${e.id}`)] : []), "/list-your-store", ...(creatorsOn() ? ["/creators"] : [])];
   return [
     ...fixed.map((p) => ({ url: `${SITE_URL}${p}`, ...(PROSE_PAGES.has(p) ? {} : { lastModified: at }), changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.8 })),
     // Every game with a product today, and each of its product types with enough products to be a page worth finding.
