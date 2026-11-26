@@ -8,7 +8,7 @@
 // render refreshes it. No ISR write, no data-cache entry per page, nothing prerendered at build. The header never covers
 // /go (a redirect per click) or /api.
 const CDN_CACHE = "public, s-maxage=86400, stale-while-revalidate=86400";
-const CDN_PAGES = ["/card/:slug", "/sets/:slug", "/sealed/:type", "/games/:slug", "/games/:slug/:type", "/preorders/:slug"];
+const CDN_PAGES = ["/card/:slug", "/sets/:slug", "/sealed/:type", "/games/:slug", "/games/:slug/:type", "/preorders/:slug", "/drops/:id"];
 
 // Sealed only (owner, 2026-11-06): the card hubs and card tools are gone; each old URL is a 301 to the nearest sealed
 // page, so links and search results keep working. A single card's own URL (/card/<slug>) is redirected by its page
