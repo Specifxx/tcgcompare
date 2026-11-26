@@ -41,6 +41,7 @@ import { VaultBackup, VaultSearch } from "./VaultTools";
 import { VaultCards } from "./VaultCards";
 import { VaultImport } from "./VaultImport";
 import { VaultInstall } from "./VaultInstall";
+import { VaultAppPoints } from "./VaultAppPoints";
 import { useCardPrices } from "./useCardPrices";
 import { isCardId, parseCardId, tcgplayerProductUrl } from "@/lib/card-collection";
 import { ebaySearchUrl, goHref } from "@/lib/affiliate";
@@ -225,6 +226,7 @@ export function VaultView() {
           This page then shows what everything is worth today, and what it has made or lost against what you paid.
         </p>
         {guest ? <GuestNote /> : <p className="ce-vault-muted">It is saved to your account, so it follows you to your phone and computer.</p>}
+        <VaultAppPoints />
         <VaultCards />
         <VaultSearch file={file} />
         <VaultImport />
@@ -265,6 +267,7 @@ export function VaultView() {
       {guest && <GuestNote />}
       {(failed || cards.failed) && <p className="ce-vault-muted">Some of today&apos;s prices didn&apos;t load. Your list is safe; try again in a moment.</p>}
       <VaultInstall items={items.length} />
+      <VaultAppPoints />
       {file &&
         totals.map((t, n) => {
           const since = sinceAdded(valued, t.market);
