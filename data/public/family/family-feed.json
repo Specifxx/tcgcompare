@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-26T05:00:51.147Z",
+ "generatedAt": "2026-11-26T20:34:04.981Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -89,9 +89,9 @@
    "currency": "USD",
    "store": "Fabricator's Forge",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/628353_200w.jpg",
-   "refCents": 568308,
+   "refCents": 561498,
    "refLabel": "TCGplayer market price",
-   "savingPct": 16
+   "savingPct": 15
   },
   {
    "kind": "preorder",
@@ -145,9 +145,9 @@
    "region": "US",
    "title": "Gift of the Rift Bundle Bundle",
    "url": "https://tcgprices.app/preorders/gift-of-the-rift-bundle",
-   "cents": 20000,
+   "cents": 14999,
    "currency": "USD",
-   "store": "Many Realms",
+   "store": "Double Infinity Gaming",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/714486_200w.jpg",
    "releaseDate": "2026-12-04"
   },
