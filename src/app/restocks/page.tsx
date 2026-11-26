@@ -65,7 +65,7 @@ export default function Restocks() {
       {drops.length > 0 && (
         <section aria-labelledby="sniper-drops">
           <h2 id="sniper-drops" className="mb-1 text-xl font-bold">Sealed Sniper drops</h2>
-          <p className="mb-2 text-sm text-muted">What the Sniper posted to Discord and Telegram, each checked at the store just before. Grabbed one, or found it gone? Vote it hot or cold, or flag it expired.</p>
+          <p className="mb-2 text-sm text-muted">What the Sniper posted to Discord and Telegram, each checked at the store just before. Grabbed one, or found it gone? Vote it hot or cold, or flag it expired. <Link className="link" href="/drops">Open the deal board</Link></p>
           <ol className="card-surface divide-y divide-ink-800">
             {drops.map((r) => (
               <li key={r.d.id} data-drop-card={r.d.id} className="flex flex-col gap-2 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">

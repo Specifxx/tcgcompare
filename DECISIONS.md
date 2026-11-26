@@ -1930,3 +1930,44 @@ signed-in member it is now also kept with their account on RiftCompare (`/api/si
   Not counted" and the share and spreadsheet buttons together; rows on a grid that keeps name, value and quantity tidy at 360 px; the
   backup file folded away now that the account carries the list between devices. Privacy page updated.
 
+## 2026-11-26 — The deal board: /drops, a page per drop, and a Hot order
+
+**Asked:** the owner, on the OzBargain study ("can we get these implemented ASAP … designed in a very, very nice way …
+tested … state of the art"). Phase one put the Sniper's drops on `/restocks` as a plain list with three buttons, hidden
+under the restock alert box. A board people come back to needs its own page, a score, and an order that votes change.
+
+**Now:** `/drops` is the board (`lib/drop-board.ts` pure and tested, `lib/drop-board-data.ts` builds the rows,
+`components/DropBoard.tsx` draws them): the newest 60 drops as cards with a score between two arrows, the product
+photo, the posted price, the store, and what OUR latest import says about it (still that price, a different price now,
+or sold out). `/drops/<id>` is one drop's page with a share button: the link to paste in a group chat. Decisions:
+
+- **Votes now order one thing: the board's "Hot" tab.** This reverses phase one's "votes order nothing" for the board
+  only. Score over age (`heat`), sold-out and flagged-gone drops under every live one. Hot is worked out when the tab is
+  picked, so a vote never moves the card under a thumb. No price, store row, badge, feed, alert or Sniper post reads a
+  vote (`tests/drop-board.test.ts`).
+- **Stock is our read, not the crowd's.** Each card's state comes from the latest import (`dropState`); visitors' "Gone?"
+  flags add "N visitors say it has gone" from three flags (`GONE_FLAGS`) and sink the card in Hot, nothing more.
+- **"N% under market" only for a US store's price and only from 5%** (`underMarket`): TCGplayer's market price is in US
+  dollars and nothing is converted; a point under is noise.
+- **A tap shows at once** and is undone with a line of text if the service refuses it. The same `dv_mine` key as
+  `DropVotes`, so a vote on `/restocks` shows on the board. Still no sign-in, nothing typed, no prompt.
+- **Cost:** `/drops` is one static copy per release; `/drops/<id>` is `force-dynamic` behind the CDN for a day
+  (`CDN_PAGES`), never ISR, noindex and out of the sitemap because a drop leaves the log after 14 days; an id the log no
+  longer holds redirects to the board, so a shared link never 404s. `/drops` joins the sitemap once it has a drop.
+  No new function, no new request beyond phase one's single tally read.
+- **Not in the Deals menu yet** (five at most, owner's UX review): the board is linked from `/restocks` and lights the
+  phone bar's Deals tab. Give it a menu place when it has earned one.
+
+**Not done, on purpose:** comments and member-posted deals. Both need accounts and moderation the owner is not there to
+do; they follow once the votes show people use the board. Measure with phase one's events plus `drop_sort`.
+
+## 2026-11-26: AI shadow match runs as a half-price batch, and Haiku 5.5 is trialled beside Sonnet
+
+Claude Haiku 5.5 costs US$0.10 / US$0.50 per million tokens, a twentieth of Sonnet 5.5 (US$2 / US$10), and Message
+Batches halve either. `ai-shadow-match.yml` takes `batch` (one Message Batch per run, admitted only while a cautious cost
+estimate fits `max_usd`; cancelled after 45 minutes, unanswered titles asked next run; a failed batch fails the run and
+counts its reserve as spent) and `model` (Sonnet 5.5 or Haiku 5.5 only). Sonnet stays the live model: only it writes
+`cache.json`, the file `pickByAi` reads. Haiku is a TRIAL: it writes `cache-claude-haiku-5-5.json` and a summary whose
+`vsReference` counts agreement with Sonnet on the same titles, and a trial never publishes without the live cache on the
+branch. Haiku goes live only if it agrees with Sonnet's guarded matches as well as Sonnet's own 99.5% pilot precision
+(scripts/ai-title-pilot.ts); a wrong match is worse than none.

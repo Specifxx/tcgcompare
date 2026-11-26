@@ -17,6 +17,12 @@ on:
       wide:
         description: "1 = also ask about titles with no product type word (not single cards)"
         default: "0"
+      model:
+        description: "Model. Anything but claude-sonnet-5-5 is a TRIAL: it writes cache-<model>.json beside the live cache.json, never cache.json, and reports agreement with it"
+        default: "claude-sonnet-5-5"
+      batch:
+        description: "1 = one Message Batch at half price (answers within the run, else cancelled and asked next run)"
+        default: "0"
 
 permissions:
   contents: write
@@ -44,27 +50,48 @@ jobs:
           CRAWL_BUDGET: ${{ inputs.crawl_budget }}
           CRAWL_MAX_MINUTES: "75"
       - name: Start from yesterday's decisions
+        id: names
+        env:
+          MODEL: ${{ inputs.model }}
         run: |
           mkdir -p out
-          if [ -f shadow/cache.json ]; then cp shadow/cache.json out/ai-shadow-cache.json; fi
+          case "$MODEL" in claude-sonnet-5-5|claude-haiku-5-5) ;; *) echo "model must be claude-sonnet-5-5 or claude-haiku-5-5 (add a price in scripts/ai-shadow-match.ts first)"; exit 1 ;; esac
+          # A trial compares against the live cache and must never publish without it.
+          if [ "$MODEL" != "claude-sonnet-5-5" ] && [ ! -f shadow/cache.json ]; then echo "trial needs the live shadow/cache.json (ai-shadow checkout failed?)"; exit 1; fi
+          # The live cache (cache.json, read by the import) belongs to Sonnet 5.5. Any other model is a trial with its own file.
+          if [ "$MODEL" = "claude-sonnet-5-5" ]; then cache=cache.json; summary=summary.json; ref=""; else cache="cache-$MODEL.json"; summary="summary-$MODEL.json"; ref="$GITHUB_WORKSPACE/shadow/cache.json"; fi
+          echo "cache=$cache" >> "$GITHUB_OUTPUT"; echo "summary=$summary" >> "$GITHUB_OUTPUT"; echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          if [ -f "shadow/$cache" ]; then cp "shadow/$cache" out/ai-shadow-cache.json; fi
       - run: npx tsx scripts/ai-shadow-match.ts
         env:
           AI_TEAM_ANTHROPIC_KEY: ${{ secrets.AI_TEAM_ANTHROPIC_KEY }}
           AI_SHADOW_MAX_USD: ${{ inputs.max_usd }}
           AI_POOL_WIDE: ${{ inputs.wide }}
+          AI_SHADOW_MODEL: ${{ inputs.model }}
+          AI_SHADOW_BATCH: ${{ inputs.batch }}
+          AI_SHADOW_REFERENCE: ${{ steps.names.outputs.ref }}
           AI_SHADOW_CACHE: ${{ github.workspace }}/out/ai-shadow-cache.json
       - name: Publish the cache to the ai-shadow branch
+        # Also after a failed batch: the script saves whatever it read before failing the run.
+        if: ${{ !cancelled() && steps.names.outcome == 'success' }}
+        env:
+          CACHE_NAME: ${{ steps.names.outputs.cache }}
+          SUMMARY_NAME: ${{ steps.names.outputs.summary }}
         run: |
           set -e
           [ -f out/ai-shadow-cache.json ] || { echo "no cache written (no key or no crawl): nothing to publish"; exit 0; }
           rm -rf pub && mkdir pub && cd pub
           git init -q -b ai-shadow
           git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
-          cp ../out/ai-shadow-cache.json cache.json
-          cp ../out/ai-shadow-summary.json summary.json
+          # Keep every other file on the branch (the live cache during a trial, the trial files during a live run).
+          cp ../shadow/*.json . 2>/dev/null || true
+          cp ../out/ai-shadow-cache.json "$CACHE_NAME"
+          if [ -f ../out/ai-shadow-summary.json ]; then cp ../out/ai-shadow-summary.json "$SUMMARY_NAME"; fi
+          # Never publish a branch without the live cache the import reads, unless this run wrote it.
+          [ -f cache.json ] || { echo "cache.json missing: not publishing"; exit 1; }
           git config user.name "ai-shadow"
           git config user.email "ai-shadow@users.noreply.github.com"
-          git add cache.json summary.json
+          git add *.json
           git commit -q -m "AI shadow decisions $(date -u +%F)"
           git push -q --force origin ai-shadow
       - uses: actions/upload-artifact@v4
