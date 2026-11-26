@@ -11,12 +11,19 @@
 // Deal Finder, from the static /share-deal.json (fetched only then). It opens
 // only on the visitor's own tap and closes with ✕. The "plain" arm is the
 // control. Events: share { medium, arm }, share_unlock { medium }.
+//
+// Brag card (2026-11-26, community plan move 4): on a phone that can share files, a product with a real gap between stores
+// in the visitor's market is shared as a 1080x1350 picture ("Found it cheaper", lib/brag-card.ts, `gapBragFields`) with
+// the link, so it lands in a group chat as an image. Desktops and products with no gap share the link as before.
+// Event: brag_share { kind: "saved", how }.
 import Link from "@/components/Link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { track } from "@vercel/analytics";
 import { money } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
-import { pickShareArm, priceGap, SHARE_ARM_KEY, shareText, shareUrl, type ShareArm, type ShareDeal, type ShareMedium } from "@/lib/share";
+import { bragLink, bragModel, prepareBrag, shareBrag, whenIdle } from "@/lib/brag-card";
+import { SITE } from "@/site.config";
+import { bragGap, gapBragFields, pickShareArm, priceGap, SHARE_ARM_KEY, shareText, shareUrl, type ShareArm, type ShareDeal, type ShareMedium } from "@/lib/share";
 import type { Offer } from "@/lib/site-types";
 import { useMarket } from "./ClientPrefs";
 
@@ -32,7 +39,7 @@ function useShareArm(): ShareArm {
   return arm;
 }
 
-export function ShareButton({ path, name, medium, offers, text, label = "Share", compact = false, className = "" }: { path: string; name: string; medium: ShareMedium; offers?: Offer[]; /** overrides the price-gap message */ text?: string; label?: string; /** icon only on phones */ compact?: boolean; className?: string }) {
+export function ShareButton({ path, name, medium, offers, text, image, refUsd, label = "Share", compact = false, className = "" }: { path: string; name: string; medium: ShareMedium; offers?: Offer[]; /** overrides the price-gap message */ text?: string; /** the product photo the brag card draws, when it loads cleanly */ image?: string | null; /** TCGplayer market, US cents: the yardstick of the brag card in the US */ refUsd?: number | null; label?: string; /** icon only on phones */ compact?: boolean; className?: string }) {
   const { market } = useMarket();
   const arm = useShareArm();
   const [note, setNote] = useState("");
@@ -58,12 +65,55 @@ export function ShareButton({ path, name, medium, offers, text, label = "Share",
     }
   }
 
+  // The brag card: only where the phone can share a picture, and only for a real gap (never a made-up saving). Drawn ahead
+  // in idle time once the gap is known (`prepareBrag`), so the tap opens the share sheet at once.
+  const gap = offers && !text ? bragGap(offers, market) : null;
+  const [files, setFiles] = useState(false);
+  useEffect(() => {
+    try {
+      setFiles(!!navigator.canShare?.({ files: [new File([new Blob(["x"])], "t.png", { type: "image/png" })] }));
+    } catch {}
+  }, []);
+  const card = useMemo(
+    () =>
+      gap && files
+        ? bragModel({
+            site: SITE.name,
+            host: new URL(SITE_URL).host,
+            accent: "#818cf8",
+            ...gapBragFields(name, gap, market, (c, cur) => money(c, cur), refUsd),
+            image: image ?? null,
+            imageShape: medium === "card" ? "card" : "box",
+            date: new Date(),
+          })
+        : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [gap?.low.cents, gap?.high.cents, gap?.low.source, gap?.high.source, gap?.sellers, files, market, name, image, medium, refUsd],
+  );
+  useEffect(() => (card ? whenIdle(() => void prepareBrag(card)) : undefined), [card]);
+
+  async function shareCard(message: string): Promise<boolean> {
+    if (!card) return false;
+    const blob = await prepareBrag(card);
+    if (!blob) return false;
+    const how = await shareBrag(blob, message, bragLink(SITE_URL, path, "saved"), "found-it-cheaper");
+    if (how === "failed") return false;
+    if (how !== "cancelled") {
+      try {
+        track("brag_share", { kind: "saved", how });
+      } catch {}
+      void unlock();
+    }
+    return true;
+  }
+
   async function share() {
     const url = shareUrl(SITE_URL, path, medium);
     const message = text ?? shareText(name, offers ? priceGap(offers, market) : null, (c, cur) => money(c, cur));
     try {
       track("share", { medium, arm });
     } catch {}
+    if (card && (await shareCard(message))) return;
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({ title: name, text: message, url });

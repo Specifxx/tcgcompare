@@ -13,6 +13,7 @@ import { LiveAgo } from "@/components/LiveAgo";
 import { DropViewBeacon, DEAL_VOTES_API } from "@/components/DropVotes";
 import { ago } from "@/lib/format";
 import { track } from "@/lib/vault";
+import { readStored } from "@/lib/premium-member";
 import { GONE_FLAGS, KIND_LABEL, NO_TALLY, NO_VOTE, applyVote, score, sortHot, type BoardRow, type Mine, type Tally, type VoteAction } from "@/lib/drop-board";
 
 const MINE_KEY = "dv_mine";
@@ -35,6 +36,10 @@ function useVotes(ids: readonly string[]) {
   const [tallies, setTallies] = useState<Record<string, Tally>>({});
   const [mine, setMine] = useState<Record<string, Mine>>({});
   const [failed, setFailed] = useState<string | null>(null);
+  // Community plan move 3 (RiftCompare lib/contributions.ts): the first named member to vouch for each drop, and the
+  // points a signed-in vote just earned. Anonymous votes count exactly as before; a name is only ever shown, never asked.
+  const [by, setBy] = useState<Record<string, string>>({});
+  const [earned, setEarned] = useState<{ id: string; n: number; named: boolean } | null>(null);
   const busy = useRef(new Set<string>());
   const state = useRef({ tallies, mine });
   state.current = { tallies, mine };
@@ -46,9 +51,10 @@ function useVotes(ids: readonly string[]) {
     if (!key) return;
     fetch(`${DEAL_VOTES_API}?site=tcgprices&ids=${encodeURIComponent(key)}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((j: { tallies?: Record<string, Tally> } | null) => {
+      .then((j: { tallies?: Record<string, Tally>; by?: Record<string, string> } | null) => {
         // Our own taps since the request left stay on top of what it brings back.
         if (live && j?.tallies && typeof j.tallies === "object") setTallies((cur) => ({ ...j.tallies, ...cur }));
+        if (live && j?.by && typeof j.by === "object") setBy(j.by);
       })
       .catch(() => {});
     return () => {
@@ -67,12 +73,15 @@ function useVotes(ids: readonly string[]) {
     const next = applyVote(before.tally, before.mine, action);
     put(next.tally, next.mine);
     setFailed(null);
+    setEarned(null);
     track("drop_vote", { drop: id, action });
+    const token = readStored()?.t;
     try {
-      const r = await fetch(DEAL_VOTES_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ drop: id, action }) });
-      const j = (await r.json().catch(() => null)) as { mine?: Mine; tally?: Tally } | null;
+      const r = await fetch(DEAL_VOTES_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(token ? { drop: id, action, token } : { drop: id, action }) });
+      const j = (await r.json().catch(() => null)) as { mine?: Mine; tally?: Tally; earned?: number; handle?: string | null } | null;
       if (!r.ok || !j?.mine || !j.tally) throw new Error("refused");
       put(j.tally, j.mine);
+      if (token && typeof j.earned === "number" && j.earned > 0) setEarned({ id, n: j.earned, named: !!j.handle });
       const all = readMine();
       if (j.mine.vote === 0 && !j.mine.expired) delete all[id];
       else all[id] = j.mine;
@@ -85,7 +94,7 @@ function useVotes(ids: readonly string[]) {
     }
   }, []);
 
-  return { tallies, mine, vote, failed };
+  return { tallies, mine, vote, failed, by, earned };
 }
 
 const Chevron = ({ down = false }: { down?: boolean }) => (
@@ -128,7 +137,7 @@ function StateLine({ r, flags }: { r: BoardRow; flags: number }) {
   );
 }
 
-function DropCard({ r, tally, mine, onVote, failed, big = false }: { r: BoardRow; tally: Tally; mine: Mine; onVote: (a: VoteAction) => void; failed: boolean; big?: boolean }) {
+function DropCard({ r, tally, mine, onVote, failed, by, earned, big = false }: { r: BoardRow; tally: Tally; mine: Mine; onVote: (a: VoteAction) => void; failed: boolean; by?: string; earned?: { n: number; named: boolean } | null; big?: boolean }) {
   const over = r.state === "gone" || tally.expired >= GONE_FLAGS;
   const Name = big ? "h1" : "h3";
   return (
@@ -153,6 +162,7 @@ function DropCard({ r, tally, mine, onVote, failed, big = false }: { r: BoardRow
           {r.under != null && !over && <span className="tag" title="Under TCGplayer's market price: what this product sold for recently on TCGplayer, in US dollars">{r.under}% under market</span>}
         </p>
         <StateLine r={r} flags={tally.expired} />
+        {by && <p className="text-xs text-muted">First vouched by <span className="font-semibold text-ink">@{by}</span></p>}
         <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2">
           {r.go && <a href={r.go} target="_blank" rel="sponsored nofollow noopener" className={`${r.state === "live" ? "btn-primary" : "btn-soft"} min-h-10 px-4`}>Go to {r.store}</a>}
           <Link href={`/card/${r.slug}`} className="inline-flex min-h-10 items-center text-sm font-semibold text-muted underline underline-offset-4 hover:text-ink">Compare every store</Link>
@@ -160,7 +170,9 @@ function DropCard({ r, tally, mine, onVote, failed, big = false }: { r: BoardRow
             {mine.expired ? "You said it has gone" : "Gone?"}
             {tally.expired > 0 && <span className="ml-1 tabular-nums no-underline">({tally.expired})</span>}
           </button>
-          <span role="status" aria-live="polite" className="text-xs text-down">{failed ? "Couldn’t save that vote. Try again in a minute." : ""}</span>
+          <span role="status" aria-live="polite" className={`text-xs ${failed ? "text-down" : "text-open"}`}>
+            {failed ? "Couldn’t save that vote. Try again in a minute." : earned ? <>+{earned.n} community {earned.n === 1 ? "point" : "points"}{earned.named ? "" : <> · <Link href="/account" className="underline underline-offset-2">pick a name</Link> to show on deals</>}</> : ""}
+          </span>
         </div>
       </div>
       <DropViewBeacon id={r.id} />
@@ -172,7 +184,7 @@ type Sort = "new" | "hot";
 
 export function DropBoard({ rows, single = false, bare = false }: { rows: BoardRow[]; single?: boolean; /** the cards alone, no order or game controls */ bare?: boolean }) {
   const ids = useMemo(() => rows.map((r) => r.id), [rows]);
-  const { tallies, mine, vote, failed } = useVotes(ids);
+  const { tallies, mine, vote, failed, by, earned } = useVotes(ids);
   const [sort, setSort] = useState<Sort>("new");
   const [game, setGame] = useState<string | null>(null);
   // "Hot" is worked out when it is picked, so a vote does not make the card under the visitor's thumb jump away.
@@ -194,7 +206,7 @@ export function DropBoard({ rows, single = false, bare = false }: { rows: BoardR
   const cards = (
     <ol className="flex flex-col gap-3">
       {shown.map((r) => (
-        <DropCard key={r.id} r={r} tally={tallies[r.id] ?? NO_TALLY} mine={mine[r.id] ?? NO_VOTE} onVote={(a) => vote(r.id, a)} failed={failed === r.id} big={single} />
+        <DropCard key={r.id} r={r} tally={tallies[r.id] ?? NO_TALLY} mine={mine[r.id] ?? NO_VOTE} onVote={(a) => vote(r.id, a)} failed={failed === r.id} by={by[r.id]} earned={earned?.id === r.id ? earned : null} big={single} />
       ))}
     </ol>
   );
