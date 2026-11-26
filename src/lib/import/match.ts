@@ -416,6 +416,14 @@ export function setCodesInTitle(title: string, idx: MatchIndex): Set<number> {
     if (!/^[A-Z]{2,4}\d{2}$/.test(code)) continue;
     for (const id of idx.setByCode.get(code) ?? []) out.add(id);
   }
+  // A release code the catalogue knows from a set name's prefix ("UE25BT", "DZ-LBT02", "ECP01"), spelled whole: the
+  // shape above stops at "UE25" when letters follow. Only codes the index holds, with a letter and a digit; it can only
+  // add codes, so a title naming another set's code is refused, never taken.
+  for (const m of title.matchAll(/(?<![A-Za-z0-9-])[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*(?![A-Za-z0-9-])/g)) {
+    const w = m[0].toUpperCase();
+    if (!/\d/.test(w) || !/[A-Z]/.test(w)) continue;
+    for (const k of new Set([w, w.replace(/-/g, "")])) for (const id of idx.setByCode.get(k) ?? []) out.add(id);
+  }
   return out;
 }
 

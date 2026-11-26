@@ -21,7 +21,7 @@ import { focusCatalog, marketCents } from "@/lib/import/focus";
 import { loadSisterOffers, MAX_AGE_H as SISTER_MAX_AGE_H } from "@/lib/import/sisters";
 import { carryDownSisters, groupsToKeep, heldForDownSisters, updateCulled, type CulledMap, type SisterMemo } from "@/lib/import/continuity";
 import { OFFER_FLOOR, vetStores, type Refusal } from "@/lib/import/vet";
-import { addCrawlOffers, carryCrawl, crawlStoreKeys, storeIdentity, takeCrawl, type CrawlRun, type CrawlStore, type PickContext } from "@/lib/import/crawl";
+import { addCrawlOffers, carryCrawl, crawlIndex, crawlStoreKeys, storeIdentity, takeCrawl, type CrawlRun, type CrawlStore, type PickContext } from "@/lib/import/crawl";
 import type { CrawlMeta } from "@/lib/site-types";
 import { sisterHostsByLine } from "./crawl-probe";
 import { buildIndex, type MatchIndex, handleOf, isForeign, isPreorder, isUnfitListing, looksSealed, matchCard, matchSealed, printingOf } from "@/lib/import/match";
@@ -557,7 +557,7 @@ function mergeOwnCrawl(a: {
     if (!indexes.has(line)) {
       const ss = sets.filter((st) => st.line === line);
       const ids = new Set(ss.map((st) => st.id));
-      indexes.set(line, buildIndex(products.filter((p) => ids.has(p.setId)), ss, SITE.numberStyle, { rarityMustAgree: SITE.rarityMustAgree, rarityAliases: SITE.rarityAliases, setEditions: SITE.setEditions }));
+      indexes.set(line, crawlIndex(products.filter((p) => ids.has(p.setId)), ss, SITE.numberStyle, { rarityMustAgree: SITE.rarityMustAgree, rarityAliases: SITE.rarityAliases, setEditions: SITE.setEditions }));
     }
     return indexes.get(line)!;
   };

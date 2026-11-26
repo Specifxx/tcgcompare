@@ -1850,3 +1850,27 @@ page) and `home-games` (the list). Reverts by deleting the block.
 **Read:** phone bounce (non-Reddit) and buy clickers per 100 phone visitors on the home page, and phone visits to
 `/games/<game>` from the home page, the week after release against the week before. If game-page visits from a phone fall,
 the six tiles come back as one sideways row and the marquee is the one that hides.
+
+## 2026-11-26: The crawl reads set names without TCGplayer's release code
+
+TCGplayer puts a release code in front of the set name for almost every Union Arena (61 of 62), Cardfight!! Vanguard
+(70 of 70) and Shadowverse: Evolve (44 of 44) set, and some hololive and Palworld ones ("UE25BT: My Hero Academia
+Special Booster", "DZ-LBT02: Lyrical Monasterio Season of Wonders"). `matchSealed` needs every word of the set's name in
+the title, so on our own crawl a shop title that did not spell the code could never be placed by its title. On the
+catalogue, a title of "<set name> <product name>" placed itself for 1 of 153 Union Arena products, 8 of 111 Vanguard,
+10 of 71 Shadowverse. The Amazon matcher already reads names this way (2026-11-14), and nothing explained why the store
+import should not.
+
+- The crawl's per-game index is `crawlIndex` (`lib/import/crawl.ts`), `buildIndex` with `stripSetCodes`: the code is one
+  more code of the set, not a word every title needs. Same simulation after: 153/153, 108/111, 71/71, and no product of
+  any game placed on another that was not already (the 9 One Piece Double Pack Set and 1 Digimon release-event rows
+  are the same before and after; the title pick's type and quantity checks refuse them).
+- `setCodesInTitle` now also reads a whole release code the index knows ("UE25BT", "DZ-LBT02", "ECP01"); before, the
+  two-letters-two-digits shape stopped at "UE25" and read nothing. It only adds codes, so a title naming another set's
+  code is refused.
+- Every other rule of the title pick is unchanged (in stock, one game, its own type, quantity one, 40-250% of
+  TCGplayer's market). The old store pass (`idx` in `import-all.ts`) is left as it was.
+
+**Read:** after the next import, `takenByLine` ua / cfv / sve (25 Nov: 116 / 421 / 124) and the products with 0 stores
+(`scripts/coverage-report.ts`; Union Arena 88/154 on 23 Nov), the Union Arena My Hero Academia box (714370, 11 Dec) and
+the Vanguard Persona 30th display (710648, 11 Dec), both TCGplayer only on 25 Nov.

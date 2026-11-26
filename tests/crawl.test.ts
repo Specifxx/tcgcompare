@@ -847,3 +847,23 @@ test("the crawl reads a pre-order shelf once; a listing only there carries the s
   assert.deepEqual(lines.get("chromatic-ascension-booster-box"), ["dbs", "ws"]);
   assert.deepEqual(lines.get("in-both"), ["ws"]);
 });
+
+// ── Set names with a release code in front (DECISIONS.md 2026-11-26) ───────────────────────────────────────────────
+
+test("crawlIndex: a shop title need not spell TCGplayer's release code, and a title naming another code is refused", async () => {
+  const { crawlIndex } = await import("../src/lib/import/crawl");
+  const { matchSealed } = await import("../src/lib/import/match");
+  const sets = [set(24849, "UE25BT: My Hero Academia Special Booster", "ua"), set(24000, "UE17BT: SOLO LEVELING", "ua")];
+  const products = [
+    prod(714370, "My Hero Academia Special Booster - Booster Box", 24849, "Booster Box"),
+    prod(600001, "SOLO LEVELING Booster Box", 24000, "Booster Box"),
+  ];
+  const plain = buildIndex(products, sets, "code");
+  const idx = crawlIndex(products, sets, "code");
+  const title = "Union Arena My Hero Academia Special Booster Box";
+  assert.equal(matchSealed(title, plain), null, "before: the code was a word every title needed");
+  assert.equal(matchSealed(title, idx)?.product.id, 714370);
+  assert.equal(matchSealed("Union Arena: My Hero Academia Special Booster [UE25BT] Booster Box", idx)?.product.id, 714370);
+  assert.equal(matchSealed("Union Arena My Hero Academia Special Booster Box [UE17BT]", idx), null, "another set's code");
+  assert.equal(matchSealed("Union Arena SOLO LEVELING Booster Box", idx)?.product.id, 600001);
+});
