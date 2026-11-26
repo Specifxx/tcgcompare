@@ -14,6 +14,7 @@ import { PRICES_DIR, SUMMARY_FILE } from "../src/lib/price-store";
 import { readRestocks } from "../src/lib/restocks";
 import { SITE_URL } from "../src/lib/site";
 import { RequestBudget, StopStore, StoreSession } from "../src/lib/import/polite-http";
+import { DROP_LOG_FILE, appendDrops, type DropLog } from "../src/lib/sniper-board";
 import {
   dropEvents,
   preorderEvents,
@@ -28,6 +29,7 @@ import {
   productPath,
   rankEvents,
   recordPosted,
+  sniperKey,
   restockEvents,
   type ShopifyJs,
   type SniperEvent,
@@ -197,6 +199,8 @@ async function main() {
   const next = recordPosted(state, posted, Date.now());
   next.lastRun = { at: new Date().toISOString(), candidates: events.length, fresh: ranked.length, posted: posted.length, skipped: why };
   fs.writeFileSync(STATE_FILE, JSON.stringify(next));
+  // the public drop log /restocks shows with its votes (lib/sniper-board.ts): only what was really posted
+  if (posted.length) fs.writeFileSync(DROP_LOG_FILE, JSON.stringify(appendDrops(readJson<DropLog>(DROP_LOG_FILE), posted, sniperKey, Date.now())));
 }
 
 main().catch((e) => console.log(`sniper: ${(e as Error).message}`));
