@@ -1943,3 +1943,14 @@ or sold out). `/drops/<id>` is one drop's page with a share button: the link to 
 
 **Not done, on purpose:** comments and member-posted deals. Both need accounts and moderation the owner is not there to
 do; they follow once the votes show people use the board. Measure with phase one's events plus `drop_sort`.
+
+## 2026-11-26: AI shadow match runs as a half-price batch, and Haiku 5.5 is trialled beside Sonnet
+
+Claude Haiku 5.5 costs US$0.10 / US$0.50 per million tokens, a twentieth of Sonnet 5.5 (US$2 / US$10), and Message
+Batches halve either. `ai-shadow-match.yml` takes `batch` (one Message Batch per run, admitted only while a cautious cost
+estimate fits `max_usd`; cancelled after 45 minutes, unanswered titles asked next run; a failed batch fails the run and
+counts its reserve as spent) and `model` (Sonnet 5.5 or Haiku 5.5 only). Sonnet stays the live model: only it writes
+`cache.json`, the file `pickByAi` reads. Haiku is a TRIAL: it writes `cache-claude-haiku-5-5.json` and a summary whose
+`vsReference` counts agreement with Sonnet on the same titles, and a trial never publishes without the live cache on the
+branch. Haiku goes live only if it agrees with Sonnet's guarded matches as well as Sonnet's own 99.5% pilot precision
+(scripts/ai-title-pilot.ts); a wrong match is worse than none.
