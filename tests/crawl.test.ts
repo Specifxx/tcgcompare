@@ -89,6 +89,13 @@ test("the id in a variant SKU is found and taken; a barcode or a store's own cod
   for (const sku of ["0810091234567", "SWU-LOF-BB", "LOF612345X"]) assert.deepEqual(idsInListing(listing({ variants: [{ id: 1, price: "1", sku }] })), [], sku);
 });
 
+test("a single card's code refuses an id from the handle, but not one TCGplayer's own photo proves (2026-11-26)", () => {
+  const single = crawled(listing({ title: "Star Wars Unlimited Legends of the Force Booster Box Leader (LOF-EN001)", handle: "lof-booster-box-612345" }));
+  assert.equal((pickId(single, ctx) as { refuse: string }).refuse, "unfit");
+  const promo = crawled(listing({ title: "Star Wars Unlimited Legends of the Force Booster Box (LOF-EN001)", images: [{ src: "https://tcgplayer-cdn.tcgplayer.com/product/612345_200w.jpg" }] }));
+  assert.deepEqual(pickId(promo, ctx), { id: 612345 });
+});
+
 test("two catalogue ids in one listing: refused", () => {
   const l = crawled(listing({ handle: "lof-booster-box-612345", images: [{ src: "https://cdn.test/files/612346_in_1000x1000.jpg" }] }));
   assert.equal((pickId(l, ctx) as { refuse: string }).refuse, "two-ids");
@@ -590,6 +597,7 @@ test("pickByTitle: one product, its own type, in stock, in the price band; anyth
   // a single card's code or a Japanese box named in the shop's own language (Haiku trial, 2026-11-26)
   assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box (SWU05-001)" }), c, "US"), true);
   assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box japonais" }), c, "US"), true);
+  assert.equal("refuse" in pickByTitle(l({ handle: "star-wars-unlimited-legends-of-the-force-booster-box-lof-en001" }), c, "US"), true);
   // never without the band callback
   assert.equal("refuse" in pickByTitle(l(), ctx, "US"), true);
   // takeCrawl uses it for every crawled store (owner, 2026-11-16: as many listings as possible)

@@ -2053,3 +2053,15 @@ posting the member's token as every other account call does. A daily check-in is
 a row, up to 10 a day; points buy 7 days of Premium (300 points, once a month, never for paying subscribers). It loads after render,
 opens nothing by itself and shows on no other page (one prompt a visit at most). Points have no cash value and never change giveaway
 entries.
+
+## 2026-11-26: Foreign words in a shop's own language, and single-card codes, refuse a crawl listing
+
+The Haiku 5.5 shadow trial (strategy/claude-capabilities-log.md, 26 Nov) hand-read 25 listings the guards passed: three
+Japanese boxes titled in Dutch, French and German ("Japans", "japonais", "Japanisch") and two singles from a starter deck
+or mastery pack ("(ST02-002)", "(MPW088)") would have been placed on English sealed products. `isForeign` now also reads
+the European words for Japanese, Korean and Chinese (`FOREIGN_NAMED`; it applies to every path, Amazon's included), and
+`namesCardCode` refuses a title or raw handle carrying a single card's code (letters and digits, hyphen, three digits;
+"LOB-EN001"; "BLC-1-001"; a bracketed "(MPW088)") in the id, title and AI picks and in the shadow guard. Set and deck
+codes ("OP-09", "OP09", "[ST-02]", "UE25BT", "SV10") are not card codes. No catalogue name matches either pattern. An id
+TCGplayer's own photo proves is still taken, since a promo collection may name its card. Rules only refuse. The Haiku
+re-trial (both models on the same candidates, 50 graded) comes after the next crawl reads with these rules.

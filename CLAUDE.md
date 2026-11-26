@@ -57,7 +57,7 @@ For the games no sister prices (the `crawl` words in `site.config.ts`; never a g
   the git-ignored `data/crawl/listings.json`. The import takes a listing ONLY by the TCGplayer id the listing carries
   (`pickId`, `lib/import/crawl.ts`): exactly one catalogue id across its handle, SKUs and photo filenames, of a game it
   was crawled for, no other TCGplayer-shaped id in its handle, SKUs or photos (in the catalogue or not), not foreign,
-  unfit (also opened, open box, pre-owned, resealed, empty, a break spot, a repack, missing packs) or another quantity
+  unfit (also opened, open box, pre-owned, resealed, empty, a break spot, a repack, missing packs, or a single card's code in the title or handle such as "(ST02-002)", unless TCGplayer's photo proves the id) or another quantity
   ("(6 Boxes)", "Display of 6", "Half"), the title's and a lone variant's product type the same as the id's, and
   `matchSealed` on that game alone agreeing or saying nothing; an id from the handle or a SKU alone (no TCGplayer
   photo of it) also needs the matcher to land on it or the title to name its set. The matcher only refuses; never
