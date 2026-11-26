@@ -5,6 +5,7 @@ import { canon } from "@/lib/site";
 import { boardRows, boardUpdatedAt } from "@/lib/drop-board-data";
 import { DROP_LOG_DAYS } from "@/lib/sniper-board";
 import { DropBoard } from "@/components/DropBoard";
+import { TopHunters } from "@/components/TopHunters";
 import { TELEGRAM_URL } from "@/components/DiscordCta";
 
 // THE DEAL BOARD (owner, 2026-11-26; lib/drop-board.ts). One static copy, rebuilt with each data release.
@@ -41,6 +42,7 @@ export default function Drops() {
           <p className="max-w-xl text-sm text-muted">The Sniper checks every store twice a day and posts at most three drops a day, each one confirmed at the store first. The next one lands here. Until then, see what came <Link className="link" href="/restocks">back in stock</Link> or <Link className="link" href="/tools/deal-finder">today&apos;s deals</Link>.</p>
         </section>
       )}
+      <TopHunters site="tcgprices" />
       <section aria-label="Get drops as they happen" className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-base font-bold">Get the next drop the minute it is checked</h2>
