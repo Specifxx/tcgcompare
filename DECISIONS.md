@@ -2065,3 +2065,17 @@ the European words for Japanese, Korean and Chinese (`FOREIGN_NAMED`; it applies
 codes ("OP-09", "OP09", "[ST-02]", "UE25BT", "SV10") are not card codes. No catalogue name matches either pattern. An id
 TCGplayer's own photo proves is still taken, since a promo collection may name its card. Rules only refuse. The Haiku
 re-trial (both models on the same candidates, 50 graded) comes after the next crawl reads with these rules.
+
+## 2026-11-26 — Deal board: the banner and the shares lead with one price gap
+
+**Asked:** the COO's Cluely study, move 1: every surface that is shared leads with ONE real, surprising number, tracked
+with `utm_campaign=price-gap`.
+
+**Now:** `/drops` opens with today's widest gap between stores for a product on the board ("X ranges $A to $B across N US
+stores today. Same sealed product."), with the difference as the big figure, a link to that product's stores and a share
+button. A drop's own share text leads with its product's gap, then says where the low end is. The gap is
+`lib/share.ts` `bragGap` (in-stock STORES in one market, never eBay, TCGplayer or Amazon, never converted) through
+`storeGap`; under 5% of the dearest price (`GAP_MIN_PCT`) nothing is said, and with no gap the banner is absent and the
+share falls back to the drop's own line. US first, then the widest in money (`pickGap`). Both share links carry
+`utm_campaign=price-gap` beside the usual `utm_source=share&utm_medium=drop`. No word about any store beyond its price.
+`tests/drop-board.test.ts`.
