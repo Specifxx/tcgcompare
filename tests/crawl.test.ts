@@ -587,6 +587,9 @@ test("pickByTitle: one product, its own type, in stock, in the price band; anyth
   assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box Opened" }), c, "US"), true);
   // a handle that names another kind than the title (a box handle under a pack title) is two readings
   assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Pack", handle: "star-wars-unlimited-legends-of-the-force-booster-box-sealed-copy" }), c, "US"), true);
+  // a single card's code or a Japanese box named in the shop's own language (Haiku trial, 2026-11-26)
+  assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box (SWU05-001)" }), c, "US"), true);
+  assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box japonais" }), c, "US"), true);
   // never without the band callback
   assert.equal("refuse" in pickByTitle(l(), ctx, "US"), true);
   // takeCrawl uses it for every crawled store (owner, 2026-11-16: as many listings as possible)
@@ -649,6 +652,12 @@ test("an AI placement whose guard failed on edition or type is refused, but a ti
   assert.ok("refuse" in pickByAi(aiListing(), "cards.test", bad, "US"));
   const noType = aiCtx({}, { id: 612345, pass: false, reasons: ["no-type"] });
   assert.deepEqual(pickByAi(aiListing(), "cards.test", noType, "US"), { id: 612345 });
+});
+
+test("an AI placement on a single card's code or a Japanese box named in the shop's language is refused (2026-11-26)", () => {
+  const c = (t: string) => aiCtx({ ai: new Map([[`cards.test|${t}`, { id: 612345, pass: true, reasons: [] }]]) });
+  for (const t of ["Legends of the Force Display Japanisch", "Legends of the Force Leader (LOF-EN001)"])
+    assert.ok("refuse" in pickByAi(aiListing({ title: t }), "cards.test", c(t), "US"), t);
 });
 
 test("an AI placement outside the wide price band, on another game's product or on an opened box is refused", () => {

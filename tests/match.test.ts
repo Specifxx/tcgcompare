@@ -149,6 +149,28 @@ test("ygo: real store title formats from the 2026-10-26 probe", () => {
   assert.equal(matchCard("Yu-Gi-Oh! Crackle Blitzclique CORI-EN012 1st Edition NM", i), null);
 });
 
+test("Japanese named in a European shop's language is foreign; card codes read as singles (Haiku trial, 2026-11-26)", async () => {
+  const { isForeign, namesCardCode } = await import("@/lib/import/match");
+  // The three Japanese listings the 26 Nov trial placed on English products.
+  assert.ok(isForeign("One Piece Card Game OP-09 Booster Box Japans"));
+  assert.ok(isForeign("Display 24 boosters One Piece OP-09 japonais"));
+  assert.ok(isForeign("One Piece Card Game OP-09 Display Japanisch"));
+  assert.ok(isForeign("Booster Box Coreano"));
+  assert.ok(isForeign("Display chinoise"));
+  // English titles are untouched.
+  assert.equal(isForeign("One Piece Card Game Emperors in the New World Booster Box [OP-09]"), false);
+  assert.equal(isForeign("Dragon Ball Super Fusion World Booster Box [FB11]"), false);
+  // Singles from starter decks and mastery packs carry their card code.
+  assert.ok(namesCardCode("Monkey.D.Luffy (ST02-002) - Starter Deck 2: Worst Generation"));
+  assert.ok(namesCardCode("Mastery Pack Warrior Card (MPW088)"));
+  assert.ok(namesCardCode("Son Goku FB11-084 SR"));
+  assert.ok(namesCardCode("Blue-Eyes White Dragon LOB-EN001"));
+  assert.ok(namesCardCode("Asta UE01BT/BLC-1-001"));
+  // Set and deck codes are not card codes.
+  for (const t of ["One Piece OP-09 Booster Box", "OP09 Booster Box", "Starter Deck [ST-02]", "Union Arena UE25BT My Hero Academia Booster Box", "Pokemon SV10 Elite Trainer Box", "Digimon BT-27 Booster Box", "Gundam Card Game Booster Box [GD06]"])
+    assert.equal(namesCardCode(t), false, t);
+});
+
 test("Japanese boxes and wrong set codes never match (Gundam Compare, live 2026-11-08)", async () => {
   const { handleOf, isForeign } = await import("@/lib/import/match");
   const gsets: SetInfo[] = [
