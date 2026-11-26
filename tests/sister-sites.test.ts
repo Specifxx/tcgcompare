@@ -1,5 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { SITE } from "@/site.config";
 
 // Every site links the whole Compare Empire family from its footer (owner,
@@ -31,7 +33,7 @@ test("footer: one link to /our-sites, which lists the other family sites", async
   assert.match(footer, /href="\/our-sites"/);
   assert.doesNotMatch(footer, /footerSisters|NETWORK_PAGE|href="https?:\/\//, "no external site links in the footer");
   const page = fs.readFileSync("src/app/our-sites/page.tsx", "utf8");
-  assert.match(page, /FAMILY_SITES\.filter\(\(s\) => s\.id !== SITE\.family\.id && sameSide\(SITE\.family\.id, s\.id\)\)/);
+  assert.match(page, /FAMILY_SITES\.filter\(\(s\) => s\.id !== SITE\.family\.id && !SITE\.family\.merged\?\.includes\(s\.id\) && sameSide\(SITE\.family\.id, s\.id\)\)/);
   assert.match(page, /rel="noopener"/);
   assert.doesNotMatch(page, /nofollow|sponsored/);
   assert.ok(FAMILY_SITES.length >= 10 && !FAMILY_SITES.some((s) => /kaeyoung/i.test(s.url)));
@@ -40,4 +42,14 @@ test("footer: one link to /our-sites, which lists the other family sites", async
 test("footer carries the TCGplayer data notice (TCGplayer API terms, 2026-11-17)", async () => {
   const fs = await import("node:fs");
   assert.ok(fs.readFileSync("src/components/Footer.tsx", "utf8").includes("This product uses TCGplayer data but is not endorsed or certified by TCGplayer."));
+});
+
+// BandaiCompare merged into TCG Prices (owner, 2026-11-26): its games are our game hubs, so it is never listed,
+// searched or tiled here as a sister, and the family sync never copies its feed.
+test("BandaiCompare is merged here, not a sister", async () => {
+  const { SITE } = await import("@/site.config");
+  assert.deepEqual(SITE.family.merged, ["bandai"]);
+  assert.ok(!SITE.sisterSites.some((s) => /bandai/i.test(s.url)));
+  const sync = fs.readFileSync(path.join(process.cwd(), "scripts/family-sync.ts"), "utf8");
+  assert.match(sync, /clusterIds\(SITE\.family\.id\)\.filter\(\(id\) => !SITE\.family\.merged\?\.includes\(id\)\)/);
 });

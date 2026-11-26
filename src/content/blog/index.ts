@@ -7,6 +7,10 @@ import { pokemonDeltaReignPrices } from "./pokemon-delta-reign-prices";
 import { magicStarTrekPrices } from "./magic-star-trek-prices";
 import { lorcanaHyperiaCityPrices } from "./lorcana-hyperia-city-prices";
 import { newTcgReleasesDecember2026 } from "./new-tcg-releases-december-2026";
+// From BandaiCompare, merged here on 2026-11-26 (owner): its three evergreen guides keep their URLs' slugs.
+import { post as unionArenaStars } from "./union-arena-stars";
+import { post as bandaiCardNumbers } from "./card-numbers";
+import { post as bandaiFakeCards } from "./fake-cards";
 
 // A post here answers one question the day's prices answer, written around real numbers (tokens, lib/game-study.ts).
-export const POSTS: Post[] = [newTcgReleasesDecember2026, boosterBoxCost, tcgplayerVsStores, swuCarbonitePrice, fabBoosterBoxPrices, pokemonDeltaReignPrices, magicStarTrekPrices, lorcanaHyperiaCityPrices];
+export const POSTS: Post[] = [newTcgReleasesDecember2026, boosterBoxCost, tcgplayerVsStores, swuCarbonitePrice, fabBoosterBoxPrices, pokemonDeltaReignPrices, magicStarTrekPrices, lorcanaHyperiaCityPrices, bandaiFakeCards, unionArenaStars, bandaiCardNumbers];

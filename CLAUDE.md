@@ -21,6 +21,10 @@ Game facts live in `src/site.config.ts`; engine code never names a game.
 
 ## Store prices come from the sister sites, by TCGplayer product id only
 
+BandaiCompare is merged here (owner, 2026-11-26; DECISIONS.md): bandaicompare.com 301s every page to its twin here
+(`SITE.family.merged`), and its import stays only as the price feed for Union Arena, Fusion World and Digimon.
+
+
 `lib/import/sisters.ts` reads each sister's published data from a sparse checkout (`SISTER_DIR`); no store is visited
 for a game a sister covers (our own crawl, below, reads only the games none covers; the one exception is the Sealed
 Sniper's single live check of a product before it is posted to Discord, `scripts/sniper.ts`, DECISIONS.md 2026-11-19). OP Compare is read from its

@@ -254,7 +254,7 @@ export interface SiteConfig {
   sisterSites: SisterSite[];
   /** This site in the Compare Empire network (lib/family-network.ts): which
    *  clusters its footer and "Also in this cluster" blocks draw from. */
-  family: { id: FamilySiteId };
+  family: { id: FamilySiteId; /** Sister sites merged into this one (owner, 2026-11-26: BandaiCompare): never listed or tiled here, their URLs 301 here. */ merged?: FamilySiteId[] };
   social: { reddit?: string; discord?: string };
   /** A model-kit section (/kits, /kit/<slug>), off unless set: plastic model
    *  kits compared across hobby shops by their JAN barcode (lib/kits.ts,
