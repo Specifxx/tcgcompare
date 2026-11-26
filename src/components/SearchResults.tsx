@@ -11,7 +11,12 @@ interface Hit { slug: string; href?: string; name: string; set: string; image: s
 export function SearchResults() {
   // useSearchParams (inside the page's Suspense) so a second search from this page's own box updates the list.
   const params = useSearchParams();
-  const q: string | null = params ? (params.get("q") ?? "").trim().slice(0, 80) : null;
+  // Read the query only after mount. The page is force-static, so its HTML was rendered with NO query (Next gives a
+  // force-static page empty search params); using the address's query in the first render made hydration disagree with
+  // that HTML (React #418/#422 on every /search?q=, found by the QA guard 2026-11-26). The first render now matches.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const q: string | null = mounted && params ? (params.get("q") ?? "").trim().slice(0, 80) : null;
   const [hits, setHits] = useState<Hit[] | null>(null);
   const [corrected, setCorrected] = useState<string | null>(null);
   const [popular, setPopular] = useState<Hit[]>([]);
