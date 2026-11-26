@@ -87,6 +87,12 @@ export function addItem(items: VaultItem[], item: Omit<VaultItem, "qty" | "added
   return [next, ...items].slice(0, VAULT_MAX_ITEMS);
 }
 
+/** What the member says they paid per unit: it replaces the price when added (0 clears it back to unknown). */
+export function setItemCost(items: VaultItem[], key: string, cents: number): VaultItem[] {
+  const c = Number.isFinite(cents) && cents > 0 && cents < 1e9 ? Math.round(cents) : 0;
+  return items.map((i) => (itemKey(i) === key ? { ...i, addedCents: c } : i));
+}
+
 /** qty 0 removes the item. */
 export function setItemQty(items: VaultItem[], key: string, qty: number): VaultItem[] {
   const q = clampQty(qty);
@@ -94,10 +100,11 @@ export function setItemQty(items: VaultItem[], key: string, qty: number): VaultI
 }
 
 /** Today's price for each item, from the site's /prices.json. */
-export function valueItems(items: VaultItem[], file: PriceFile | null): ValuedItem[] {
+export function valueItems(items: VaultItem[], file: PriceFile | null, cards: Record<string, number> = {}): ValuedItem[] {
   const by = new Map((file?.products ?? []).map((p) => [p.id, p.prices ?? {}]));
   return items.map((i) => {
-    const c = by.get(i.id)?.[i.market]?.cents;
+    // A single card (lib/card-collection.ts) is valued at TCGplayer's market price from TCG Singles DB, in US$.
+    const c = i.id.startsWith("card:") ? cards[i.id] : by.get(i.id)?.[i.market]?.cents;
     return { ...i, nowCents: typeof c === "number" && c > 0 ? c : null };
   });
 }
