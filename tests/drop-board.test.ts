@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { BOARD_MAX, GONE_FLAGS, NO_TALLY, NO_VOTE, applyVote, dropState, heat, score, sortHot, underMarket, type Tally } from "../src/lib/drop-board";
+import { GAP_CAMPAIGN, GAP_MIN_PCT, gapLine, pickGap, type StoreGap, BOARD_MAX, GONE_FLAGS, NO_TALLY, NO_VOTE, applyVote, dropState, heat, score, sortHot, underMarket, type Tally } from "../src/lib/drop-board";
 
 // The deal board (owner, 2026-11-26): /drops and /drops/<id>.
 
@@ -75,4 +75,22 @@ test("votes order the board and nothing else; nothing is typed and nobody is ask
   assert.match(ui, /rel="sponsored nofollow noopener"/);
   for (const f of ["src/lib/sniper.ts", "src/components/PriceTable.tsx", "src/lib/data.ts", "src/lib/alert-feed.ts", "src/components/ProductTile.tsx"])
     assert.doesNotMatch(readFileSync(f, "utf8"), /deal-votes|drop-board|DropBoard/, f);
+});
+
+test("the price gap: one real sentence, US first then the widest in money, tagged price-gap", () => {
+  const g = (diffCents: number, pct: number, where = "US"): StoreGap => ({ low: "$100.00", high: "$141.00", diff: "$41.00", diffCents, pct, stores: 6, where });
+  assert.equal(gapLine("Prismatic Evolutions Booster Bundle", g(4100, 29)), "Prismatic Evolutions Booster Bundle ranges $100.00 to $141.00 across 6 US stores today. Same sealed product.");
+  const rows = [
+    { id: "uk-wide", market: "UK" as const, gap: g(9000, 30, "UK") },
+    { id: "us-small", market: "US" as const, gap: g(1500, 12) },
+    { id: "us-wide", market: "US" as const, gap: g(4100, 29) },
+    { id: "us-noise", market: "US" as const, gap: g(99000, GAP_MIN_PCT - 1) },
+  ];
+  assert.equal(pickGap(rows)?.id, "us-wide");
+  assert.equal(pickGap(rows.filter((r) => r.market !== "US"))?.id, "uk-wide", "no US gap: the widest elsewhere");
+  assert.equal(pickGap([rows[3]!]), null, "a spread under the floor is never the headline");
+  assert.equal(GAP_CAMPAIGN, "price-gap");
+  const data = readFileSync("src/lib/drop-board-data.ts", "utf8");
+  assert.match(data, /bragGap\(priceOf\(productId\)\.offers, market\)/, "stores only, one market, never converted (lib/share.ts bragGap)");
+  for (const f of ["src/app/drops/page.tsx", "src/app/drops/[id]/page.tsx"]) assert.match(readFileSync(f, "utf8"), /utm_campaign=\$\{GAP_CAMPAIGN\}/, f);
 });

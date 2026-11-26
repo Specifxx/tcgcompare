@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "@/components/Link";
 import { boardRow, boardRows } from "@/lib/drop-board-data";
-import { KIND_LABEL } from "@/lib/drop-board";
+import { GAP_CAMPAIGN, KIND_LABEL } from "@/lib/drop-board";
 import { DropBoard } from "@/components/DropBoard";
 import { ShareButton } from "@/components/ShareButton";
 
@@ -39,7 +39,8 @@ export default function Drop({ params }: { params: { id: string } }) {
       <DropBoard rows={[r]} single />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-xl text-sm text-muted">Checked at the store just before it was posted. Stock can sell out between our checks: the store&apos;s page has the final word.</p>
-        <ShareButton path={`/drops/${r.id}`} name={r.name} medium="drop" text={`${KIND_LABEL[r.kind]}: ${r.name} ${r.price} at ${r.store}`} label="Share this deal" />
+        {/* The share leads with the gap between stores when there is one (Cluely study, move 1), then says where the low end is. */}
+        <ShareButton path={`/drops/${r.id}?utm_campaign=${GAP_CAMPAIGN}`} name={r.name} medium="drop" text={r.gap ? `${r.gap} ${r.store} has it at ${r.now ?? r.price}.` : `${KIND_LABEL[r.kind]}: ${r.name} ${r.price} at ${r.store}`} label="Share this deal" />
       </div>
       {more.length > 0 && (
         <section aria-labelledby="more-drops" className="flex flex-col gap-3">
