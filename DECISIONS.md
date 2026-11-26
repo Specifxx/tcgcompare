@@ -2080,6 +2080,12 @@ share falls back to the drop's own line. US first, then the widest in money (`pi
 `utm_campaign=price-gap` beside the usual `utm_source=share&utm_medium=drop`. No word about any store beyond its price.
 `tests/drop-board.test.ts`.
 
+## 2026-11-27 — Trustpilot domain verified; review link on About and How we compare
+
+tcgprices.app was verified on Trustpilot through the meta tag above (26 Nov, Bill's account). A plain text link
+"Review us on Trustpilot" (trustpilot.com/review/tcgprices.app) now sits at the foot of /about and /methodology only.
+No widget, no script, no stars on product or home pages, no prompt (UX guard). We never filter or ask only happy
+buyers for reviews.
 ## 2026-11-27: The Empire design system replaces the 2050 layer's effects
 
 A visitor wrote to Compare Empire asking us to "hire a graphic designer so it wasn't giving claudeslop", and the owner asked
