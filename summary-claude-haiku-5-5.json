@@ -1,0 +1,24 @@
+{
+  "at": "2026-11-26T09:12:07.541Z",
+  "model": "claude-haiku-5-5",
+  "batch": true,
+  "idLess": 25516,
+  "reused": 0,
+  "asked": 23373,
+  "matched": 9469,
+  "passedGuards": 7306,
+  "stoppedAtCeiling": false,
+  "calls": 23373,
+  "spentUsd": 0.919,
+  "cacheEntries": 25516,
+  "vsReference": {
+    "both": 16297,
+    "same": 12317,
+    "sameMatch": 4838,
+    "onlyThis": 3606,
+    "onlyRef": 372,
+    "differentId": 2,
+    "thisPassedGuards": 6461,
+    "refPassedGuards": 4111
+  }
+}
