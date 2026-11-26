@@ -1878,6 +1878,19 @@ a.hero-pill:hover { color: rgb(var(--ink)); text-decoration: underline; text-und
   box-shadow: 0 0 0 3px rgb(var(--brand) / 0.18);
 }
 .hero-search button { border-radius: calc(var(--ds-radius) - 3px); }
+/* Where the field is a bordered form holding the input and a button (Dex, MTG), the form is the field. */
+.hero-search form.border {
+  border-width: 1.5px;
+  border-color: rgb(var(--ink) / 0.28);
+  border-radius: var(--ds-radius);
+  background-color: rgb(var(--surface));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+.hero-search form.border:focus-within { border-color: rgb(var(--brand)); box-shadow: 0 0 0 3px rgb(var(--brand) / 0.18); }
+.hero-search form.border input,
+.hero-search form.border input:focus { border: 0; box-shadow: none; background: transparent; }
 /* The ways in: flat tiles with a firm edge. No glass, no pointer spotlight, no glow. */
 .way {
   border-radius: var(--ds-radius);
