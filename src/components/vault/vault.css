@@ -121,3 +121,47 @@
 .ce-vault-details summary::after { content: "+"; font-size: 1rem; opacity: 0.7; }
 .ce-vault-details[open] summary::after { content: "−"; }
 .ce-vault-details[open] summary { margin-bottom: 0.4rem; }
+
+/* ── 2026-11-26: the collection app (single cards, what I paid, import, add to home screen; lib/card-collection.ts) ────── */
+.ce-cards-games { display: flex; gap: 0.4rem; overflow-x: auto; scrollbar-width: none; padding: 0.1rem 0.05rem 0.3rem; margin: 0 -0.05rem; }
+.ce-cards-games::-webkit-scrollbar { display: none; }
+.ce-cards-games button { flex: none; min-height: 2.1rem; padding: 0 0.8rem; border-radius: 999px; border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  background: transparent; color: inherit; font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.ce-cards-games button[aria-pressed="true"] { background: var(--cart-accent); border-color: var(--cart-accent); color: var(--cart-on-accent); }
+.ce-cards-games button:focus-visible, .ce-cards-hits button:focus-visible, .ce-vault-cost:focus-visible, .ce-app-close:focus-visible { outline: 2px solid var(--cart-accent); outline-offset: 2px; }
+.ce-cards .ce-vault-input { width: 100%; min-height: 2.75rem; font-size: 1rem; }
+.ce-cards-hits { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+.ce-cards-hits button { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; width: 100%; min-height: 3.5rem;
+  padding: 0.4rem 0.6rem; border-radius: 0.75rem; border: 1px solid color-mix(in srgb, currentColor 12%, transparent); background: transparent; color: inherit;
+  font: inherit; text-align: left; cursor: pointer; }
+.ce-cards-hits button:hover { border-color: color-mix(in srgb, var(--cart-accent) 60%, transparent); background: color-mix(in srgb, var(--cart-accent) 7%, transparent); }
+.ce-cards-hits img { width: 44px; height: 61px; object-fit: cover; border-radius: 4px; background: color-mix(in srgb, currentColor 8%, transparent); }
+.ce-cards-hitname { display: grid; min-width: 0; font-size: 0.875rem; line-height: 1.3; }
+.ce-cards-hitname strong, .ce-cards-hitname span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ce-cards-v { font-weight: 800; font-size: 0.875rem; }
+.ce-cards-pick { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 0.9rem; align-items: start; padding: 0.75rem; border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--cart-accent) 7%, transparent); }
+.ce-cards-pick img { width: 72px; height: 100px; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 14px rgb(0 0 0 / 0.25); }
+.ce-cards-printings { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.55rem; }
+.ce-cards-back { margin-top: 0.5rem; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-size: 0.8rem; opacity: 0.7; text-decoration: underline; cursor: pointer; }
+.ce-cards-src { margin: 0; }
+.ce-vault-row > img[src*="tcgplayer-cdn"] { object-fit: cover; height: 78px; width: 56px; }
+.ce-vault-cost { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+.ce-vault-costform { display: inline-flex; align-items: center; gap: 0.35rem; }
+.ce-vault-costform input { width: 5.5rem; min-height: 2rem; padding: 0 0.5rem; border-radius: 0.5rem; border: 1px solid var(--cart-accent); background: transparent;
+  color: inherit; font: inherit; font-size: 16px; /* 16px: iOS zooms into anything smaller */ }
+.ce-vault-name .ce-vault-muted a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.ce-import-result { display: grid; gap: 0.5rem; justify-items: start; padding: 0.75rem; border-radius: 0.75rem; background: color-mix(in srgb, currentColor 5%, transparent); }
+.ce-import-result p { margin: 0; }
+.ce-import-missed { margin: 0.4rem 0 0; padding-left: 1.1rem; font-size: 0.8rem; max-height: 14rem; overflow: auto; }
+
+.ce-app-install { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 0.85rem; align-items: start; padding: 1rem 2.6rem 1rem 1rem;
+  border-radius: 1rem; border: 1px solid color-mix(in srgb, var(--cart-accent) 45%, transparent); background: color-mix(in srgb, var(--cart-accent) 8%, transparent); }
+.ce-app-install img { border-radius: 10px; }
+.ce-app-install p { margin: 0.2rem 0 0.6rem; line-height: 1.45; }
+.ce-app-close { position: absolute; top: 0.35rem; right: 0.35rem; width: 2.25rem; height: 2.25rem; border: 0; border-radius: 999px; background: none; color: inherit;
+  font-size: 1.35rem; line-height: 1; opacity: 0.6; cursor: pointer; }
+.ce-app-close:hover { opacity: 1; background: color-mix(in srgb, currentColor 10%, transparent); }
+/* A grid item is as wide as its widest child unless told otherwise: the sideways game chips stretched the page on a phone. */
+.ce-vault, .ce-vault-empty, .ce-vault-tools { grid-template-columns: minmax(0, 1fr); }
+.ce-vault-empty > *, .ce-vault-tools > * { min-width: 0; max-width: 100%; }

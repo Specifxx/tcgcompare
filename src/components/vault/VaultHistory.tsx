@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { collectionSeries, idsToFetch, type HistoryHolding } from "@/lib/vault-history";
 import { formatMoney, pctChange, type ValuedItem } from "@/lib/vault";
 import { dayToDate, type Series } from "@/lib/series";
+import { historyEligible, isCardId, parseCardId, SINGLES_API, toUnixSeries, type OpenSetFile } from "@/lib/card-collection";
 
 const W = 640, H = 180, P = 28;
 const RANGES = [
@@ -13,7 +14,7 @@ const RANGES = [
   { label: "60 days", days: 60 },
 ];
 
-export function VaultHistory({ items }: { items: ValuedItem[] }) {
+export function VaultHistory({ items, cardSets = {} }: { items: ValuedItem[]; cardSets?: Record<string, OpenSetFile | null> }) {
   const [series, setSeries] = useState<Record<string, Series | undefined>>({});
   const [range, setRange] = useState(60);
   const [done, setDone] = useState(false);
@@ -22,28 +23,48 @@ export function VaultHistory({ items }: { items: ValuedItem[] }) {
   const holdings: HistoryHolding[] = useMemo(() => {
     const by = new Map<string, HistoryHolding>();
     for (const i of items) {
+      // A card's history is its dearest printing's (TCG Singles DB): only a card held in that printing joins the chart.
+      if (isCardId(i.id) && !historyEligible(i.id, cardSets)) continue;
       const h = by.get(i.id) ?? { id: i.id, qty: 0, weight: i.nowCents ?? i.addedCents ?? 0 };
       h.qty += i.qty;
       by.set(i.id, h);
     }
     return [...by.values()];
-  }, [items]);
+  }, [items, cardSets]);
   const key = idsToFetch(holdings).join(",");
 
   useEffect(() => {
     let live = true;
     setDone(false);
-    const ids = key ? key.split(",") : [];
-    Promise.all(
+    const all = key ? key.split(",") : [];
+    const ids = all.filter((id) => !isCardId(id));
+    // Cards: one CDN-cached request per set, for just the cards held.
+    const bySet = new Map<string, string[]>();
+    for (const id of all.filter(isCardId)) {
+      const r = parseCardId(id)!;
+      const k = `${r.game}/${r.set}`;
+      bySet.set(k, [...(bySet.get(k) ?? []), id]);
+    }
+    const cardRows = Promise.all(
+      [...bySet].map(([k, list]) => {
+        const tcg = [...new Set(list.map((id) => parseCardId(id)!.tcgId))].sort((a, b) => a - b);
+        return fetch(`${SINGLES_API}/history/${k}?ids=${tcg.join(",")}`, { credentials: "omit" })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((j: { history?: Record<string, [number, number][]> } | null) => list.map((id) => [id, j?.history?.[String(parseCardId(id)!.tcgId)] ? toUnixSeries(j.history[String(parseCardId(id)!.tcgId)]) : undefined] as const))
+          .catch(() => list.map((id) => [id, undefined] as const));
+      }),
+    ).then((g) => g.flat());
+    const sealedRows = Promise.all(
       ids.map((id) =>
         fetch(`/api/history/${encodeURIComponent(id)}`, { credentials: "omit" })
           .then((r) => (r.ok ? r.json() : null))
           .then((j: { series?: Series } | null) => [id, j?.series] as const)
           .catch(() => [id, undefined] as const),
       ),
-    ).then((rows) => {
+    );
+    Promise.all([sealedRows, cardRows]).then(([a, b]) => {
       if (!live) return;
-      setSeries(Object.fromEntries(rows));
+      setSeries(Object.fromEntries([...a, ...b]));
       setDone(true);
     });
     return () => {
@@ -96,7 +117,7 @@ export function VaultHistory({ items }: { items: ValuedItem[] }) {
         <text x={W - P} y={H - 6} fontSize="11" fill="currentColor" opacity="0.65" textAnchor="end">{dayToDate(maxX)}</text>
       </svg>
       <p className="ce-vault-muted">
-        What the {r.used === 1 ? "1 product" : `${r.used} products`} in your collection today would have been worth on each day{pct != null ? ` (${pct > 0 ? "+" : ""}${pct}% over the chart)` : ""}.
+        What the {r.used === 1 ? "1 item" : `${r.used} items`} in your collection today would have been worth on each day{pct != null ? ` (${pct > 0 ? "+" : ""}${pct}% over the chart)` : ""}.
         {r.left ? ` ${r.left} left out (no price history yet${holdings.length > 60 ? ", or beyond the 60 most valuable" : ""}).` : ""} This is TCGplayer&apos;s market price in US dollars, so it differs from the store-price total above.
       </p>
     </section>

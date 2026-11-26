@@ -15,6 +15,7 @@ import {
   readDays,
   readVault,
   recordDay,
+  setItemCost,
   setItemQty,
   shareText,
   sinceAdded,
@@ -36,6 +37,12 @@ import { bragLink, bragModel, prepareBrag, shareBrag, whenIdle } from "@/lib/bra
 const BRAG_ACCENT = "#818cf8";
 import { VaultHistory } from "./VaultHistory";
 import { VaultBackup, VaultSearch } from "./VaultTools";
+import { VaultCards } from "./VaultCards";
+import { VaultImport } from "./VaultImport";
+import { VaultInstall } from "./VaultInstall";
+import { useCardPrices } from "./useCardPrices";
+import { isCardId, parseCardId, tcgplayerProductUrl } from "@/lib/card-collection";
+import { ebaySearchUrl, goHref } from "@/lib/affiliate";
 import { VaultWeekly } from "./VaultAccount";
 import { startVaultSync } from "@/lib/vault-sync";
 import { usePremium } from "@/components/premium/usePremium";
@@ -52,8 +59,10 @@ function stashCard(valued: ValuedItem[], t: MarketTotal, since: { from: number; 
     site: VAULT_SITE.name,
     host,
     accent: BRAG_ACCENT,
-    kicker: "My sealed stash",
-    title: `${t.units === 1 ? "1 sealed item" : `${t.units} sealed items`} at today's ${t.market} store prices`,
+    kicker: valued.some((i) => i.market === t.market && isCardId(i.id)) ? "My collection" : "My sealed stash",
+    title: valued.some((i) => i.market === t.market && isCardId(i.id))
+      ? `${t.units === 1 ? "1 item" : `${t.units} items`}, cards and sealed, at today's prices`
+      : `${t.units === 1 ? "1 sealed item" : `${t.units} sealed items`} at today's ${t.market} store prices`,
     value: formatMoney(t.nowCents, t.currency),
     pill:
       since && pct
@@ -71,6 +80,8 @@ function Change({ from, to, currency, label }: { from: number; to: number; curre
   const pct = pctChange(from, to);
   const diff = to - from;
   if (pct == null) return null;
+  // A row that hasn't moved says nothing (the hero total still shows its 0%).
+  if (diff === 0 && !label) return null;
   const cls = diff > 0 ? "is-up" : diff < 0 ? "is-down" : "";
   return (
     <span className={`ce-vault-change ${cls}${label ? " is-pill" : ""}`}>
@@ -104,17 +115,57 @@ function Spark({ days, market }: { days: DayTotal[]; market: string }) {
   );
 }
 
+/** "Paid $12.00": tap to say what you really paid per item (it starts as the price on the day it was added). */
+function CostEdit({ cents, currency, onSave }: { cents: number; currency: string; onSave: (c: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const [v, setV] = useState("");
+  if (!open)
+    return (
+      <button
+        type="button"
+        className="ce-vault-cost"
+        onClick={() => {
+          setV(cents > 0 ? (cents / 100).toFixed(2) : "");
+          setOpen(true);
+        }}
+        aria-label={cents > 0 ? `Paid ${formatMoney(cents, currency)} each. Change` : "Add what you paid"}
+      >
+        {cents > 0 ? `paid ${formatMoney(cents, currency)}` : "add what you paid"}
+      </button>
+    );
+  const save = () => {
+    const n = Number(v.replace(/[^0-9.]/g, ""));
+    onSave(Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0);
+    setOpen(false);
+  };
+  return (
+    <form
+      className="ce-vault-costform"
+      onSubmit={(e) => {
+        e.preventDefault();
+        save();
+      }}
+    >
+      <label>
+        <span className="sr-only">Paid per item, {currency}</span>
+        <input inputMode="decimal" autoFocus value={v} onChange={(e) => setV(e.target.value)} onBlur={save} placeholder="0.00" aria-label={`Paid per item, ${currency}`} />
+      </label>
+      <span className="ce-vault-muted">{currency} each</span>
+    </form>
+  );
+}
+
 /** Signed out: what the collection does, and the way in. */
 function CollectionSignIn() {
   return (
     <div className="ce-vault-empty">
       <p>
-        <strong>Sign in to start your collection.</strong> Add every box, pack and tin you own with <em>I own this</em>, and see what it is worth
-        today and how much it has moved since you added it.
+        <strong>Sign in to start your collection.</strong> Add every box, tin and single card you own (any game), or import your list from
+        another app, and see what it is worth today and how much it has made or lost against what you paid.
       </p>
       <p className="ce-vault-muted">
         A free account, no password: Google, Discord or an emailed link. Your collection follows you to every device, and you can get its value by
-        email once a week. Premium adds a year of value history and a spreadsheet export, 14 days free.
+        email once a week. Nothing to install: add it to your home screen and it opens like an app. Premium adds a year of value history and a spreadsheet export, 14 days free.
       </p>
       <a className="ce-vault-btn" href="/account?src=collection&next=/collection">
         Sign in or create a free account
@@ -146,7 +197,9 @@ export function VaultView() {
     if (premium.status === "member" || premium.status === "free") startVaultSync();
   }, [premium.status]);
 
-  const valued = useMemo(() => (items ? valueItems(items, file) : []), [items, file]);
+  const cards = useCardPrices((items ?? []).map((i) => i.id));
+  const hasCards = (items ?? []).some((i) => isCardId(i.id));
+  const valued = useMemo(() => (items ? valueItems(items, file, cards.prices) : []), [items, file, cards.prices]);
   const totals = useMemo(() => totalsByMarket(valued), [valued]);
   useEffect(() => {
     const t = totals.find((x) => x.nowCents > 0);
@@ -157,13 +210,13 @@ export function VaultView() {
   // The previous look, read once before today's totals are recorded over it.
   const [prevDays] = useState<DayTotal[]>(() => (typeof window === "undefined" ? [] : readDays()));
   useEffect(() => {
-    if (!file || !totals.length) return;
+    if (!file || !cards.ready || !totals.length) return;
     let next = readDays();
     for (const t of totals) if (t.nowCents > 0) next = recordDay(next, t.market, t.nowCents, new Date(), member ? MEMBER_HISTORY_DAYS : undefined);
     writeDays(next);
     // once per load of the price file
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [file, member]);
+  }, [file, member, cards.ready]);
 
   // My collection needs an account (owner, 2026-11-19: "you can only use my collection if you are signed in"). The list itself still
   // lives in this browser; signing in is what opens it.
@@ -173,11 +226,13 @@ export function VaultView() {
     return (
       <div className="ce-vault-empty">
         <p>
-          <strong>Your collection is empty.</strong> Open any product and tap <em>I own this</em>. This page then shows what everything is worth at
-          today&apos;s store prices, and how much it has moved since you added it.
+          <strong>Your collection is empty.</strong> Add single cards below, search a sealed product, or import the list you keep in another app.
+          This page then shows what everything is worth today, and what it has made or lost against what you paid.
         </p>
         <p className="ce-vault-muted">It is saved to your account, so it follows you to your phone and computer.</p>
+        <VaultCards />
         <VaultSearch file={file} />
+        <VaultImport />
         <a className="ce-vault-btn" href="/">
           Browse products
         </a>
@@ -212,7 +267,8 @@ export function VaultView() {
 
   return (
     <div className="ce-vault">
-      {failed && <p className="ce-vault-muted">Today&apos;s prices didn&apos;t load. Your list is safe; try again in a moment.</p>}
+      {(failed || cards.failed) && <p className="ce-vault-muted">Some of today&apos;s prices didn&apos;t load. Your list is safe; try again in a moment.</p>}
+      <VaultInstall items={items.length} />
       {file &&
         totals.map((t, n) => {
           const since = sinceAdded(valued, t.market);
@@ -223,11 +279,11 @@ export function VaultView() {
           return (
             <section key={t.market} className="ce-vault-total" aria-label={`Collection value in ${t.market}`}>
               <div className="ce-vault-label">
-                Worth today · {t.market} stores, {t.currency}
+                Worth today · {hasCards && t.market === "US" ? "US$, store prices and TCGplayer market" : `${t.market} stores, ${t.currency}`}
               </div>
               <div className="ce-vault-big tabular">{formatMoney(t.nowCents, t.currency)}</div>
               <div className="ce-vault-moves">
-                {since && <Change from={since.from} to={since.to} currency={t.currency} label="since you added them" />}
+                {since && <Change from={since.from} to={since.to} currency={t.currency} label="against what you paid" />}
                 {prev && <Change from={prev.c} to={t.nowCents} currency={t.currency} label={`since ${new Date(`${prev.d}T00:00:00Z`).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`} />}
               </div>
               {member ? (
@@ -242,7 +298,7 @@ export function VaultView() {
                   <dt>Items</dt>
                   <dd className="tabular">{t.units}</dd>
                 </div>
-                {best && bestPct != null && bestPct > 0 && (
+                {best && bestPct != null && bestPct > 0 && !isCardId(best.id) && (
                   <div>
                     <dt>Up most</dt>
                     <dd>
@@ -253,7 +309,7 @@ export function VaultView() {
                 {t.unpriced > 0 && (
                   <div>
                     <dt>Not counted</dt>
-                    <dd>{t.unpriced} out of stock everywhere today</dd>
+                    <dd>{t.unpriced} with no price today</dd>
                   </div>
                 )}
               </dl>
@@ -271,24 +327,39 @@ export function VaultView() {
           );
         })}
       <VaultWeekly />
-      {file && <VaultHistory items={valued} />}
+      {file && cards.ready && <VaultHistory items={valued} cardSets={cards.sets} />}
+      <VaultCards />
       <VaultSearch file={file} />
+      <VaultImport />
       <ul className="ce-vault-list" aria-label="What you own">
         {valued.map((i) => {
           const key = itemKey(i);
+          const card = parseCardId(i.id);
+          const href = card ? goHref({ url: tcgplayerProductUrl(card.tcgId), source: "tcgplayer", market: "US" }, undefined, "collection") : i.href;
           return (
             <li key={key} className="ce-vault-row">
               {i.image ? <img src={i.image} alt={i.name} width={56} height={56} loading="lazy" decoding="async" /> : <span className="ce-vault-ph" aria-hidden="true" />}
               <div className="ce-vault-name">
-                <a href={i.href}>{i.name}</a>
+                <a href={href} {...(card ? { rel: "sponsored noopener", target: "_blank" } : {})}>
+                  {card ? i.name.split(" · ")[0] : i.name}
+                </a>
                 <div className="ce-vault-muted">
-                  {i.market}
+                  {card ? i.name.split(" · ").slice(1).join(" · ") || "Card" : i.market}
                   {i.nowCents != null && i.qty > 1 ? ` · ${formatMoney(i.nowCents, i.currency)} each` : ""}
-                  {i.addedCents > 0 ? ` · ${formatMoney(i.addedCents, i.currency)} when added` : ""}
+                  {" · "}
+                  <CostEdit cents={i.addedCents} currency={i.currency} onSave={(c) => writeVault(setItemCost(readVault(), key, c))} />
+                  {card && (
+                    <>
+                      {" · "}
+                      <a href={goHref({ url: ebaySearchUrl(i.name.split(" · ").slice(0, 2).join(" ")), source: "ebay", market: "US" }, undefined, "collection")} rel="sponsored noopener" target="_blank">
+                        eBay
+                      </a>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="ce-vault-price tabular">
-                {i.nowCents != null ? formatMoney(i.nowCents * i.qty, i.currency) : <span className="ce-vault-muted">{file ? "Not in stock" : "…"}</span>}
+                {i.nowCents != null ? formatMoney(i.nowCents * i.qty, i.currency) : <span className="ce-vault-muted">{!file || (card && !cards.ready) ? "…" : card ? "No price yet" : "Not in stock"}</span>}
                 {i.nowCents != null && i.addedCents > 0 && <Change from={i.addedCents * i.qty} to={i.nowCents * i.qty} currency={i.currency} label="" />}
               </div>
               <span className="ce-vault-qty" aria-label={`How many ${i.name} you own`}>
@@ -305,8 +376,9 @@ export function VaultView() {
         })}
       </ul>
       <p className="ce-vault-muted">
-        Values are the cheapest in-stock store price in each item&apos;s region today, the price you would pay to buy it again. They are not what a
-        buyer would pay you. Prices are never converted between currencies.
+        Sealed products are valued at the cheapest in-stock store price in their region today, the price you would pay to buy one again; single
+        cards at TCGplayer&apos;s market price (recent sales) in US$. Neither is what a buyer would pay you. Prices are never converted between
+        currencies. &ldquo;Paid&rdquo; starts as the price on the day you added an item; tap it to enter what you really paid.
       </p>
       <VaultBackup />
     </div>

@@ -1995,3 +1995,31 @@ counts its reserve as spent) and `model` (Sonnet 5.5 or Haiku 5.5 only). Sonnet 
 `vsReference` counts agreement with Sonnet on the same titles, and a trial never publishes without the live cache on the
 branch. Haiku goes live only if it agrees with Sonnet's guarded matches as well as Sonnet's own 99.5% pilot precision
 (scripts/ai-title-pilot.ts); a wrong match is worse than none.
+
+## 2026-11-26: The collection app: single cards, what I paid, import, and an installable app
+
+Owner, 2026-11-26: "can we launch like Collectr … something better … you don't need to install an app, you can use it on the
+website, on your phone". My collection (the sealed stash tracker, entry above) becomes the app:
+
+- **Single cards of every game.** This site still prices sealed only; a card in a collection is valued in the browser from TCG
+  Singles DB's open card API (tcgsinglesdb.com/api/open, its DECISIONS.md the same day): TCGplayer's market price in US$ for the
+  printing the member owns, labelled as such and never converted. A card is an ordinary vault item with the id
+  `card:<game>:<set>:<tcgplayer id>:<printing>` (lib/card-collection.ts), market US, so it syncs, backs up, shares and gets the
+  weekly email through the same code. Its row links to TCGplayer and an eBay search through /go (tagged); no card page, file or
+  function is added here. The value chart includes a card only when held in the printing Singles DB's history follows (the
+  dearest); others are left out, not estimated.
+- **What I paid.** `addedCents` stays the one cost field (the account stores it as `a`): it starts as the price on the day an
+  item is added and the member can change it; the change line reads "against what you paid". A cost edited on one device wins a
+  sync like a quantity does (three-way, lib/vault-sync.ts).
+- **Import.** A CSV from Collectr, the TCGplayer app, ManaBox or any sheet: a row becomes a card only when its set name lands on
+  exactly one set and its number (or exact name) on exactly one card with the names agreeing; a bracketed qualifier ("Black Dot
+  Error") must be in the sheet's name to count. Graded rows (no graded prices), sealed rows and every miss are listed back with
+  the reason. Nothing is added before the member says so. Collectr's export columns are not published where we could read them,
+  so the reader takes the usual header names and says which columns it needs.
+- **Installable, offline.** The manifest opens on /collection (PNG icons, maskable, shortcuts); `public/sw.js`, registered from
+  /collection only, keeps the last copy of that page, its build files and /prices.json and Singles DB set files for offline use,
+  and passes every other request straight through (no push, no sync, no caching of other pages). "Add to home screen" is an
+  in-page card, the visit's one prompt (`claimPromptSlot("app-install")`), shown only with something in the collection, on a
+  browser that can install, and silent 30 days after a close. A failed sync request offline is now an "offline" answer, not an
+  uncaught error.
+- Signing in still opens My collection (owner, 2026-11-19); the cheapest price is never behind Premium.

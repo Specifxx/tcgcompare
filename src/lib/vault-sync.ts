@@ -72,7 +72,8 @@ export function mergeThreeWay(base: VaultItem[], local: VaultItem[], remote: Vau
         ...r,
         ...l,
         qty,
-        addedCents: l.addedCents || r.addedCents,
+        // "What I paid" (setItemCost) edited on one side only takes that side, like a quantity.
+        addedCents: b && l.addedCents === b.addedCents && r.addedCents ? r.addedCents : l.addedCents || r.addedCents,
         addedAt: l.addedAt < r.addedAt ? l.addedAt : r.addedAt,
         image: l.image ?? r.image ?? null,
       };
@@ -132,7 +133,9 @@ type Answer = { ok?: boolean; conflict?: boolean; rev?: number; items?: WireItem
 export type Post = (body: Record<string, unknown>) => Promise<{ status: number; json: Answer }>;
 
 const realPost: Post = async (body) => {
-  const r = await fetch(STASH_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), credentials: "omit" });
+  // No signal (the installed app opens offline, public/sw.js) is an answer, not a crash: the sync reports "offline" and tries again.
+  const r = await fetch(STASH_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), credentials: "omit" }).catch(() => null);
+  if (!r) return { status: 0, json: { error: "You're offline. Your list is safe here and syncs when you're back online." } };
   return { status: r.status, json: ((await r.json().catch(() => ({}))) ?? {}) as Answer };
 };
 
