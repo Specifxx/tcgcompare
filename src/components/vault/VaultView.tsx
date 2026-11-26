@@ -25,17 +25,47 @@ import {
   type DayTotal,
   type MarketTotal,
   type PriceFile,
+  type ValuedItem,
   type VaultItem,
 } from "@/lib/vault";
 import { track as trackShare } from "@vercel/analytics";
 import { VAULT_SITE } from "./vault-config";
-import { cardLink, cardModel, drawCard, saveBlob } from "./collection-card";
+import { bragLink, bragModel, prepareBrag, shareBrag, whenIdle } from "@/lib/brag-card";
+
+/** The brag card's accent on its dark ground: the site's indigo, lightened to read on navy. */
+const BRAG_ACCENT = "#818cf8";
 import { VaultHistory } from "./VaultHistory";
 import { VaultBackup, VaultSearch } from "./VaultTools";
 import { VaultWeekly } from "./VaultAccount";
 import { startVaultSync } from "@/lib/vault-sync";
 import { usePremium } from "@/components/premium/usePremium";
 import { MEMBER_HISTORY_DAYS } from "@/lib/premium-member";
+
+/** The stash brag card (lib/brag-card.ts, 2026-11-26, community plan move 4): this market's total, its change since the
+ * items were added, and the three most valuable lines. Only the numbers this page shows. */
+function stashCard(valued: ValuedItem[], t: MarketTotal, since: { from: number; to: number } | null, host: string) {
+  const pct = since ? pctChange(since.from, since.to) : null;
+  const mine = valued
+    .filter((i) => i.market === t.market && i.nowCents != null)
+    .sort((a, b) => (b.nowCents ?? 0) * b.qty - (a.nowCents ?? 0) * a.qty);
+  return bragModel({
+    site: VAULT_SITE.name,
+    host,
+    accent: BRAG_ACCENT,
+    kicker: "My sealed stash",
+    title: `${t.units === 1 ? "1 sealed item" : `${t.units} sealed items`} at today's ${t.market} store prices`,
+    value: formatMoney(t.nowCents, t.currency),
+    pill:
+      since && pct
+        ? { text: `${pct > 0 ? "+" : ""}${pct}% (${formatMoney(Math.abs(since.to - since.from), t.currency)}) since I added them`, tone: since.to > since.from ? "up" : "down" }
+        : null,
+    rows: mine.slice(0, 3).map((i) => ({ label: i.qty > 1 ? `${i.qty} × ${i.name}` : i.name, value: formatMoney((i.nowCents ?? 0) * i.qty, i.currency) })),
+    image: mine[0]?.image ?? null,
+    imageShape: "box",
+    cta: "Track yours free",
+    date: new Date(),
+  });
+}
 
 function Change({ from, to, currency, label }: { from: number; to: number; currency: string; label: string }) {
   const pct = pctChange(from, to);
@@ -118,6 +148,11 @@ export function VaultView() {
 
   const valued = useMemo(() => (items ? valueItems(items, file) : []), [items, file]);
   const totals = useMemo(() => totalsByMarket(valued), [valued]);
+  useEffect(() => {
+    const t = totals.find((x) => x.nowCents > 0);
+    if (!t) return;
+    return whenIdle(() => void prepareBrag(stashCard(valued, t, sinceAdded(valued, t.market), location.host)));
+  }, [valued, totals]);
 
   // The previous look, read once before today's totals are recorded over it.
   const [prevDays] = useState<DayTotal[]>(() => (typeof window === "undefined" ? [] : readDays()));
@@ -150,54 +185,20 @@ export function VaultView() {
       </div>
     );
 
-  // The collection value card (collection-card.ts): a picture of these totals drawn in this browser, shared as a file
-  // where the phone can, else saved, with the tracked link copied. Counted only when it really went out.
+  // The stash brag card (stashCard below): drawn ahead in idle time, shared as a file where the phone can, else saved, with
+  // the tracked link copied. Counted only when it really went out.
   const share = async (t: MarketTotal, since: { from: number; to: number } | null) => {
-    const url = cardLink(location.origin);
-    const text = `${shareText(VAULT_SITE.name, VAULT_SITE.what, t, since)} ${url}`;
-    const pct = since ? pctChange(since.from, since.to) : null;
-    const top = valued
-      .filter((i) => i.market === t.market && i.nowCents != null)
-      .sort((a, b) => (b.nowCents ?? 0) * b.qty - (a.nowCents ?? 0) * a.qty)
-      .slice(0, 3)
-      .map((i) => ({ name: i.qty > 1 ? `${i.qty} × ${i.name}` : i.name, price: formatMoney((i.nowCents ?? 0) * i.qty, i.currency) }));
-    const blob = await drawCard(
-      cardModel({
-        site: VAULT_SITE.name,
-        what: VAULT_SITE.what,
-        host: location.host.replace(/^www\./, ""),
-        total: formatMoney(t.nowCents, t.currency),
-        change: since && pct ? { up: since.to > since.from, text: `${formatMoney(Math.abs(since.to - since.from), t.currency)} (${pct > 0 ? "+" : ""}${pct}%) since I added them` } : null,
-        units: t.units,
-        market: t.market,
-        top,
-        date: new Date(),
-      }),
-    );
-    const file = blob ? new File([blob], "my-collection.png", { type: "image/png" }) : null;
-    try {
-      if (file && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], text });
-        trackShare("share", { kind: "collection", how: "image" });
-        return;
-      }
-      if (navigator.share) {
-        await navigator.share({ text });
-        trackShare("share", { kind: "collection", how: "text" });
-        return;
-      }
-    } catch (e) {
-      if ((e as Error)?.name === "AbortError") return;
+    const url = bragLink(location.origin, "/collection", "stash");
+    const text = shareText(VAULT_SITE.name, VAULT_SITE.what, t, since);
+    const blob = await prepareBrag(stashCard(valued, t, since, location.host));
+    const how = await shareBrag(blob, text, url, `my-stash-${new Date().toISOString().slice(0, 10)}`);
+    if (how === "cancelled" || how === "failed") return;
+    if (how === "saved" || how === "copied") {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3500);
     }
-    if (file) saveBlob(file, `my-collection-${new Date().toISOString().slice(0, 10)}.png`);
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      /* the saved picture still carries the address */
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 3500);
-    trackShare("share", { kind: "collection", how: file ? "saved" : "copy" });
+    trackShare("share", { kind: "collection", how });
+    trackShare("brag_share", { kind: "stash", how });
   };
 
   const csv = () => {
