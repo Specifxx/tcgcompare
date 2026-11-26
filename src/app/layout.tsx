@@ -30,6 +30,7 @@ import { AdFreeSync } from "@/components/premium/AdFreeSync";
 import { ADFREE_BOOT_SCRIPT } from "@/lib/premium-member";
 import { AiReferralTracker } from "@/components/AiReferralTracker";
 import { ShareArrival } from "@/components/ShareArrival";
+import { EmbedArrival } from "@/components/EmbedArrival";
 import { DockAds } from "@/components/DockAds";
 import { GutterAds } from "@/components/GutterAds";
 import { BottomNav } from "@/components/BottomNav";
@@ -132,6 +133,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AdFreeSync />
         <AiReferralTracker />
         <ShareArrival />
+        <EmbedArrival />
         <ReturnBeacon />
         <ImageFallback />
       </body>

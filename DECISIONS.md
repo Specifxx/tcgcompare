@@ -2096,3 +2096,12 @@ rules in the project's `design-system/README.md`) takes those off and sets a pri
 colour solid, a left-aligned masthead hero from 640px (centred on phones), a hairline between sections, 10px radius on cards,
 inputs and buttons and 6px on badges, hover as a firmer edge. CSS only: no markup, words, order, URL or heading changes. The
 paintings behind the hero (owner, 2026-11-14) and the Santa hat stay.
+
+## 2026-11-26: Embed visits and the /data page are now counted (traffic plan rows 5 and 6)
+
+The 26 Nov check could not score "+200 visits from embeds" because nothing counted them. Every widget already links back with
+`utm_source=embed` (`utm_medium` = widget, daily or index; the index widget lands on /data). `EmbedArrival` sends one Vercel Web
+Analytics event, `embed_visit { medium, page }`, once per browser tab, the same way `share_visit` works: no id, no referrer, no
+address stored. Read it in Vercel → Analytics → Events; /data's own visits are in Pages. Returning visitors were already counted
+by `return_visit` (ReturnBeacon). Not counted: how often a widget LOADS on someone else's page (it is a cached script-free
+document, so no function runs); only clicks through to us are. `tests/embed-arrival.test.ts`.
