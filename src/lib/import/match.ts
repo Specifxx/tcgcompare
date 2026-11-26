@@ -314,8 +314,23 @@ export interface MatchResult {
 // JPN" box at a third of the price sat on the English box's page). Japanese,
 // Chinese and Korean script count too.
 const FOREIGN = /\b(japanese|japan|jpn|jap|jp|chinese|simplified|traditional|chn|french|fran[cç]ais|german|deutsch|italian|italiano|spanish|espa[nñ]ol|korean|kor|portuguese|thai|indonesian|\(fr\)|\(de\)|\(it\)|\(jp\)|\(cn\)|\(kr\))\b/i;
+// The same languages named in a European shop's own language (2026-11-26, Haiku trial: "Japans", "japonais" and
+// "Japanisch" boxes got past the English words). No catalogue name contains one of them.
+const FOREIGN_NAMED = /\b(japanse?|japansk\w*|japon(?:ais|aise|ês|es|és|esa)|japanisch\w*|giapponese|japón|koreanisch\w*|koreaans\w*|koreansk\w*|cor[eé]en(?:ne)?|corean[oa]|chinois(?:e)?|chinesisch\w*|chinees|kinesisk\w*|cinese|chino)\b/i;
 const CJK = /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/;
-export const isForeign = (title: string) => FOREIGN.test(title) || CJK.test(title);
+export const isForeign = (title: string) => FOREIGN.test(title) || FOREIGN_NAMED.test(title) || CJK.test(title);
+
+// A single card's own code in a title: "(ST02-002)", "OP09-118", "BT25-104", "(MPW088)", "LOB-EN001",
+// "UE01BT/BLC-1-001". The catalogue here is sealed only and no sealed name carries one (checked 2026-11-26), so a title
+// that does is a single from a starter deck or a promo pack, never the product. Set codes stay readable: "OP-09",
+// "OP09", "[ST-02]", "UE25BT" and "SV10" are not card codes.
+const CARD_CODE = /\b[A-Z]{1,4}\d{1,2}[A-Z]?-\d{3}[A-Z]?\b|[(\[][A-Z]{2,4}\d{3}[)\]]|\b[A-Z0-9]{3,4}-EN\d{3}\b|\b[A-Z]{2,4}-\d{1,2}-\d{3}\b/i;
+export const namesCardCode = (title: string) => CARD_CODE.test(title);
+/** The listing's handle as the shop wrote it, hyphens kept ("monkey-d-luffy-st02-002"), for the card-code test. */
+export const rawHandleOf = (url: string) => {
+  const m = url.match(/\/products\/([^/?#]+)/);
+  return m ? decodeURIComponent(m[1]) : "";
+};
 
 /** The listing's own URL slug ("...-gd06-jpn"): a store that keeps the
  *  language only in the handle is still a foreign product. Read for the

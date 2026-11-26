@@ -16,7 +16,7 @@
 // Everything here is pure: tests/crawl.test.ts pins it with fixtures.
 import type { GameLine, Market, Meta, Offer, Product, SetInfo, StoreConfig } from "@/lib/site-types";
 import { CURRENCY } from "@/lib/site-types";
-import { buildIndex, handleOf, isForeign, isMulti, isPreorder, isUnfitListing, matchSealed, type IndexOptions, type MatchIndex, type NumberStyle } from "./match";
+import { buildIndex, handleOf, isForeign, isMulti, isPreorder, isUnfitListing, matchSealed, namesCardCode, rawHandleOf, type IndexOptions, type MatchIndex, type NumberStyle } from "./match";
 import { sealedTypeOf } from "./tcgcsv";
 import { launchReferenceCents } from "./sanity";
 import { tokens } from "@/lib/slug";
@@ -324,6 +324,9 @@ export function pickId(l: CrawlListing, ctx: PickContext): IdPick {
   // A number in a handle or SKU may be the store's own numbering: unless TCGplayer's own photo carries the id, the
   // title must say which product it is (the matcher lands on it, or the title names its set).
   const photo = l.ids.some((x) => x.where === "image" && x.id === id);
+  // A single card's code in the title or handle, unless TCGplayer's own photo of this sealed product proves the id (a
+  // promo collection may name its card: "Mew ex Premium Collection (SVP053)").
+  if (!photo && (namesCardCode(l.title) || namesCardCode(rawHandleOf(l.url)))) return { refuse: "unfit", detail: "single card code" };
   if (!photo && !m && !namesSet(l.title, p, idx)) return { refuse: "unconfirmed" };
   return { id };
 }
@@ -342,6 +345,7 @@ export function pickByTitle(l: CrawlListing, ctx: PickContext, market: Market): 
   if (!l.inStock) return { refuse: "unconfirmed", detail: "out of stock" };
   if (isUnfitListing(l.title) || NOT_SEALED_AS_SOLD.test(l.title)) return { refuse: "unfit" };
   if (isForeign(l.title) || isForeign(handleOf(l.url))) return { refuse: "foreign" };
+  if (namesCardCode(l.title) || namesCardCode(rawHandleOf(l.url))) return { refuse: "unfit", detail: "single card code" };
   if (OTHER_QUANTITY.test(l.title)) return { refuse: "multiple", detail: "quantity" };
   const said = sealedTypeOf(l.title);
   if (said === "Other") return { refuse: "unconfirmed", detail: "no product type" };
@@ -375,6 +379,7 @@ export function pickByAi(l: CrawlListing, host: string, ctx: PickContext, market
   if (l.ids.length || !l.inStock) return { refuse: "no-id" };
   if (isUnfitListing(l.title) || NOT_SEALED_AS_SOLD.test(l.title)) return { refuse: "unfit" };
   if (isForeign(l.title) || isForeign(handleOf(l.url))) return { refuse: "foreign" };
+  if (namesCardCode(l.title) || namesCardCode(rawHandleOf(l.url))) return { refuse: "unfit", detail: "single card code" };
   if (OTHER_QUANTITY.test(l.title)) return { refuse: "multiple", detail: "quantity" };
   if (!d.pass && !d.reasons.every((r) => r === "no-type")) return { refuse: "unconfirmed", detail: `ai guard: ${d.reasons.join(",")}` };
   const p = ctx.products.get(d.id);

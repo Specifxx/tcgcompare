@@ -117,7 +117,8 @@ test("the post: the live price in the store's own currency, a live 'checked' tim
   const em = embedFor(r, 14999, NOW, "https://tcgprices.app");
   assert.match(em.description, /A\$149\.99/);
   assert.match(em.description, new RegExp(`<t:${NOW / 1000}:R>`));
-  assert.equal(em.url, "https://tcgprices.app/card/some-booster-box?utm_source=discord&utm_medium=social&utm_campaign=sealed-sniper");
+  assert.equal(em.url, "https://tcgprices.app/card/some-booster-box?utm_source=discord&utm_medium=social&utm_campaign=price-gap", "price-gap through the TCGplayer sale");
+  assert.match(embedFor(r, 14999, Date.UTC(2026, 11, 2), "https://tcgprices.app").url, /utm_campaign=sealed-sniper$/);
   assert.doesNotMatch(JSON.stringify(em), /ebay/i, "no eBay price, no eBay link of our own");
 });
 
@@ -215,4 +216,34 @@ test("a Riftbound deal names RiftCompare and links it (campaign brand); other ga
   assert.match(later.description, /riftcompare\.com\/sealed\?/);
   const other = embedFor({ ...rb, product: { ...box, line: "pkm" } }, 14999, NOW, "https://tcgprices.app");
   assert.doesNotMatch(other.description, /riftcompare/i);
+});
+
+test("through the TCGplayer sale a drop leads with one real price gap, every link tagged price-gap, then the plain feed returns", async () => {
+  const { priceGap, biggestGap, gapLine, PRICE_GAP_UNTIL, GAP_MIN_STORES } = await import("@/lib/sniper");
+  const us2: SniperStore = { key: "us2", name: "Shop US 2", base: "https://us2.example", market: "US" };
+  const us3: SniperStore = { key: "us3", name: "Shop US 3", base: "https://us3.example", market: "US" };
+  const all = new Map([us, au, us2, us3].map((s) => [s.key, s]));
+  const r = { kind: "restock" as const, product: box, store: us, cents: 11000, ref: "a" };
+  const tuples: Tuple[] = [["us2", 13900, 1, "x"], ["us3", 12500, 1, "y"], ["shopau", 99900, 1, "z"], ["us3", 20000, 2, "pre"], ["ebay", 30000, 1, "e"]];
+  const g = priceGap(r, 10999, tuples, all, fx)!;
+  assert.deepEqual([g.low, g.high, g.stores, g.market], [10999, 13900, 3, "US"], "same market, in stock, real stores only; the low is the checked price");
+  assert.ok(GAP_MIN_STORES >= 3);
+  assert.equal(priceGap(r, 10999, tuples.slice(0, 1), all, fx), null, "two stores is not a spread");
+  assert.equal(priceGap(r, 13000, tuples, all, fx), null, "another store is cheaper than the post: no headline");
+  assert.equal(priceGap(r, 13000, [["us2", 13900, 1, "x"], ["us3", 14000, 1, "y"]], all, fx), null, "too small a gap");
+  assert.equal(priceGap({ ...r, kind: "preorder" }, 10999, tuples, all, fx), null);
+  assert.equal(biggestGap([null, g, { ...g, usd: 1 }]), g);
+  const during = Date.UTC(2026, 10, 28, 9, 47);
+  const line = gapLine(g, "https://tcgprices.app", "sniper-2026112809", during);
+  assert.match(line, /Some Booster Box\*\* ranges \*\*\$109\.99 to \$139\.00\*\* across 3 US stores today/);
+  assert.match(line, /<https:\/\/tcgprices\.app\/card\/some-booster-box\?utm_source=discord&utm_medium=social&utm_campaign=price-gap&utm_content=sniper-2026112809>/);
+  assert.doesNotMatch(line, /Shop US 2|Shop US 3/, "the dear store is never named");
+  const em = embedFor(r, 10999, during, "https://tcgprices.app", "sniper-2026112809");
+  assert.match(em.url, /utm_campaign=price-gap/);
+  assert.ok(dropMessage([em], during, line).content.startsWith("💸"), "the hook leads the post");
+  const t = telegramText([em], during, line);
+  assert.match(t, /^💸 Some Booster Box ranges \$109\.99 to \$139\.00 .*utm_source=telegram&utm_medium=social&utm_campaign=price-gap/);
+  assert.doesNotMatch(t, /\*\*|<https/);
+  assert.match(embedFor(r, 10999, PRICE_GAP_UNTIL, "https://tcgprices.app").url, /utm_campaign=sealed-sniper/, "after the sale the plain feed returns");
+  assert.ok(PRICE_GAP_UNTIL <= Date.UTC(2026, 11, 1, 4, 0));
 });

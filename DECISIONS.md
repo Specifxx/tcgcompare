@@ -2034,6 +2034,38 @@ links sign-in, never a pop-up or a second prompt. Signing in merges the browser'
 base, so it is a union and nothing is lost (`lib/vault-sync.ts`). The weekly email and Premium history stay account-only.
 `tests/card-collection.test.ts` pins that neither page sends a signed-out visitor to sign-in.
 
+## 2026-11-26: Sealed Sniper drops lead with one real price gap through the TCGplayer sale
+
+The Cluely growth study (move 1, strategy/cluely-2026-11-26) wants every Discord and Telegram drop to lead with one live,
+surprising number. Until `PRICE_GAP_UNTIL` (1 Dec 04:00 UTC, the end of TCGplayer's sale) each drop opens with the biggest
+spread among the products it posts: "<product> ranges $low to $high across n <market> stores today. Same product." The low
+is the price just checked at the store; the high is the dearest in-stock independent store in the same market in today's
+data (what the product page shows). A spread needs 3+ stores, the high 15%+ and 10+ above the low, and no store cheaper
+than the one posted; otherwise no hook (never a made-up or converted number, and the dear store is never named). Every
+product link in the drop is tagged `utm_campaign=price-gap` while it runs, so its clicks read apart from `sealed-sniper`.
+Game-room copies (TCGEmpire discord-publish.ts) carry the embeds only, so the hook stays in #sealed-sniper and Telegram.
+## 2026-11-26 — Member rewards on the account page
+
+Owner (26 Nov): "we really, really need a loyalty system ... on all of our Empire websites", one that never runs at a loss. The
+shared account service keeps one points balance (RiftCompare `lib/loyalty.ts`, `/api/loyalty`, DECISIONS there, "Compounding daily
+streaks, and member rewards"); this site draws it in its own name on the account page (`components/account/MemberRewards.tsx`),
+posting the member's token as every other account call does. A daily check-in is 1 point on day 1 of a streak, one more each day in
+a row, up to 10 a day; points buy 7 days of Premium (300 points, once a month, never for paying subscribers). It loads after render,
+opens nothing by itself and shows on no other page (one prompt a visit at most). Points have no cash value and never change giveaway
+entries.
+
+## 2026-11-26: Foreign words in a shop's own language, and single-card codes, refuse a crawl listing
+
+The Haiku 5.5 shadow trial (strategy/claude-capabilities-log.md, 26 Nov) hand-read 25 listings the guards passed: three
+Japanese boxes titled in Dutch, French and German ("Japans", "japonais", "Japanisch") and two singles from a starter deck
+or mastery pack ("(ST02-002)", "(MPW088)") would have been placed on English sealed products. `isForeign` now also reads
+the European words for Japanese, Korean and Chinese (`FOREIGN_NAMED`; it applies to every path, Amazon's included), and
+`namesCardCode` refuses a title or raw handle carrying a single card's code (letters and digits, hyphen, three digits;
+"LOB-EN001"; "BLC-1-001"; a bracketed "(MPW088)") in the id, title and AI picks and in the shadow guard. Set and deck
+codes ("OP-09", "OP09", "[ST-02]", "UE25BT", "SV10") are not card codes. No catalogue name matches either pattern. An id
+TCGplayer's own photo proves is still taken, since a promo collection may name its card. Rules only refuse. The Haiku
+re-trial (both models on the same candidates, 50 graded) comes after the next crawl reads with these rules.
+
 ## 2026-11-26 — Deal board: the banner and the shares lead with one price gap
 
 **Asked:** the COO's Cluely study, move 1: every surface that is shared leads with ONE real, surprising number, tracked

@@ -314,8 +314,62 @@ export interface DiscordEmbed {
   footer: { text: string };
 }
 
-export function productUrl(siteUrl: string, slug: string, drop?: string): string {
-  return `${siteUrl}/card/${slug}?${UTM}${drop ? `&utm_content=${drop}` : ""}`;
+export function productUrl(siteUrl: string, slug: string, drop?: string, now = Date.now()): string {
+  const utm = now < PRICE_GAP_UNTIL ? UTM.replace("sealed-sniper", "price-gap") : UTM;
+  return `${siteUrl}/card/${slug}?${utm}${drop ? `&utm_content=${drop}` : ""}`;
+}
+
+// ── the price-gap hook (Cluely growth study, move 1, 2026-11-26) ───────────
+/** Through TCGplayer's Black Friday sale (ends 30 Nov 23:00 New York) every drop leads with ONE real price gap, and every
+ * product link in the drop is tagged utm_campaign=price-gap so the hook's clicks read apart from the plain feed's. */
+export const PRICE_GAP_UNTIL = Date.UTC(2026, 11, 1, 4, 0);
+/** A gap worth leading with: 3+ in-stock stores in one market, the dearest 15%+ and 10+ (of the currency) above the cheapest. */
+export const GAP_MIN_STORES = 3;
+export const GAP_MIN_RATIO = 1.15;
+export const GAP_MIN_CENTS = 1000;
+export interface PriceGap {
+  name: string;
+  slug: string;
+  market: Market;
+  low: number;
+  high: number;
+  stores: number;
+  /** the gap in US cents, to pick the biggest across markets */
+  usd: number;
+}
+
+/**
+ * The spread of one posted product across the in-stock independent stores of its market: the low is the price just
+ * checked at the store (never a lower stale one), the high is the dearest in-stock store our page shows today. Nothing
+ * converted is shown; null when the spread is not worth a headline. Never names the dear store.
+ */
+export function priceGap(e: SniperEvent, liveCents: number, tuples: readonly Tuple[], stores: ReadonlyMap<string, SniperStore>, fx: Record<string, number>): PriceGap | null {
+  if (e.kind === "preorder") return null;
+  const best = new Map<string, number>();
+  best.set(e.store.key, liveCents);
+  for (const t of tuples) {
+    if (t[2] !== 1 || !(t[1] > 0) || t[0] === e.store.key) continue;
+    const s = stores.get(t[0]);
+    if (!s || s.market !== e.store.market) continue;
+    best.set(t[0], Math.min(best.get(t[0]) ?? Infinity, t[1]));
+  }
+  const prices = [...best.values()];
+  const low = liveCents;
+  const high = Math.max(...prices);
+  if (Math.min(...prices) < low) return null; // another store is cheaper than the one we post: no headline from it
+  if (prices.length < GAP_MIN_STORES || high < low * GAP_MIN_RATIO || high - low < GAP_MIN_CENTS) return null;
+  const usd = toUsd(high - low, e.store.market, fx);
+  if (usd == null) return null;
+  return { name: e.product.name, slug: e.product.slug, market: e.store.market, low, high, stores: prices.length, usd };
+}
+
+export const biggestGap = (gaps: readonly (PriceGap | null)[]): PriceGap | null =>
+  gaps.reduce<PriceGap | null>((a, g) => (g && (!a || g.usd > a.usd) ? g : a), null);
+
+/** The hook line, Discord form: one real number, the product page linked (no preview card). */
+export function gapLine(g: PriceGap, siteUrl: string, drop: string | undefined, now: number): string {
+  const cur = CURRENCY[g.market];
+  return `💸 **${g.name}** ranges **${money(g.low, cur)} to ${money(g.high, cur)}** across ${g.stores} ${MARKET_NAME[g.market]} stores today. Same product. <${productUrl(siteUrl, g.slug, drop, now)}>`;
 }
 
 /** Riftbound drops name RiftCompare and link it (Rift Google plan, 2026-11-25, item 4: brand searches back to 170+ a week by
@@ -337,12 +391,12 @@ export function extensionPromo(source: "discord" | "telegram", now: number): str
   return `🧩 See what you'd save on TCGplayer and other shops: free Chrome extension https://chromewebstore.google.com/detail/fdhpgledimoadpaokiipficepklogmha?utm_source=${source}&utm_medium=social&utm_campaign=extension`;
 }
 
-export function dropMessage(embeds: DiscordEmbed[], now = Date.now()): { username: string; content: string; embeds: DiscordEmbed[]; allowed_mentions: { parse: never[] } } {
+export function dropMessage(embeds: DiscordEmbed[], now = Date.now(), hook: string | null = null): { username: string; content: string; embeds: DiscordEmbed[]; allowed_mentions: { parse: never[] } } {
   const n = embeds.length;
   const promo = extensionPromo("discord", now);
   return {
     username: "Sealed Sniper",
-    content: `**Sealed Sniper drop:** ${n} ${n === 1 ? "deal" : "deals"}, each checked at the store just before posting.${promo ? `\n${promo.replace(/(https:\S+)/, "<$1>")}` : ""}`,
+    content: `${hook ? `${hook}\n` : ""}**Sealed Sniper drop:** ${n} ${n === 1 ? "deal" : "deals"}, each checked at the store just before posting.${promo ? `\n${promo.replace(/(https:\S+)/, "<$1>")}` : ""}`,
     embeds: embeds.slice(0, 10),
     allowed_mentions: { parse: [] },
   };
@@ -355,7 +409,7 @@ export const TELEGRAM_CHANNEL = "@tcgdealsrestocks";
  * The same drop as one plain-text Telegram message: Discord's bold, links and relative timestamps turned into plain text
  * ("HH:MM UTC"), every link tagged utm_source=telegram, kept under Telegram's 4,096 characters (whole deals only).
  */
-export function telegramText(embeds: DiscordEmbed[], now = Date.now()): string {
+export function telegramText(embeds: DiscordEmbed[], now = Date.now(), hook: string | null = null): string {
   const plain = (t: string) =>
     t
       .replace(/<t:(\d+):R>/g, (_, s: string) => `at ${new Date(Number(s) * 1000).toISOString().slice(11, 16)} UTC`)
@@ -364,7 +418,8 @@ export function telegramText(embeds: DiscordEmbed[], now = Date.now()): string {
       .replace(/utm_source=discord/g, "utm_source=telegram");
   const parts: string[] = [];
   const promo = extensionPromo("telegram", now);
-  const head = (n: number) => `Sealed Sniper drop: ${n} ${n === 1 ? "deal" : "deals"}, each checked at the store just before posting.${promo ? `\n${promo}` : ""}`;
+  const lead = hook ? `${plain(hook).replace(/<(https:\S+)>/, "$1")}\n` : "";
+  const head = (n: number) => `${lead}Sealed Sniper drop: ${n} ${n === 1 ? "deal" : "deals"}, each checked at the store just before posting.${promo ? `\n${promo}` : ""}`;
   for (const e of embeds.slice(0, 10)) {
     const part = `${plain(e.title)}\n${plain(e.description)}`;
     if ([head(parts.length + 1), ...parts, part].join("\n\n").length > 4096) break;
@@ -385,12 +440,12 @@ export function embedFor(e: SniperEvent, liveCents: number, checkedAt: number, s
       : e.kind === "restock" ? "Sold out at our previous check, in stock now." : `Cheapest ${e.store.market} store price was ${money(e.was, cur)} at our previous check (${e.pct}% lower now).`,
     e.product.marketCents ? `TCGplayer market: ${money(e.product.marketCents, "USD")}` : null,
     `${e.kind === "preorder" ? "Open for pre-order" : "In stock"} at the store when checked <t:${ts}:R>. Stock can sell out fast; the store's page has the final word.`,
-    `[Compare every store](${productUrl(siteUrl, e.product.slug, drop)})`,
+    `[Compare every store](${productUrl(siteUrl, e.product.slug, drop, checkedAt)})`,
     e.product.line === "rb" ? `Every Riftbound price, every day, on [RiftCompare](${riftCompareUrl(checkedAt, drop)})` : null,
   ].filter(Boolean);
   return {
     title: `${e.kind === "preorder" ? `${FLAG[e.store.market]} First pre-order` : e.kind === "restock" ? "Back in stock" : "Price drop"}: ${e.product.name}`.slice(0, 250),
-    url: productUrl(siteUrl, e.product.slug, drop),
+    url: productUrl(siteUrl, e.product.slug, drop, checkedAt),
     description: lines.join("\n"),
     color: e.kind === "preorder" ? 0xf59e0b : e.kind === "restock" ? 0x22c55e : 0x3b82f6,
     ...(e.product.image ? { thumbnail: { url: e.product.image } } : {}),
