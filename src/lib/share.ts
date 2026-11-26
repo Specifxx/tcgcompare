@@ -170,3 +170,39 @@ export function moveNote(c7: number | null | undefined, c30: number | null | und
   if (c7 != null || c30 != null) return "Steady this month";
   return null;
 }
+
+// The "found it cheaper" brag card (2026-11-26, lib/brag-card.ts; community plan move 4): what the share button draws on a
+// product page when the visitor's market has a real gap between STORES (`bragGap`: never eBay, Amazon or TCGplayer as the
+// cheapest, as the deal board). In the US, where the cheapest store is under TCGplayer's market price, that is the
+// saving shown (the fair yardstick, not an outlier store); elsewhere the spread between the cheapest and dearest store.
+// Only numbers the page already shows; it never claims the visitor bought, and never converts.
+export function bragGap(offers: readonly Offer[], market: Market): PriceGap | null {
+  return priceGap(offers.filter((o) => o.source !== "ebay" && o.source !== "amazon" && o.source !== "tcgplayer"), market);
+}
+
+export function gapBragFields(
+  name: string,
+  gap: PriceGap,
+  market: Market,
+  money: (cents: number, currency: string) => string,
+  /** TCGplayer's market price, US cents */
+  refUsd?: number | null,
+): { kicker: string; title: string; value: string; pill: { text: string; tone: "up" }; rows: { label: string; value: string; tone?: "up" }[]; cta: string } {
+  const low = gap.low;
+  const cheapest = { label: `Cheapest: ${storeName(low)}`, value: money(low.cents, low.currency), tone: "up" as const };
+  const stores = { label: "Stores compared", value: String(gap.sellers) };
+  const common = { kicker: `Found it cheaper · ${MARKET_LABEL[market]}`, title: name, value: money(low.cents, low.currency), cta: "Compare every store free" };
+  if (market === "US" && low.currency === "USD" && refUsd && refUsd > low.cents) {
+    const under = refUsd - low.cents;
+    return {
+      ...common,
+      pill: { text: `${money(under, "USD")} under TCGplayer market (${Math.round((under / refUsd) * 100)}% less)`, tone: "up" },
+      rows: [cheapest, { label: "TCGplayer market", value: money(refUsd, "USD") }, stores],
+    };
+  }
+  return {
+    ...common,
+    pill: { text: `${money(gap.high.cents - low.cents, low.currency)} less than the dearest store`, tone: "up" },
+    rows: [cheapest, { label: `Dearest: ${storeName(gap.high)}`, value: money(gap.high.cents, gap.high.currency) }, stores],
+  };
+}

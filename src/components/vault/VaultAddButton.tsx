@@ -1,9 +1,10 @@
 "use client";
 
 // "I own this" on a product page (src/lib/vault.ts): adds the product to the visitor's collection in this browser,
-// valued in the page's market. Nothing leaves the browser.
+// valued in the page's market. Signed in, the list is also kept with the member's account (lib/vault-sync.ts).
 import { useEffect, useState } from "react";
 import { usePremium } from "@/components/premium/usePremium";
+import { startVaultSync } from "@/lib/vault-sync";
 import { addItem, itemKey, onVaultChange, readVault, setItemQty, track, writeVault, type VaultItem } from "@/lib/vault";
 
 export function VaultAddButton({ className = "", hint = true, ...item }: Omit<VaultItem, "qty" | "addedAt"> & { className?: string; hint?: boolean }) {
@@ -17,6 +18,10 @@ export function VaultAddButton({ className = "", hint = true, ...item }: Omit<Va
   }, [key]);
 
   const premium = usePremium();
+  // Signed in, an "I own this" here reaches the account copy too (lib/vault-sync.ts).
+  useEffect(() => {
+    if (premium.status === "member" || premium.status === "free") startVaultSync();
+  }, [premium.status]);
   const add = () => {
     // My collection needs an account (owner, 2026-11-19): signed out, the tap goes to sign-in and comes back to this page.
     if (premium.status === "out") {

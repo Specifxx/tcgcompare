@@ -1,8 +1,9 @@
 // MY COLLECTION (competitor scan, 2026-11-08: Collectr and PriceCharting keep visitors coming back with "what is my
 // collection worth today"). The same file in every Compare Empire site that has a /prices.json; port fixes by hand.
 //
-// A visitor marks products they own; the list lives in THIS BROWSER ONLY (localStorage `ce_vault_v1`): no account,
-// no server, no database, nothing stored about anyone. /collection values it from the site's static /prices.json
+// A visitor marks products they own; the list lives in this browser (localStorage `ce_vault_v1`) and, for a signed-in member,
+// also with their account (lib/vault-sync.ts, 2026-11-26). Pages value it from the browser copy only:
+// no function of this site and no database here. /collection values it from the site's static /prices.json
 // (lib/price-api.ts: the cheapest in-stock store price per market, never eBay, never converted), so no function of
 // ours runs. Each item keeps the market it was added in, and the price there when added, so the page can say what
 // the collection is worth today, the change since the items were added, and the change since the visitor last looked

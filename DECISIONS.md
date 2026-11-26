@@ -1913,6 +1913,47 @@ that drop's fresh count. No page gains a function or a build step. Votes order n
 alert reads them. GA gets `drop_view` (a card 60% in view, once a page view), `drop_vote` and `drop_click`, for votes per
 100 drop views and the click-through.
 
+## 2026-11-26 — My collection follows a signed-in member, with an opt-in weekly value email
+
+Owner, 2026-11-26 (move 5 of the deal-site study: a sealed stash tracker with a weekly "your stash moved" email; "designed in a very, very
+nice way … tested"). The list still lives in the browser (`ce_vault_v1`) and every page still values it from `/prices.json`; for a
+signed-in member it is now also kept with their account on RiftCompare (`/api/sister-premium/stash`, TCGEmpire DECISIONS.md, same day).
+
+- `lib/vault-sync.ts` syncs once on `/collection` and on a product page, then 1.2 s after any change, when the tab comes back and when
+  the connection returns; one sync at a time. It is a three-way merge against the last list both sides agreed on, and every write
+  names the server's revision (a stale one is refused and merged again): an item added on the phone and one removed on the laptop both
+  survive, a quantity changed on both keeps the larger, never the sum. A browser that last synced another account takes the new
+  account's list and never copies the old one into it. `tests/vault-sync.test.ts`.
+- The weekly value email is a switch on `/collection` (`VaultAccount.tsx`), off until the member turns it on, to the account's own
+  address. It is a control on the page, never a prompt (the one-prompt-per-visit rule is untouched). The email links only to this site.
+- The page: a sync line under the title, a hero card with the total, change pills, a filled value line (members), "Items / Up most /
+  Not counted" and the share and spreadsheet buttons together; rows on a grid that keeps name, value and quantity tidy at 360 px; the
+  backup file folded away now that the account carries the list between devices. Privacy page updated.
+
+
+## 2026-11-26 — Brag cards: the stash and "found it cheaper" pictures people post
+
+Community plan move 4 (owner: "the community is really, really important, because when people talk about things, that's when
+things really blow up"; target 200 shares in December). A share is worth far more as a picture than a link: it lands in a group
+chat, a Discord channel or a story as something to look at, with our address on it.
+
+- One renderer, `lib/brag-card.ts` (the same file in TCGEmpire for the pull card): 1080×1350 portrait, drawn in the browser on a
+  canvas, no route, no function, no Vercel image cost. A JPEG of about 200 KB. Dark ground with the site's colour, the product
+  photo when it loads cleanly (cross-origin only with CORS, else the card is drawn without it), a kicker, the title, one big
+  number, a tone pill, up to three rows and a footer with the address. Text is measured and clipped; the photo takes only the room
+  the words leave.
+- My collection's share button (the 1200×630 `collection-card.ts` is gone): "My sealed stash", the market total, the change since
+  the items were added, the three most valuable lines. Shared as a file where the phone can, else saved and the link copied.
+- Product pages: on a phone that can share a picture, and only when the visitor's market has a real gap between STORES
+  (`bragGap`: never eBay, Amazon or TCGplayer as the cheapest), the share button sends "Found it cheaper". In the US, when the
+  cheapest store is under TCGplayer's market price, that is the saving shown ("$14.52 under TCGplayer market"), the fair
+  yardstick rather than an outlier store; otherwise the spread to the dearest store. It never says the visitor bought anything.
+  Desktops and products without a gap share the link exactly as before.
+- A phone opens its share sheet only shortly after the tap, so the card is drawn ahead in idle time (`prepareBrag`, one cached
+  card) and the tap reuses it.
+- Counted as `brag_share { kind: stash | saved, how }` (Vercel Analytics) beside the existing `share` events; the link carries
+  `utm_medium=brag-card&utm_campaign=<kind>`. Read in December against the 200 target. `tests/brag-card.test.ts`.
+
 ## 2026-11-26 — The deal board: /drops, a page per drop, and a Hot order
 
 **Asked:** the owner, on the OzBargain study ("can we get these implemented ASAP … designed in a very, very nice way …
