@@ -1874,3 +1874,28 @@ import should not.
 **Read:** after the next import, `takenByLine` ua / cfv / sve (25 Nov: 116 / 421 / 124) and the products with 0 stores
 (`scripts/coverage-report.ts`; Union Arena 88/154 on 23 Nov), the Union Arena My Hero Academia box (714370, 11 Dec) and
 the Vanguard Persona 30th display (710648, 11 Dec), both TCGplayer only on 25 Nov.
+
+## 2026-11-26: BandaiCompare merged into TCG Prices
+
+The owner asked whether BandaiCompare should be split into one site per game or merged into TCG Prices ("we thrive on
+sites that are tailored … Bandai Compare has earned us nothing"). The numbers: 4 weeks to 22-23 Nov, A$4 earned, 299
+visitors, 1 buy click; its best page in Google had 19 impressions and no click (page scorecard, 23 Nov). The last eight
+launches earn A$0-27 a month after 3-7 weeks, and the standing rule is no new site before 18 Jan, so three new sites
+would start from the same nothing. TCG Prices already had all three games as game hubs (Union Arena, Fusion World,
+Digimon: 357 products to BandaiCompare's 219) and already took BandaiCompare's store prices as a sister. Merged.
+
+- bandaicompare.com 301s every page to its TCG Prices twin, one hop (`Specifxx/bandaicompare`,
+  `data/redirects/tcgprices.json`, frozen): 508 pages, 389 to the same path here, the 110 others (93 release-event and
+  promo sets with no sealed product here, 17 old Digimon decks and boxes culled here) to the game's hub. Its domain
+  stays and keeps renewing.
+- BandaiCompare's daily store import keeps running in its own repo, as this site's price feed for the three games
+  (`sisters.ts`, unchanged), its 100 eurozone shops of 26 Nov included. Retire it only after a trial import shows our own
+  crawl matches it game by game.
+- Here: `SITE.family.merged` (`["bandai"]`) keeps BandaiCompare off `/our-sites`, the family block and the sister search
+  links; its three evergreen guides (Union Arena star rarities, the card-number guide, fake cards) moved to `/blog`
+  under the same slugs. `tests/sister-sites.test.ts` pins it.
+- The other sites' shared `family-network.ts` still lists BandaiCompare; its link lands here through the 301.
+
+**Read:** Google clicks on `/games/union-arena`, `/games/dragon-ball-super-fusion-world` and `/games/digimon-card-game`
+and the three guides, 28 days to ~24 Dec, against 0; GSC's page indexing for bandaicompare.com should show the 301s
+by mid-December.

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default function OurSites() {
-  const sites = FAMILY_SITES.filter((s) => s.id !== SITE.family.id && sameSide(SITE.family.id, s.id));
+  const sites = FAMILY_SITES.filter((s) => s.id !== SITE.family.id && !SITE.family.merged?.includes(s.id) && sameSide(SITE.family.id, s.id));
   return (
     <StaticPage title="Our other sites">
       <p>{SITE.name} is one of the Compare Empire sites: independent price comparison, the same rules on every site, no paid ranking.</p>

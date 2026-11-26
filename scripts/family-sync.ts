@@ -20,7 +20,7 @@ async function main() {
   fs.writeFileSync(path.join(FAMILY_DIR, FEED_FILE), JSON.stringify(feed, null, 1) + "\n");
   console.log(`[family] ${FEED_FILE}: ${feed.items.length} items`);
 
-  const ids = clusterIds(SITE.family.id);
+  const ids = clusterIds(SITE.family.id).filter((id) => !SITE.family.merged?.includes(id));
   const feeds = await fetchFamilyFeeds(ids);
   console.log(`[family] read ${feeds.length}/${ids.length} sister feeds: ${feeds.map((f) => f.site).join(", ") || "none"}`);
   if (!feeds.length && fs.existsSync(path.join(FAMILY_DIR, CLUSTER_FILE))) {
