@@ -2033,6 +2033,7 @@ keep the list in this browser (`lib/vault.ts`, as it always was underneath); one
 links sign-in, never a pop-up or a second prompt. Signing in merges the browser's list into the account: the first sync has an empty
 base, so it is a union and nothing is lost (`lib/vault-sync.ts`). The weekly email and Premium history stay account-only.
 `tests/card-collection.test.ts` pins that neither page sends a signed-out visitor to sign-in.
+<<<<<<< HEAD
 
 ## 2026-11-26: Sealed Sniper drops lead with one real price gap through the TCGplayer sale
 
@@ -2053,3 +2054,5 @@ Compare's giveaway page and panel ported (`components/giveaway/`, `lib/giveaway.
 addition: 25 points for the first 500 entrants who open My collection from a home-screen icon, signed in, once each. `/collection`
 asks for them itself (`VaultAppPoints.tsx`) only in display-mode standalone, as this visit's one prompt; closing or claiming keeps it
 away on that device. The install card never shows inside the app, so the two never meet. The page is ad-free like every giveaway page.
+=======
+>>>>>>> 17f9af5160d50622361c5181e510dc62632a3700
