@@ -92,7 +92,7 @@ const SVG = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke:
 const tabs = (): Tab[] => [
   { key: "home", label: "Home", href: "/", icon: <svg {...SVG}><path d="M3 11 12 4l9 7M5 10v10h14V10M10 20v-5h4v5" /></svg> },
   { key: "search", label: "Search", href: "/search", icon: <Icon name="search" size={22} /> },
-  { key: "deals", label: "Deals", href: "/tools/deal-finder", also: ["/movers", "/restocks"], icon: <Icon name="tag" size={22} /> },
+  { key: "deals", label: "Deals", href: "/tools/deal-finder", also: ["/movers", "/restocks", "/drops"], icon: <Icon name="tag" size={22} /> },
   { key: "cart", label: "Cart", icon: <CartIcon size={22} /> },
   // My collection (owner, 2026-11-19: "instead of the menu on the navbar, it should be like my collection"); the header keeps its menu
   // button on phones.
