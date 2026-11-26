@@ -133,6 +133,9 @@ shelf; the game list; one ad block. No pop-ups, default region US. `tests/minima
 2050 layer (owner, 2026-11-14; `globals.css`, `Neo.tsx`, `GameMarquee.tsx`): dark by default, three lights, scroll
 animations. Keep its rules: CSS only, no layout shift, hidden-until-scrolled only inside `@supports` for scroll
 timelines, everything off under reduced motion, never a product in the hero.
+Since 2026-11-27 the Empire design system (`empire-ds` block at the end of `globals.css`, canonical copy and rules in the
+project's `design-system/`) takes the 2050 layer's glows, glass, gradient words and gradient button off: one brand colour,
+solid; a left-aligned masthead hero from 640px; hairline section rules; 10px / 6px radii. Never add those tells back.
 
 ## The site watches itself
 
