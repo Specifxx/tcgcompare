@@ -2105,3 +2105,16 @@ Analytics event, `embed_visit { medium, page }`, once per browser tab, the same 
 address stored. Read it in Vercel → Analytics → Events; /data's own visits are in Pages. Returning visitors were already counted
 by `return_visit` (ReturnBeacon). Not counted: how often a widget LOADS on someone else's page (it is a cached script-free
 document, so no function runs); only clicks through to us are. `tests/embed-arrival.test.ts`.
+
+## 2026-11-27: A release event, tournament or advance-deck title never lands on the set's plain pack or case
+
+A self-test of the crawl's matcher (each sealed product's own TCGplayer name read as a shop title, 26 Nov catalogue) put 21
+products on ANOTHER product: every Union Arena, One Piece, Fusion World and Digimon "Release Event Pack" on that set's plain
+"Booster Pack" (the event pack's set is "<Set> Release Event Cards", so a title without "cards" missed its own set and the plain
+pack won with only a small penalty), OP's "3rd Anniversary Tournament" packs on the Carrying On His Will pack, Bleach's "Advance
+Deck Display Case" on the booster box case, and a Secret Lair bundle on "The Hobbit - Bundle". A shop's event pack at US$8
+sits inside the 40-250% band of a US$5 pack, so pickByTitle and the sisters' store pass would have shown it as that pack's price.
+The Amazon matcher's kind words (`OTHER_KIND`, 2026-11-14) now live in `match.ts` and `matchSealed` itself applies them, with
+"anniversary tournament", "advance deck", "advanced deck" and "secret lair" added: a title naming such a kind only matches a
+product whose name names it too. It only refuses. After: 0 wrong of 4,331 (was 21), no product lost its own match.
+`tests/match.test.ts`.

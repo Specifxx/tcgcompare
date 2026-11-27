@@ -455,6 +455,27 @@ function codesAgree(p: Product, codes: Set<number>, idx: MatchIndex): boolean {
   return false;
 }
 
+// Kinds of product a title can be that the product types (sealedTypeOf) do not tell apart (first written for the Amazon
+// matcher, 2026-11-14). A title that says one and a product name that does not are two products: an "Inuyasha - Release
+// Event Pack" is not the Inuyasha booster pack, a "3rd Anniversary Tournament 3 Brothers Pack" is not the set's pack, an
+// "Advance Deck Display Case" is not the booster box case. Since 2026-11-27 every store and crawl title is held to it
+// too (matchSealed), so such a title finds its own product or nothing; it only refuses. DECISIONS.md 2026-11-27.
+const OTHER_KIND = [
+  "double pack", "release event", "welcome", "event pack", "tournament pack", "anniversary tournament", "promo pack",
+  "advance deck", "advanced deck", "secret lair",
+  "sleeved", "blister", "checklane", "empty", "mystery", "repack", "repacked", "custom", "proxy", "opened",
+];
+const fold = (s: string) => tokens(s.replace(/ß/g, "ss").replace(/ẞ/g, "SS"));
+const hasPhrase = (have: Set<string>, phrase: string) => {
+  const need = fold(phrase);
+  return need.length > 0 && need.every((t) => have.has(t));
+};
+export function kindAgrees(title: string, productName: string): boolean {
+  const t = new Set(fold(title));
+  const n = new Set(fold(productName));
+  return OTHER_KIND.every((k) => !hasPhrase(t, k) || hasPhrase(n, k));
+}
+
 export function matchSealed(title: string, idx: MatchIndex): MatchResult | null {
   if (isForeign(title)) return null;
   const have = new Set(tokens(title).filter((t) => !STOP.has(t) || t === "booster"));
@@ -463,6 +484,7 @@ export function matchSealed(title: string, idx: MatchIndex): MatchResult | null 
   const scored: MatchResult[] = [];
   for (const p of idx.sealed) {
     if (sealedTypeOf(p.name) !== type) continue;
+    if (!kindAgrees(title, p.name)) continue;
     if (!editionAgrees(p, title, idx)) continue;
     if (isMulti(p.name) !== isMulti(title)) continue;
     // "Pack Bundle Magnificent Maestros" is several packs, not one.

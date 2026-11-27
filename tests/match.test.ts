@@ -208,3 +208,30 @@ test("Japanese boxes and wrong set codes never match (Gundam Compare, live 2026-
   // The deck build box carries its parent set's code.
   assert.equal(matchSealed("Gundam Freedom Ascension Deck Build Box [GD05]", gidx)?.product.id, 693625);
 });
+
+// 2026-11-27: a store title of another kind of product (release event pack, tournament pack, advance deck) must not
+// land on the set's plain pack or box case. Real TCGplayer names; titles as shops spell them.
+test("a release event or tournament pack is never the set's booster pack", () => {
+  const ss = [
+    { ...set(23986, "UE23BT: Inuyasha"), line: "ua" },
+    { ...set(23987, "UE23BT: Inuyasha Release Event Cards"), line: "ua" },
+    { ...set(23300, "Carrying On His Will: 3rd Anniversary Tournament Cards"), line: "op" },
+    { ...set(23301, "Carrying On His Will"), line: "op" },
+    { ...set(23400, "UE10DC: Bleach: Thousand Year Blood War Advanced Deck"), line: "ua" },
+    { ...set(23401, "UE01BT: BLEACH: Thousand-Year Blood War"), line: "ua" },
+  ];
+  const ps = [
+    { ...sealed(1, "Inuyasha - Booster Pack", 23986), sealedType: "Booster Pack" },
+    { ...sealed(2, "Inuyasha - Release Event Pack", 23987), sealedType: "Booster Pack" },
+    { ...sealed(3, "Carrying On His Will Booster Pack", 23301), sealedType: "Booster Pack" },
+    { ...sealed(4, "Carrying On His Will - 3rd Anniversary Tournament 3 Brothers Pack", 23300), sealedType: "Booster Pack" },
+    { ...sealed(5, "BLEACH: Thousand-Year Blood War - Booster Box Case", 23401), sealedType: "Case" },
+  ];
+  const ix = buildIndex(ps, ss, "series", { stripSetCodes: true });
+  assert.equal(matchSealed("Inuyasha - Booster Pack", ix)?.product.id, 1);
+  assert.notEqual(matchSealed("Union Arena Inuyasha Release Event Pack", ix)?.product.id, 1);
+  assert.notEqual(matchSealed("Inuyasha - Release Event Pack", ix)?.product.id, 1);
+  assert.equal(matchSealed("Carrying On His Will Booster Pack", ix)?.product.id, 3);
+  assert.notEqual(matchSealed("One Piece Carrying On His Will - 3rd Anniversary Tournament 3 Brothers Pack", ix)?.product.id, 3);
+  assert.notEqual(matchSealed("Bleach: Thousand Year Blood War - Advance Deck Display Case", ix)?.product.id, 5);
+});
