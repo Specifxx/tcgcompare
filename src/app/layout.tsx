@@ -42,18 +42,24 @@ import { SinceLastVisit } from "@/components/SinceLastVisit";
 import { AdRouteGate } from "@/components/AdRouteGate";
 import { ImageFallback } from "@/components/ImageFallback";
 
-// The engine's two faces (DexCompare and MTG Compare: Bricolage Grotesque for headings, Inter for text), bundled as the latin
-// subsets of the variable fonts (OFL, src/app/fonts): no font request at build or at runtime. Display is optional, not swap:
-// both faces are preloaded, so a warm visit renders in them from the first paint, and a slow first visit keeps the size-adjusted
-// fallback for that page instead of re-wrapping every line when the font lands (MTG Compare measured CLS 0.209 with swap).
+// The Empire design language v2 ("Ledger", 2026-11-27; globals.css empire-v2): Geist for every word and Geist Mono for every
+// figure, the variable fonts bundled (OFL, src/app/fonts/Geist-OFL.txt): no font request at build or at runtime. Display is
+// optional, not swap: the faces are preloaded, so a warm visit renders in them from the first paint, and a slow first visit
+// keeps the size-adjusted fallback for that page instead of re-wrapping every line when the font lands (MTG Compare measured
+// CLS 0.209 with swap). --font-display stays a name for the same face, so headings and the old class names keep working.
 const display = localFont({
-  src: [{ path: "./fonts/BricolageGrotesque-latin.woff2", weight: "600 800" }],
+  src: [{ path: "./fonts/Geist-Variable.woff2", weight: "100 900" }],
   variable: "--font-display",
   display: "optional",
 });
 const sans = localFont({
-  src: [{ path: "./fonts/Inter-latin.woff2", weight: "100 900" }],
+  src: [{ path: "./fonts/Geist-Variable.woff2", weight: "100 900" }],
   variable: "--font-sans",
+  display: "optional",
+});
+const mono = localFont({
+  src: [{ path: "./fonts/GeistMono-Variable.woff2", weight: "100 900" }],
+  variable: "--font-mono",
   display: "optional",
 });
 
@@ -83,7 +89,7 @@ const ADSENSE = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // The boot scripts stamp data-theme and data-season on this element before React hydrates; React must not report that.
-    <html lang="en" className={`${display.variable} ${sans.variable}`} data-festive={CHRISTMAS_FESTIVE_LAYER ? "on" : undefined} suppressHydrationWarning>
+    <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`} data-festive={CHRISTMAS_FESTIVE_LAYER ? "on" : undefined} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT + SEASON_BOOT_SCRIPT + ADFREE_BOOT_SCRIPT }} />
         <link rel="preconnect" href="https://tcgplayer-cdn.tcgplayer.com" />
