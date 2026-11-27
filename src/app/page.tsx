@@ -28,6 +28,7 @@ import { Section } from "@/components/Section";
 import { adSearch, cardAds } from "@/lib/card-ads";
 import { GameRows } from "@/components/GameRows";
 import { GameMarquee } from "@/components/GameMarquee";
+import { MascotGuide } from "@/components/MascotGuide";
 import { gameViews } from "@/lib/game-hubs";
 import { homeDescription } from "@/lib/site-copy";
 import { HOME_DEMAND, rankBy, rankProducts } from "@/lib/home-demand";
@@ -232,6 +233,8 @@ export default function Home() {
         <div className="hero-search rise" style={riseAt(2)}>
           <SearchBox big />
         </div>
+        {/* Penny suggests a first search (owner, 2026-11-27: "a little mascot saying, hey, search this term here"). */}
+        <MascotGuide examples={["Prismatic Evolutions", "Elite Trainer Box", "OP-13"]} />
         {/* Phone hero, 2026-11-19 (owner: "way too much going on in the mobile version of the home page"): the region row shows
             from sm up; the header's own region button does the same job on a phone. */}
         <div className="rise mt-6 hidden sm:block" style={riseAt(3)}>
