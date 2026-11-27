@@ -2115,6 +2115,9 @@ pack won with only a small penalty), OP's "3rd Anniversary Tournament" packs on 
 Deck Display Case" on the booster box case, and a Secret Lair bundle on "The Hobbit - Bundle". A shop's event pack at US$8
 sits inside the 40-250% band of a US$5 pack, so pickByTitle and the sisters' store pass would have shown it as that pack's price.
 The Amazon matcher's kind words (`OTHER_KIND`, 2026-11-14) now live in `match.ts` and `matchSealed` itself applies them, with
-"anniversary tournament", "advance deck", "advanced deck" and "secret lair" added: a title naming such a kind only matches a
-product whose name names it too. It only refuses. After: 0 wrong of 4,570 (was 21), no product lost its own match.
+"anniversary tournament", "advance deck" and "secret lair" added: a title naming such a kind only matches a product whose
+name, or whose set's name, names it too. A kind is its words side by side and in order ("Booster Box (24 Pack) + Promo" is
+no promo pack), and "advanced" reads as "advance" (TCGplayer's "Advance Deck" is the set's "Advanced Deck"). It only refuses.
+After: 0 wrong of 4,570 (was 21), and every product still matches its own TCGplayer name; real shop spellings were not
+available here, so read crawl takenByLine ua/op/fw/dg after the next import.
 `tests/match.test.ts`.
