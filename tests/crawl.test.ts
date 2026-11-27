@@ -884,3 +884,25 @@ test("crawlIndex: a shop title need not spell TCGplayer's release code, and a ti
   assert.equal(matchSealed("Union Arena My Hero Academia Special Booster Box [UE17BT]", idx), null, "another set's code");
   assert.equal(matchSealed("Union Arena SOLO LEVELING Booster Box", idx)?.product.id, 600001);
 });
+
+test("crawlIndex: Godzilla's 'Booster Set 4: ' is read as a code, so 'Endless Wars Booster Box' lands, and a title naming another set number is refused", async () => {
+  const { crawlIndex } = await import("../src/lib/import/crawl");
+  const { matchSealed, splitSetCode } = await import("../src/lib/import/match");
+  assert.deepEqual(splitSetCode("Booster Set 4: Endless Wars"), { name: "Endless Wars", code: "BOOSTER SET 4" });
+  assert.deepEqual(splitSetCode("Booster Set 2: G: Monsters Raid Again"), { name: "G: Monsters Raid Again", code: "BOOSTER SET 2" });
+  assert.deepEqual(splitSetCode("Starter Deck 23: Beatbreak"), { name: "Starter Deck 23: Beatbreak", code: "" }, "a deck's number stays");
+  const sets = [set(30004, "Booster Set 4: Endless Wars", "gz"), set(30003, "Booster Set 3: Resonance of Rivals", "gz")];
+  const products = [
+    prod(800004, "Endless Wars Booster Box", 30004, "Booster Box"),
+    prod(800003, "Resonance of Rivals Booster Box", 30003, "Booster Box"),
+  ];
+  const plain = buildIndex(products, sets, "code");
+  const idx = crawlIndex(products, sets, "code");
+  const title = "Godzilla Card Game Endless Wars Booster Box";
+  assert.equal(matchSealed(title, plain), null, "before: 'booster set 4' were words every title needed");
+  assert.equal(matchSealed(title, idx)?.product.id, 800004);
+  assert.equal(matchSealed("Godzilla Card Game Booster Set 4 Endless Wars Booster Box", idx)?.product.id, 800004);
+  assert.equal(matchSealed("Godzilla Card Game Booster Set 04: Endless Wars - Booster Box", idx)?.product.id, 800004);
+  assert.equal(matchSealed("Godzilla Card Game Booster Set 3 Endless Wars Booster Box", idx), null, "another set's number");
+  assert.equal(matchSealed("Godzilla Resonance of Rivals Booster Box", idx)?.product.id, 800003);
+});

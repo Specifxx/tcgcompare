@@ -216,7 +216,14 @@ export interface IndexOptions {
 // short all-capital one; "Commander: ", "Tarkir: " and "CookieRun: " are names, not codes.
 const SET_CODE_PREFIX = /^([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*):\s+(?=\S)/;
 /** A set name without its release-code prefix, and the code ("" when it has none). */
+// "Booster Set 4: Endless Wars" (the Godzilla Card Game numbers its sets in words, 2026-11-27): the product names and
+// shop titles say "Endless Wars Booster Box", never "Booster Set 4", so the words are a code too. Kept whole as
+// "BOOSTER SET 4", which a title names only by spelling "Booster Set 4" (setCodesInTitle). "Starter Deck 23: " stays a
+// name: a deck's number is how titles tell decks apart.
+const NUMBERED_SET_PREFIX = /^booster\s+set\s+0*(\d{1,2}):\s+(?=\S)/i;
 export function splitSetCode(name: string): { name: string; code: string } {
+  const n = name.match(NUMBERED_SET_PREFIX);
+  if (n) return { name: name.slice(n[0].length), code: `BOOSTER SET ${n[1]}` };
   const m = name.match(SET_CODE_PREFIX);
   if (!m || !(/\d/.test(m[1]) || /^[A-Z]{2,5}$/.test(m[1]))) return { name, code: "" };
   return { name: name.slice(m[0].length), code: m[1] };
@@ -442,6 +449,9 @@ export function setCodesInTitle(title: string, idx: MatchIndex): Set<number> {
     if (!/\d/.test(w) || !/[A-Z]/.test(w)) continue;
     for (const k of new Set([w, w.replace(/-/g, "")])) for (const id of idx.setByCode.get(k) ?? []) out.add(id);
   }
+  // A numbered set spelled in words ("Booster Set 3", "Booster Set 03"): the code splitSetCode keeps for it.
+  for (const m of title.matchAll(/\bbooster\s+set\s*0*(\d{1,2})(?![0-9])/gi))
+    for (const id of idx.setByCode.get(`BOOSTER SET ${m[1]}`) ?? []) out.add(id);
   return out;
 }
 
