@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-26T20:34:04.981Z",
+ "generatedAt": "2026-11-27T04:17:34.461Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -97,18 +97,6 @@
    "kind": "preorder",
    "cluster": "cards",
    "region": "US",
-   "title": "Chromatic Ascension Booster Box",
-   "url": "https://tcgprices.app/preorders/chromatic-ascension",
-   "cents": 12000,
-   "currency": "USD",
-   "store": "Dark Vassal Gaming",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/710675_200w.jpg",
-   "releaseDate": "2026-11-27"
-  },
-  {
-   "kind": "preorder",
-   "cluster": "cards",
-   "region": "US",
    "title": "Starter Deck 25: Rubeusdramon Starter Deck",
    "url": "https://tcgprices.app/preorders/starter-deck-25-rubeusdramon",
    "cents": 1999,
@@ -161,6 +149,17 @@
    "currency": "USD",
    "store": "Topspot Cards",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/723027_200w.jpg",
+   "releaseDate": "2026-12-11"
+  },
+  {
+   "kind": "preorder",
+   "cluster": "cards",
+   "region": "US",
+   "title": "Ignition of X Booster Box",
+   "url": "https://tcgprices.app/preorders/ignition-of-x",
+   "cents": 9499,
+   "currency": "USD",
+   "store": "Many Realms",
    "releaseDate": "2026-12-11"
   }
  ]
