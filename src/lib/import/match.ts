@@ -33,6 +33,8 @@ export interface MatchIndex {
   setByCode: Map<string, number[]>;
   sealed: Product[];
   setName: Map<number, string[]>;
+  /** set id → the set's name as written (code taken off under stripSetCodes), for kindAgrees. */
+  setTitle?: Map<number, string>;
   style: NumberStyle;
   /** Every rarity in the catalogue plus aliases, longest first (rarityMustAgree only). */
   rarities: { name: string; re: RegExp }[] | null;
@@ -295,7 +297,8 @@ export function buildIndex(products: Product[], setList: SetInfo[], style: Numbe
   const rarities = opts.rarityMustAgree
     ? rarityPatterns(products.map((p) => p.rarity).filter((r): r is string => !!r), opts.rarityAliases)
     : null;
-  return { byNumber, bySetNumber, bySetName, setByCode, sealed, setName, style, rarities, editions, setEdition };
+  const setTitle = new Map(sets.map((s) => [s.id, s.name]));
+  return { byNumber, bySetNumber, bySetName, setByCode, sealed, setName, setTitle, style, rarities, editions, setEdition };
 }
 
 function overlap(need: string[], have: Set<string>): number {
@@ -455,6 +458,33 @@ function codesAgree(p: Product, codes: Set<number>, idx: MatchIndex): boolean {
   return false;
 }
 
+// Kinds of product a title can be that the product types (sealedTypeOf) do not tell apart (first written for the Amazon
+// matcher, 2026-11-14). A title that says one and a product name that does not are two products: an "Inuyasha - Release
+// Event Pack" is not the Inuyasha booster pack, a "3rd Anniversary Tournament 3 Brothers Pack" is not the set's pack, an
+// "Advance Deck Display Case" is not the booster box case. Since 2026-11-27 every store and crawl title is held to it
+// too (matchSealed), so such a title finds its own product or nothing; it only refuses. DECISIONS.md 2026-11-27.
+const OTHER_KIND = [
+  "double pack", "release event", "welcome", "event pack", "tournament pack", "anniversary tournament", "promo pack",
+  "advance deck", "secret lair",
+  "sleeved", "blister", "checklane", "empty", "mystery", "repack", "repacked", "custom", "proxy", "opened",
+].map((k) => kindWords(k));
+// Words folded so one spelling of a kind is every spelling ("Advanced Deck", the set's word, is TCGplayer's "Advance Deck").
+function kindWords(s: string): string[] {
+  return tokens(s.replace(/ß/g, "ss").replace(/ẞ/g, "SS")).map((t) => (t === "advanced" ? "advance" : t));
+}
+/** The phrase's words side by side and in order ("promo pack", never "Booster Box (24 Pack) + Promo"). */
+function hasPhrase(words: string[], phrase: string[]): boolean {
+  for (let i = 0; i + phrase.length <= words.length; i++) if (phrase.every((w, j) => words[i + j] === w)) return true;
+  return false;
+}
+/** A title that names one of these kinds is only a product whose name, or its set's name, names it too. */
+export function kindAgrees(title: string, productName: string, setName = ""): boolean {
+  const t = kindWords(title);
+  const n = kindWords(productName);
+  const s = kindWords(setName);
+  return OTHER_KIND.every((k) => !hasPhrase(t, k) || hasPhrase(n, k) || hasPhrase(s, k));
+}
+
 export function matchSealed(title: string, idx: MatchIndex): MatchResult | null {
   if (isForeign(title)) return null;
   const have = new Set(tokens(title).filter((t) => !STOP.has(t) || t === "booster"));
@@ -463,6 +493,7 @@ export function matchSealed(title: string, idx: MatchIndex): MatchResult | null 
   const scored: MatchResult[] = [];
   for (const p of idx.sealed) {
     if (sealedTypeOf(p.name) !== type) continue;
+    if (!kindAgrees(title, p.name, idx.setTitle?.get(p.setId))) continue;
     if (!editionAgrees(p, title, idx)) continue;
     if (isMulti(p.name) !== isMulti(title)) continue;
     // "Pack Bundle Magnificent Maestros" is several packs, not one.

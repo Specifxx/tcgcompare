@@ -7,10 +7,13 @@
 //   2. It is matched only against that game's products, with "ME06: " style codes taken off the set names
 //      (IndexOptions.stripSetCodes; the code still counts as a code).
 //   3. It must not be a different kind of product the store matcher reads as the same type: a "Double Pack Set" is
-//      not the booster pack, a "Release Event" or "Welcome" pack is not the starter deck, an empty box is no box.
+//      not the booster pack, a "Release Event" or "Welcome" pack is not the starter deck, an empty box is no box
+//      (kindAgrees in match.ts; since 2026-11-27 the store matcher itself holds every title to it).
 import type { GameLine, Product, SetInfo } from "@/lib/site-types";
 import { tokens } from "@/lib/slug";
-import { buildIndex, isForeign, matchSealed, splitSetCode, type IndexOptions, type MatchIndex, type NumberStyle } from "./match";
+import { buildIndex, isForeign, kindAgrees, matchSealed, splitSetCode, type IndexOptions, type MatchIndex, type NumberStyle } from "./match";
+
+export { kindAgrees };
 
 const fold = (s: string) => tokens(s.replace(/ß/g, "ss").replace(/ẞ/g, "SS"));
 
@@ -29,18 +32,6 @@ export function namesGame(have: Set<string>, line: GameLine): boolean {
 export function gamesNamed(title: string, lines: GameLine[]): GameLine[] {
   const have = new Set(fold(title));
   return lines.filter((l) => namesGame(have, l));
-}
-
-// Kinds of product a title can be that the store matcher's product types do not tell apart. A title that says one
-// and a product name that does not are two products.
-const OTHER_KIND = [
-  "double pack", "release event", "welcome", "event pack", "tournament pack", "promo pack",
-  "sleeved", "blister", "checklane", "empty", "mystery", "repack", "repacked", "custom", "proxy", "opened",
-];
-export function kindAgrees(title: string, productName: string): boolean {
-  const t = new Set(fold(title));
-  const n = new Set(fold(productName));
-  return OTHER_KIND.every((k) => !has(t, k) || has(n, k));
 }
 
 export interface AmazonMatcher {
@@ -84,9 +75,9 @@ export function amazonMatcher(products: Product[], sets: SetInfo[], lines: GameL
     }
     const idx = indexes.get(key);
     if (!idx) return null;
-    // Products of another kind are out before the store matcher chooses, so a Double Pack Set's title can still find
-    // the Double Pack Set rather than lose to the plain pack and match nothing.
-    return matchSealed(title, { ...idx, sealed: idx.sealed.filter((p) => kindAgrees(title, p.name)) })?.product ?? null;
+    // matchSealed leaves out products of another kind (kindAgrees, match.ts) before it chooses, so a Double Pack Set's
+    // title can still find the Double Pack Set rather than lose to the plain pack and match nothing.
+    return matchSealed(title, idx)?.product ?? null;
   };
 
   return {

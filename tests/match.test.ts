@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { Product, SetInfo } from "@/lib/site-types";
-import { buildIndex, matchCard, matchSealed, markersAgree, numbersInTitle, printingOf } from "@/lib/import/match";
+import { buildIndex, kindAgrees, matchCard, matchSealed, markersAgree, numbersInTitle, printingOf } from "@/lib/import/match";
 
 const set = (id: number, name: string): SetInfo => ({ id, name, code: String(id), slug: name, releasedOn: "2026-01-01", productCount: 1, upcoming: false });
 const card = (id: number, name: string, number: string, setId: number, rarity = "Rare"): Product => ({ id, slug: String(id), name, kind: "card", setId, number, rarity, attrs: {}, sealedType: null, image: null, tcgUrl: "", printings: [] });
@@ -207,4 +207,44 @@ test("Japanese boxes and wrong set codes never match (Gundam Compare, live 2026-
   assert.equal(matchSealed("Gundam Freedom Ascension Booster Box GD06", gidx), null);
   // The deck build box carries its parent set's code.
   assert.equal(matchSealed("Gundam Freedom Ascension Deck Build Box [GD05]", gidx)?.product.id, 693625);
+});
+
+// 2026-11-27: a store title of another kind of product (release event pack, tournament pack, advance deck) must not
+// land on the set's plain pack or box case. Real TCGplayer names; titles as shops spell them.
+test("a release event or tournament pack is never the set's booster pack", () => {
+  const ss = [
+    { ...set(23986, "UE23BT: Inuyasha"), line: "ua" },
+    { ...set(23987, "UE23BT: Inuyasha Release Event Cards"), line: "ua" },
+    { ...set(23300, "Carrying On His Will: 3rd Anniversary Tournament Cards"), line: "op" },
+    { ...set(23301, "Carrying On His Will"), line: "op" },
+    { ...set(23400, "UE10DC: Bleach: Thousand Year Blood War Advanced Deck"), line: "ua" },
+    { ...set(23401, "UE01BT: BLEACH: Thousand-Year Blood War"), line: "ua" },
+  ];
+  const ps = [
+    { ...sealed(1, "Inuyasha - Booster Pack", 23986), sealedType: "Booster Pack" },
+    { ...sealed(2, "Inuyasha - Release Event Pack", 23987), sealedType: "Booster Pack" },
+    { ...sealed(3, "Carrying On His Will Booster Pack", 23301), sealedType: "Booster Pack" },
+    { ...sealed(4, "Carrying On His Will - 3rd Anniversary Tournament 3 Brothers Pack", 23300), sealedType: "Booster Pack" },
+    { ...sealed(5, "BLEACH: Thousand-Year Blood War - Booster Box Case", 23401), sealedType: "Case" },
+    { ...sealed(6, "Bleach: Thousand Year Blood War - Advance Deck Display Case", 23400), sealedType: "Case" },
+    { ...sealed(7, "Inuyasha - Booster Box", 23986), sealedType: "Booster Box" },
+  ];
+  const ix = buildIndex(ps, ss, "series", { stripSetCodes: true });
+  assert.equal(matchSealed("Inuyasha - Booster Pack", ix)?.product.id, 1);
+  assert.notEqual(matchSealed("Union Arena Inuyasha Release Event Pack", ix)?.product.id, 1);
+  assert.notEqual(matchSealed("Inuyasha - Release Event Pack", ix)?.product.id, 1);
+  assert.equal(matchSealed("Carrying On His Will Booster Pack", ix)?.product.id, 3);
+  assert.notEqual(matchSealed("One Piece Carrying On His Will - 3rd Anniversary Tournament 3 Brothers Pack", ix)?.product.id, 3);
+  assert.notEqual(matchSealed("Bleach: Thousand Year Blood War - Advance Deck Display Case", ix)?.product.id, 5);
+  // The set's own spelling, "Advanced Deck", is the same kind as TCGplayer's "Advance Deck": it finds its product.
+  assert.equal(matchSealed("Union Arena Bleach: Thousand Year Blood War Advanced Deck Display Case", ix)?.product.id, 6);
+  // A kind's words apart are no kind: a box with a promo is still the box.
+  assert.equal(matchSealed("Union Arena Inuyasha - Booster Box (24 Pack) + Promo", ix)?.product.id, 7);
+});
+
+test("kindAgrees reads a kind as words side by side, from the product or its set", () => {
+  assert.ok(kindAgrees("One Piece OP-09 Booster Box (24 Pack) + Promo", "The Four Emperors Booster Box"));
+  assert.ok(!kindAgrees("Inuyasha - Release Event Pack", "Inuyasha - Booster Pack", "Inuyasha"));
+  assert.ok(kindAgrees("Digimon Beatbreak Release Event Welcome Tamers Pack Vol.2", "Welcome Tamers Pack Vol.2 (ST-23 & ST-24)", "Starter Deck 23: Beatbreak Release Event Cards"));
+  assert.ok(kindAgrees("Bleach Advanced Deck Display Case", "Bleach: Thousand Year Blood War - Advance Deck Display Case"));
 });
