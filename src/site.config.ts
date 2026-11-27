@@ -156,6 +156,9 @@ const GAP_CRAWL = new Set(["ua", "fw", "dg", "gun"]);
 // 20 Nov crawl refused 88 Fusion World listings there as another game). GameLine.alsoIn: taken only by the product's
 // own TCGplayer id, only at a store Bandai Compare does not list.
 const ALSO_IN: Record<string, string[]> = { fw: ["dbs"] };
+// TCGplayer names every Godzilla set "Booster Set N: <name>", while its product names and shop titles say "Endless Wars
+// Booster Box" (GameLine.numberedSets, DECISIONS.md 2026-11-27).
+const NUMBERED_SETS: Record<string, string[]> = { gz: ["Booster Set"] };
 
 const LINES: GameLine[] = [
   g("mtg", 1, "Magic: The Gathering", "Magic", "magic-the-gathering", "magic", "magic the gathering", "#b8742a", "Play Booster and Collector Booster boxes, bundles, Commander decks and Secret Lair-era sealed product."),
@@ -189,7 +192,7 @@ const LINES: GameLine[] = [
   g("wx", 67, "WIXOSS", "WIXOSS", "wixoss", "all", "wixoss", "#9a5a9a", "English booster boxes and starter decks."),
   g("bss", 72, "Battle Spirits Saga", "Battle Spirits", "battle-spirits-saga", "all", "battle spirits saga", "#b0553c", "Booster boxes and starter decks."),
   g("ac", 78, "Alpha Clash", "Alpha Clash", "alpha-clash", "all", "alpha clash tcg", "#5a8a4a", "Booster boxes and starter decks."),
-].map((l) => ({ ...l, ...(LOGOS.has(l.id) ? { logo: `/games/${l.id}.webp` } : {}), ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}), ...(OWN_CRAWL[l.id] ? { ownCrawl: OWN_CRAWL[l.id] } : {}), ...(GAP_CRAWL.has(l.id) && OWN_CRAWL[l.id] ? { gapCrawl: true } : {}), ...(ALSO_IN[l.id] ? { alsoIn: ALSO_IN[l.id] } : {}), ...(SEO[l.id] ? { seo: SEO[l.id] } : {}) }));
+].map((l) => ({ ...l, ...(LOGOS.has(l.id) ? { logo: `/games/${l.id}.webp` } : {}), ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}), ...(OWN_CRAWL[l.id] ? { ownCrawl: OWN_CRAWL[l.id] } : {}), ...(GAP_CRAWL.has(l.id) && OWN_CRAWL[l.id] ? { gapCrawl: true } : {}), ...(ALSO_IN[l.id] ? { alsoIn: ALSO_IN[l.id] } : {}), ...(NUMBERED_SETS[l.id] ? { numberedSets: NUMBERED_SETS[l.id] } : {}), ...(SEO[l.id] ? { seo: SEO[l.id] } : {}) }));
 
 export const SITE: SiteConfig = {
   // The affiliate sub-id prefix (eBay customid, Impact subId1): `tcgprices-us-card_pinned-1234`.

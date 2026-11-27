@@ -2184,8 +2184,10 @@ Released at 12:28 UTC on 27 Nov once the 8-hour gate opened (the 12:13 merge was
 TCGplayer names every Godzilla Card Game set "Booster Set N: <name>" ("Booster Set 4: Endless Wars"), while its own product
 names and shop titles say "Endless Wars Booster Box". The set's words are words every title must carry, so 12 of 17 Godzilla
 products could not even match their own TCGplayer name (a self-test over the 26 Nov catalogue), and no shop title either.
-`splitSetCode` now reads "Booster Set N: " as the code "BOOSTER SET N", as the release codes are read since #194 (crawl and
-Amazon indexes only, `stripSetCodes`); a title that spells "Booster Set 3" names that set, so another set's number is still
-refused. "Starter Deck 23: " stays part of the name: a deck's number is how titles tell decks apart. Self-test: Godzilla 5 ->
-13 of 17 (the rest are promotion packs), 0 wrong across every game, as before. It only refuses less where the set's words
-were a TCGplayer naming habit; every other check is unchanged.
+A game now lists its numbered set phrases (`GameLine.numberedSets`, off by default; Godzilla: "Booster Set"), and under
+`stripSetCodes` (crawl and Amazon indexes, as the release codes since #194) `splitSetCode` reads "Booster Set 4: " as the
+code "BOOSTER SET 4". A title that spells "Booster Set 3" / "#3" / "No. 3" names that set, so another set's number is still
+refused, and a number no set has refuses too (as the number word did before). "Starter Deck 23: " stays part of the name.
+Self-test: Godzilla 5 -> 13 of 17 (the rest are promotion packs), 0 wrong of 4,574 across every game. Side effect to watch:
+Godzilla titles now reach the matcher, so pickId's "matcher-disagrees" can refuse an id listing whose title reads as a
+sibling product; read crawl refusals for gz after the next import.
