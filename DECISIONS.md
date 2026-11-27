@@ -2200,3 +2200,9 @@ Compare's giveaway page and panel ported (`components/giveaway/`, `lib/giveaway.
 addition: 25 points for the first 500 entrants who open My collection from a home-screen icon, signed in, once each. `/collection`
 asks for them itself (`VaultAppPoints.tsx`) only in display-mode standalone, as this visit's one prompt; closing or claiming keeps it
 away on that device. The install card never shows inside the app, so the two never meet. The page is ad-free like every giveaway page.
+
+## 2026-11-27 — The rating card no longer asks on its own
+
+Owner, 27 Nov: "make sure that users have a good experience … not too many pop-ups … the feedback pop-up on Rift Compare
+can be taken down a little because we already have enough feedback". The rate-us corner card never opens by itself any
+more (`AUTO_ASK = false`); a "Rate us" link still opens it. During Cyber Weekend the visit's one prompt goes to the sale card.
