@@ -136,6 +136,11 @@ timelines, everything off under reduced motion, never a product in the hero.
 Since 2026-11-27 the Empire design system (`empire-ds` block at the end of `globals.css`, canonical copy and rules in the
 project's `design-system/`) takes the 2050 layer's glows, glass, gradient words and gradient button off: one brand colour,
 solid; a left-aligned masthead hero from 640px; hairline section rules; 10px / 6px radii. Never add those tells back.
+Since 2026-11-27 (owner: "state of the art … what an expert would do") the Empire design language v2, "Ledger", sits on
+top (`empire-v2` block, last in `globals.css`; tokens set in place at the top): Geist for words and Geist Mono for every
+figure (bundled in `src/app/fonts`, `layout.tsx`), near-black with neutral greys (warm paper in light), product photos on one
+paper plate, prices as the loudest thing on a card or row, solid "View deal" buttons in one shape (no row is
+ever marked the cheapest), a mono ticker for the game strip, and nothing that blurs or rises in on scroll.
 
 ## The site watches itself
 

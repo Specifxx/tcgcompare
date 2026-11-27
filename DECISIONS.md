@@ -2121,3 +2121,23 @@ no promo pack), and "advanced" reads as "advance" (TCGplayer's "Advance Deck" is
 After: 0 wrong of 4,570 (was 21), and every product still matches its own TCGplayer name; real shop spellings were not
 available here, so read crawl takenByLine ua/op/fw/dg after the next import.
 `tests/match.test.ts`.
+
+## 2026-11-27 — Empire design language v2, "Ledger"
+
+Bill (2026-11-27): rework the sites so they look state of the art and expert-designed, not vibe-coded or AI slop. The v1
+pass (empire-ds, the day before) took the template tells off; v2 gives the site a point of view, a price ledger:
+
+- One family: Geist for words, Geist Mono for every figure (prices, counts, badges, table heads, the game ticker). Bundled
+  variable fonts, `display: optional` as before; Bricolage Grotesque and Inter are gone.
+- Colour: near-black with neutral greys in dark (no blue cast), warm paper in light; the brand blue only where you act.
+  The dark tokens moved, so `tests/contrast.test.ts` pins the new surface and green.
+- Product photos sit on one paper plate (multiply blend, so a white JPEG's box reads as the plate); the price is the
+  largest type on a card; the "% under median" badge is a mono label.
+- Price tables: mono right-aligned figures, uppercase mono heads, hairline rows with a hover tint. The "View deal"
+  buttons stay solid (Cyber Weekend, and the A/B reads frozen to 2 Dec); every row's is the same (owner 2026-11-14).
+- Header: ghost Premium (gold star only) and a solid ink Sign in, instead of a gradient amber pill and a filled blue one.
+- The hero keeps its words, search and ways in (minimal look); its figures become a mono ledger line, the game marquee a
+  mono ticker, and nothing blurs, rises or draws itself in on scroll any more.
+
+CSS, fonts and one test only: no word, order, URL, heading, ranking or link changed. The canonical rules live in the
+project's design-system/README.md for the other sites.

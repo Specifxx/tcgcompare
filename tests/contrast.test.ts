@@ -62,13 +62,13 @@ function filled(): Array<{ rule: string; bg: string; text: string }> {
 
 test("the two themes are read from the stylesheet: the dark theme is the default and makes the money green a bright one", () => {
   assert.deepEqual(light.get("open"), [20, 118, 56]);
-  assert.deepEqual(dark.get("open"), [74, 206, 120]);
+  assert.deepEqual(dark.get("open"), [92, 214, 140]);
   assert.deepEqual(light.get("surface"), [255, 255, 255]);
-  assert.deepEqual(dark.get("surface"), [15, 17, 25]);
+  assert.deepEqual(dark.get("surface"), [17, 18, 21]);
   assert.equal(names.get("buy"), "open", "the old colour name is the same token");
   // The arithmetic, against the published pairs: black on white is 21:1, and the bug this file is for was 2.0:1.
   assert.equal(Math.round(contrast([0, 0, 0], [255, 255, 255])), 21);
-  assert.equal(contrast([255, 255, 255], dark.get("open")!).toFixed(2), "2.02");
+  assert.equal(contrast([255, 255, 255], dark.get("open")!).toFixed(2), "1.83");
 });
 
 test("every filled control in the stylesheet reads at 4.5:1 or better in the light theme and in the dark one", () => {
