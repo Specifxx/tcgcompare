@@ -33,6 +33,8 @@ export interface MatchIndex {
   setByCode: Map<string, number[]>;
   sealed: Product[];
   setName: Map<number, string[]>;
+  /** set id → the set's name as written (code taken off under stripSetCodes), for kindAgrees. */
+  setTitle?: Map<number, string>;
   style: NumberStyle;
   /** Every rarity in the catalogue plus aliases, longest first (rarityMustAgree only). */
   rarities: { name: string; re: RegExp }[] | null;
@@ -40,6 +42,8 @@ export interface MatchIndex {
   editions: SetEdition[] | null;
   /** set id → the edition word its name carries ("beta"), or null. */
   setEdition: Map<number, string | null>;
+  /** IndexOptions.numberedSets, when the index read them. */
+  numberedSets?: readonly string[];
 }
 
 /** A game that prints one set in several editions with the same card and
@@ -208,13 +212,28 @@ export interface IndexOptions {
    *  word of the set name every title needs, those sets could never match. Off by default (the Amazon matcher sets
    *  it, lib/import/amazon-match.ts). */
   stripSetCodes?: boolean;
+  /** Under stripSetCodes, the game's numbered set phrases (GameLine.numberedSets): "Booster Set 4: Endless Wars" is
+   *  read as "Endless Wars", its "Booster Set 4" kept as a code a title names only by spelling it. Off by default. */
+  numberedSets?: readonly string[];
 }
 
 // A release code in front of a set name: "ME06: ", "SWSH10: ", "DZ-BT16: ", "SV: ", "MEZ: ". A word with a digit, or a
 // short all-capital one; "Commander: ", "Tarkir: " and "CookieRun: " are names, not codes.
 const SET_CODE_PREFIX = /^([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*):\s+(?=\S)/;
-/** A set name without its release-code prefix, and the code ("" when it has none). */
-export function splitSetCode(name: string): { name: string; code: string } {
+/** A numbered set phrase ("Booster Set") as a regex source: words joined by any space. */
+const phraseSource = (phrase: string) =>
+  phrase.trim().split(/\s+/).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("\\s+");
+/** The code a numbered set phrase keeps: "BOOSTER SET 4". */
+const numberedCode = (phrase: string, n: string) => `${phrase.trim().split(/\s+/).join(" ").toUpperCase()} ${Number(n)}`;
+
+/** A set name without its release-code prefix, and the code ("" when it has none). `numbered` are a game's own
+ *  numbered set phrases (GameLine.numberedSets, "Booster Set"): "Booster Set 4: Endless Wars" is read as "Endless
+ *  Wars", its code "BOOSTER SET 4". */
+export function splitSetCode(name: string, numbered: readonly string[] = []): { name: string; code: string } {
+  for (const ph of numbered) {
+    const n = name.match(new RegExp(`^${phraseSource(ph)}\\s+0*(\\d{1,2}):\\s+(?=\\S)`, "i"));
+    if (n) return { name: name.slice(n[0].length), code: numberedCode(ph, n[1]) };
+  }
   const m = name.match(SET_CODE_PREFIX);
   if (!m || !(/\d/.test(m[1]) || /^[A-Z]{2,5}$/.test(m[1]))) return { name, code: "" };
   return { name: name.slice(m[0].length), code: m[1] };
@@ -243,7 +262,7 @@ export function buildIndex(products: Product[], setList: SetInfo[], style: Numbe
   const prefixes = new Map<number, string>();
   const sets = opts.stripSetCodes
     ? setList.map((s) => {
-        const { name, code } = splitSetCode(s.name);
+        const { name, code } = splitSetCode(s.name, opts.numberedSets);
         if (code) prefixes.set(s.id, code);
         return { ...s, name };
       })
@@ -295,7 +314,9 @@ export function buildIndex(products: Product[], setList: SetInfo[], style: Numbe
   const rarities = opts.rarityMustAgree
     ? rarityPatterns(products.map((p) => p.rarity).filter((r): r is string => !!r), opts.rarityAliases)
     : null;
-  return { byNumber, bySetNumber, bySetName, setByCode, sealed, setName, style, rarities, editions, setEdition };
+  const setTitle = new Map(sets.map((s) => [s.id, s.name]));
+  const numberedSets = opts.stripSetCodes && opts.numberedSets?.length ? opts.numberedSets : undefined;
+  return { byNumber, bySetNumber, bySetName, setByCode, sealed, setName, setTitle, style, rarities, editions, setEdition, ...(numberedSets ? { numberedSets } : {}) };
 }
 
 function overlap(need: string[], have: Set<string>): number {
@@ -314,8 +335,23 @@ export interface MatchResult {
 // JPN" box at a third of the price sat on the English box's page). Japanese,
 // Chinese and Korean script count too.
 const FOREIGN = /\b(japanese|japan|jpn|jap|jp|chinese|simplified|traditional|chn|french|fran[cç]ais|german|deutsch|italian|italiano|spanish|espa[nñ]ol|korean|kor|portuguese|thai|indonesian|\(fr\)|\(de\)|\(it\)|\(jp\)|\(cn\)|\(kr\))\b/i;
+// The same languages named in a European shop's own language (2026-11-26, Haiku trial: "Japans", "japonais" and
+// "Japanisch" boxes got past the English words). No catalogue name contains one of them.
+const FOREIGN_NAMED = /\b(japanse?|japansk\w*|japon(?:ais|aise|ês|es|és|esa)|japanisch\w*|giapponese|japón|koreanisch\w*|koreaans\w*|koreansk\w*|cor[eé]en(?:ne)?|corean[oa]|chinois(?:e)?|chinesisch\w*|chinees|kinesisk\w*|cinese|chino)\b/i;
 const CJK = /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/;
-export const isForeign = (title: string) => FOREIGN.test(title) || CJK.test(title);
+export const isForeign = (title: string) => FOREIGN.test(title) || FOREIGN_NAMED.test(title) || CJK.test(title);
+
+// A single card's own code in a title: "(ST02-002)", "OP09-118", "BT25-104", "(MPW088)", "LOB-EN001",
+// "UE01BT/BLC-1-001". The catalogue here is sealed only and no sealed name carries one (checked 2026-11-26), so a title
+// that does is a single from a starter deck or a promo pack, never the product. Set codes stay readable: "OP-09",
+// "OP09", "[ST-02]", "UE25BT" and "SV10" are not card codes.
+const CARD_CODE = /\b[A-Z]{1,4}\d{1,2}[A-Z]?-\d{3}[A-Z]?\b|[(\[][A-Z]{2,4}\d{3}[)\]]|\b[A-Z0-9]{3,4}-EN\d{3}\b|\b[A-Z]{2,4}-\d{1,2}-\d{3}\b/i;
+export const namesCardCode = (title: string) => CARD_CODE.test(title);
+/** The listing's handle as the shop wrote it, hyphens kept ("monkey-d-luffy-st02-002"), for the card-code test. */
+export const rawHandleOf = (url: string) => {
+  const m = url.match(/\/products\/([^/?#]+)/);
+  return m ? decodeURIComponent(m[1]) : "";
+};
 
 /** The listing's own URL slug ("...-gd06-jpn"): a store that keeps the
  *  language only in the handle is still a foreign product. Read for the
@@ -424,6 +460,16 @@ export function setCodesInTitle(title: string, idx: MatchIndex): Set<number> {
     if (!/\d/.test(w) || !/[A-Z]/.test(w)) continue;
     for (const k of new Set([w, w.replace(/-/g, "")])) for (const id of idx.setByCode.get(k) ?? []) out.add(id);
   }
+  // A numbered set named in words ("Booster Set 3", "Booster Set 03", "Booster Set #3", "Booster Set No. 3"): the code
+  // splitSetCode kept for it. Any number a title gives counts, so a title naming another set's number is refused, and one
+  // naming a number the catalogue has no set for gets an id no product has (-1): the set's number was a word every such
+  // title needed before the phrase was read as a code, and it still refuses as it did then.
+  for (const ph of idx.numberedSets ?? [])
+    for (const m of title.matchAll(new RegExp(`(?<![A-Za-z0-9])${phraseSource(ph)}\\s*(?:#|no\\.?|:)?\\s*(\\d{1,3})(?![0-9])`, "gi"))) {
+      const ids = idx.setByCode.get(numberedCode(ph, m[1])) ?? [];
+      for (const id of ids) out.add(id);
+      if (!ids.length) out.add(-1);
+    }
   return out;
 }
 
@@ -440,6 +486,33 @@ function codesAgree(p: Product, codes: Set<number>, idx: MatchIndex): boolean {
   return false;
 }
 
+// Kinds of product a title can be that the product types (sealedTypeOf) do not tell apart (first written for the Amazon
+// matcher, 2026-11-14). A title that says one and a product name that does not are two products: an "Inuyasha - Release
+// Event Pack" is not the Inuyasha booster pack, a "3rd Anniversary Tournament 3 Brothers Pack" is not the set's pack, an
+// "Advance Deck Display Case" is not the booster box case. Since 2026-11-27 every store and crawl title is held to it
+// too (matchSealed), so such a title finds its own product or nothing; it only refuses. DECISIONS.md 2026-11-27.
+const OTHER_KIND = [
+  "double pack", "release event", "welcome", "event pack", "tournament pack", "anniversary tournament", "promo pack",
+  "advance deck", "secret lair",
+  "sleeved", "blister", "checklane", "empty", "mystery", "repack", "repacked", "custom", "proxy", "opened",
+].map((k) => kindWords(k));
+// Words folded so one spelling of a kind is every spelling ("Advanced Deck", the set's word, is TCGplayer's "Advance Deck").
+function kindWords(s: string): string[] {
+  return tokens(s.replace(/ß/g, "ss").replace(/ẞ/g, "SS")).map((t) => (t === "advanced" ? "advance" : t));
+}
+/** The phrase's words side by side and in order ("promo pack", never "Booster Box (24 Pack) + Promo"). */
+function hasPhrase(words: string[], phrase: string[]): boolean {
+  for (let i = 0; i + phrase.length <= words.length; i++) if (phrase.every((w, j) => words[i + j] === w)) return true;
+  return false;
+}
+/** A title that names one of these kinds is only a product whose name, or its set's name, names it too. */
+export function kindAgrees(title: string, productName: string, setName = ""): boolean {
+  const t = kindWords(title);
+  const n = kindWords(productName);
+  const s = kindWords(setName);
+  return OTHER_KIND.every((k) => !hasPhrase(t, k) || hasPhrase(n, k) || hasPhrase(s, k));
+}
+
 export function matchSealed(title: string, idx: MatchIndex): MatchResult | null {
   if (isForeign(title)) return null;
   const have = new Set(tokens(title).filter((t) => !STOP.has(t) || t === "booster"));
@@ -448,6 +521,7 @@ export function matchSealed(title: string, idx: MatchIndex): MatchResult | null 
   const scored: MatchResult[] = [];
   for (const p of idx.sealed) {
     if (sealedTypeOf(p.name) !== type) continue;
+    if (!kindAgrees(title, p.name, idx.setTitle?.get(p.setId))) continue;
     if (!editionAgrees(p, title, idx)) continue;
     if (isMulti(p.name) !== isMulti(title)) continue;
     // "Pack Bundle Magnificent Maestros" is several packs, not one.

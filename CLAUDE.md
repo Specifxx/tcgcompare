@@ -57,7 +57,7 @@ For the games no sister prices (the `crawl` words in `site.config.ts`; never a g
   the git-ignored `data/crawl/listings.json`. The import takes a listing ONLY by the TCGplayer id the listing carries
   (`pickId`, `lib/import/crawl.ts`): exactly one catalogue id across its handle, SKUs and photo filenames, of a game it
   was crawled for, no other TCGplayer-shaped id in its handle, SKUs or photos (in the catalogue or not), not foreign,
-  unfit (also opened, open box, pre-owned, resealed, empty, a break spot, a repack, missing packs) or another quantity
+  unfit (also opened, open box, pre-owned, resealed, empty, a break spot, a repack, missing packs, or a single card's code in the title or handle such as "(ST02-002)", unless TCGplayer's photo proves the id) or another quantity
   ("(6 Boxes)", "Display of 6", "Half"), the title's and a lone variant's product type the same as the id's, and
   `matchSealed` on that game alone agreeing or saying nothing; an id from the handle or a SKU alone (no TCGplayer
   photo of it) also needs the matcher to land on it or the title to name its set. The matcher only refuses; never
@@ -133,6 +133,14 @@ shelf; the game list; one ad block. No pop-ups, default region US. `tests/minima
 2050 layer (owner, 2026-11-14; `globals.css`, `Neo.tsx`, `GameMarquee.tsx`): dark by default, three lights, scroll
 animations. Keep its rules: CSS only, no layout shift, hidden-until-scrolled only inside `@supports` for scroll
 timelines, everything off under reduced motion, never a product in the hero.
+Since 2026-11-27 the Empire design system (`empire-ds` block at the end of `globals.css`, canonical copy and rules in the
+project's `design-system/`) takes the 2050 layer's glows, glass, gradient words and gradient button off: one brand colour,
+solid; a left-aligned masthead hero from 640px; hairline section rules; 10px / 6px radii. Never add those tells back.
+Since 2026-11-27 (owner: "state of the art … what an expert would do") the Empire design language v2, "Ledger", sits on
+top (`empire-v2` block, last in `globals.css`; tokens set in place at the top): Geist for words and Geist Mono for every
+figure (bundled in `src/app/fonts`, `layout.tsx`), near-black with neutral greys (warm paper in light), product photos on one
+paper plate, prices as the loudest thing on a card or row, solid "View deal" buttons in one shape (no row is
+ever marked the cheapest), a mono ticker for the game strip, and nothing that blurs or rises in on scroll.
 
 ## The site watches itself
 

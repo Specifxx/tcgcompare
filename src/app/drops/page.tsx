@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "@/components/Link";
 import { SITE } from "@/site.config";
 import { canon } from "@/lib/site";
-import { boardRows, boardUpdatedAt } from "@/lib/drop-board-data";
+import { boardGap, boardRows, boardUpdatedAt } from "@/lib/drop-board-data";
+import { GAP_CAMPAIGN } from "@/lib/drop-board";
+import { ShareButton } from "@/components/ShareButton";
 import { DROP_LOG_DAYS } from "@/lib/sniper-board";
 import { DropBoard } from "@/components/DropBoard";
 import { TopHunters } from "@/components/TopHunters";
@@ -20,6 +22,7 @@ export default function Drops() {
   const rows = boardRows();
   const updated = boardUpdatedAt();
   const live = rows.filter((r) => r.state !== "gone").length;
+  const top = boardGap();
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <header className="flex flex-col gap-2">
@@ -29,6 +32,24 @@ export default function Drops() {
           Price drops of 10% or more and restocks of boxes, bundles and trainer boxes at independent stores. Got one, or found it gone? Use the arrows. Votes order this board and nothing else: <Link className="link" href="/methodology">no store pays to be here</Link>.
         </p>
       </header>
+      {top && (
+        // The one number the board leads with (Cluely study, move 1): today's widest gap between stores for a product on it.
+        <section aria-label="Today's price gap" className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-5">
+          <p className="shrink-0">
+            <span className="block font-display text-4xl font-black leading-none tabular-nums text-open">{top.gap.diff}</span>
+            <span className="eyebrow mt-1 block">gap between stores today</span>
+          </p>
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <p className="text-sm sm:text-base">
+              <Link className="font-semibold hover:underline" href={`/card/${top.slug}`}>{top.name}</Link> ranges <strong className="tabular-nums">{top.gap.low}</strong> to <strong className="tabular-nums">{top.gap.high}</strong> across {top.gap.stores} {top.gap.where} stores today. Same sealed product.
+            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Link className="link text-sm font-semibold" href={`/card/${top.slug}`}>See all {top.gap.stores} stores</Link>
+              <ShareButton path={`/drops?utm_campaign=${GAP_CAMPAIGN}`} name="Deal board" medium="drop" text={top.line} label="Share" />
+            </div>
+          </div>
+        </section>
+      )}
       {rows.length > 0 ? (
         <>
           <p className="text-sm text-muted" aria-live="off">

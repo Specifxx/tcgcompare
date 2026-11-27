@@ -15,7 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { CrawlRun, CrawlListing } from "@/lib/import/crawl";
-import { isForeign, isMulti, isUnfitListing } from "@/lib/import/match";
+import { isForeign, isMulti, isUnfitListing, namesCardCode } from "@/lib/import/match";
 import { sealedTypeOf } from "@/lib/import/tcgcsv";
 
 const ROOT = process.cwd();
@@ -97,6 +97,7 @@ function guard(l: CrawlListing, p: Prod): { pass: boolean; reasons: string[] } {
   const reasons: string[] = [];
   if (isUnfitListing(l.title)) reasons.push("unfit");
   if (isForeign(l.title)) reasons.push("foreign");
+  if (namesCardCode(l.title)) reasons.push("single");
   if (isMulti(l.title) !== isMulti(p.name)) reasons.push("multi");
   const said = sealedTypeOf(l.title);
   if (said === "Other") reasons.push("no-type");
@@ -264,6 +265,7 @@ async function main() {
       // Wide pool (AI_POOL_WIDE=1, owner's go 2026-11-17): titles with no product type word, the commonest id-less refusal.
       // Skip what reads as a single card (collector number, rarity or finish word, grading) and anything whose best
       // catalogue candidate shares under half its words; the guard still refuses a wrong type or edition afterwards.
+      if (namesCardCode(l.title)) continue;
       if (!sealedWord && !(WIDE && !SINGLE_MARK.test(l.title) && (shortlistScore(l, prods) >= 0.5))) continue;
       const key = `${s.host}|${l.title}`;
       if (seen.has(key)) continue;

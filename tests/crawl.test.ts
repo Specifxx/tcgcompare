@@ -89,6 +89,13 @@ test("the id in a variant SKU is found and taken; a barcode or a store's own cod
   for (const sku of ["0810091234567", "SWU-LOF-BB", "LOF612345X"]) assert.deepEqual(idsInListing(listing({ variants: [{ id: 1, price: "1", sku }] })), [], sku);
 });
 
+test("a single card's code refuses an id from the handle, but not one TCGplayer's own photo proves (2026-11-26)", () => {
+  const single = crawled(listing({ title: "Star Wars Unlimited Legends of the Force Booster Box Leader (LOF-EN001)", handle: "lof-booster-box-612345" }));
+  assert.equal((pickId(single, ctx) as { refuse: string }).refuse, "unfit");
+  const promo = crawled(listing({ title: "Star Wars Unlimited Legends of the Force Booster Box (LOF-EN001)", images: [{ src: "https://tcgplayer-cdn.tcgplayer.com/product/612345_200w.jpg" }] }));
+  assert.deepEqual(pickId(promo, ctx), { id: 612345 });
+});
+
 test("two catalogue ids in one listing: refused", () => {
   const l = crawled(listing({ handle: "lof-booster-box-612345", images: [{ src: "https://cdn.test/files/612346_in_1000x1000.jpg" }] }));
   assert.equal((pickId(l, ctx) as { refuse: string }).refuse, "two-ids");
@@ -587,6 +594,10 @@ test("pickByTitle: one product, its own type, in stock, in the price band; anyth
   assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box Opened" }), c, "US"), true);
   // a handle that names another kind than the title (a box handle under a pack title) is two readings
   assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Pack", handle: "star-wars-unlimited-legends-of-the-force-booster-box-sealed-copy" }), c, "US"), true);
+  // a single card's code or a Japanese box named in the shop's own language (Haiku trial, 2026-11-26)
+  assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box (SWU05-001)" }), c, "US"), true);
+  assert.equal("refuse" in pickByTitle(l({ title: "Star Wars Unlimited Legends of the Force Booster Box japonais" }), c, "US"), true);
+  assert.equal("refuse" in pickByTitle(l({ handle: "star-wars-unlimited-legends-of-the-force-booster-box-lof-en001" }), c, "US"), true);
   // never without the band callback
   assert.equal("refuse" in pickByTitle(l(), ctx, "US"), true);
   // takeCrawl uses it for every crawled store (owner, 2026-11-16: as many listings as possible)
@@ -649,6 +660,12 @@ test("an AI placement whose guard failed on edition or type is refused, but a ti
   assert.ok("refuse" in pickByAi(aiListing(), "cards.test", bad, "US"));
   const noType = aiCtx({}, { id: 612345, pass: false, reasons: ["no-type"] });
   assert.deepEqual(pickByAi(aiListing(), "cards.test", noType, "US"), { id: 612345 });
+});
+
+test("an AI placement on a single card's code or a Japanese box named in the shop's language is refused (2026-11-26)", () => {
+  const c = (t: string) => aiCtx({ ai: new Map([[`cards.test|${t}`, { id: 612345, pass: true, reasons: [] }]]) });
+  for (const t of ["Legends of the Force Display Japanisch", "Legends of the Force Leader (LOF-EN001)"])
+    assert.ok("refuse" in pickByAi(aiListing({ title: t }), "cards.test", c(t), "US"), t);
 });
 
 test("an AI placement outside the wide price band, on another game's product or on an opened box is refused", () => {
@@ -866,4 +883,37 @@ test("crawlIndex: a shop title need not spell TCGplayer's release code, and a ti
   assert.equal(matchSealed("Union Arena: My Hero Academia Special Booster [UE25BT] Booster Box", idx)?.product.id, 714370);
   assert.equal(matchSealed("Union Arena My Hero Academia Special Booster Box [UE17BT]", idx), null, "another set's code");
   assert.equal(matchSealed("Union Arena SOLO LEVELING Booster Box", idx)?.product.id, 600001);
+});
+
+test("crawlIndex: a game's numbered set phrase ('Booster Set 4: ') is read as a code, so 'Endless Wars Booster Box' lands, and a title naming another number is refused", async () => {
+  const { crawlIndex } = await import("../src/lib/import/crawl");
+  const { matchSealed, splitSetCode } = await import("../src/lib/import/match");
+  const { SITE } = await import("../src/site.config");
+  assert.deepEqual(SITE.lines?.find((l) => l.id === "gz")?.numberedSets, ["Booster Set"]);
+  const B = ["Booster Set"];
+  assert.deepEqual(splitSetCode("Booster Set 4: Endless Wars", B), { name: "Endless Wars", code: "BOOSTER SET 4" });
+  assert.deepEqual(splitSetCode("Booster Set 2: G: Monsters Raid Again", B), { name: "G: Monsters Raid Again", code: "BOOSTER SET 2" });
+  assert.deepEqual(splitSetCode("Booster Set 4: Endless Wars"), { name: "Booster Set 4: Endless Wars", code: "" }, "off by default");
+  assert.deepEqual(splitSetCode("Starter Deck 23: Beatbreak", B), { name: "Starter Deck 23: Beatbreak", code: "" }, "only the game's phrase");
+  const sets = [set(30004, "Booster Set 4: Endless Wars", "gz"), set(30003, "Booster Set 3: Resonance of Rivals", "gz")];
+  const products = [
+    prod(800004, "Endless Wars Booster Box", 30004, "Booster Box"),
+    prod(800003, "Resonance of Rivals Booster Box", 30003, "Booster Box"),
+  ];
+  const plain = crawlIndex(products, sets, "code");
+  const idx = crawlIndex(products, sets, "code", { numberedSets: B });
+  const title = "Godzilla Card Game Endless Wars Booster Box";
+  assert.equal(matchSealed(title, plain), null, "without the option: 'booster set 4' are words every title needs");
+  assert.equal(matchSealed(title, idx)?.product.id, 800004);
+  assert.equal(matchSealed("Godzilla Card Game Booster Set 4 Endless Wars Booster Box", idx)?.product.id, 800004);
+  assert.equal(matchSealed("Godzilla Card Game Booster Set 04: Endless Wars - Booster Box", idx)?.product.id, 800004);
+  for (const t of [
+    "Godzilla Card Game Booster Set 3 Endless Wars Booster Box",
+    "Godzilla Card Game Booster Set #3 Endless Wars Booster Box",
+    "Godzilla Card Game Booster Set No. 3 Endless Wars Booster Box",
+    "Godzilla Card Game Booster Set: 3 Endless Wars Booster Box",
+    "Godzilla Card Game Booster Set 9 Endless Wars Booster Box",
+  ])
+    assert.equal(matchSealed(t, idx), null, t);
+  assert.equal(matchSealed("Godzilla Resonance of Rivals Booster Box", idx)?.product.id, 800003);
 });

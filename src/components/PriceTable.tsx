@@ -20,6 +20,7 @@ import { ReportPrice } from "./ReportForms";
 import { StoreVote } from "./StoreVote";
 import { LiveAgo } from "./LiveAgo";
 import { ago } from "@/lib/format";
+import { TcgSaleChip } from "@/components/TcgSaleChip";
 
 const NAMES: Record<string, string> = {
   tcgplayer: "TCGplayer",
@@ -121,6 +122,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
     <tr data-tcg-search-row className="border-t border-line">
       <td className="px-2 py-2.5 sm:px-3">
         <span className="font-medium text-ink [overflow-wrap:anywhere]">TCGplayer</span>
+        <TcgSaleChip className="ml-2" />
         {tcgCart && <span className="block sm:hidden"><CartAddButton {...tcgCart} inline className="text-xs" /></span>}
       </td>
       <td className="hidden px-3 py-2.5 text-xs text-muted sm:table-cell">Sealed listings on TCGplayer</td>
@@ -200,6 +202,7 @@ export function PriceTable({ ebayQuery, tcgUrl, offers, fx, productId, page, com
                 <tr className={`border-t border-line ${o.inStock ? "" : "opacity-60"} ${o.source === "ebay" && pinned.includes(o) ? PIN_OUTLINE.ebay : ""}`}>
                   <td className="px-2 py-2.5 sm:px-3">
                     <span className="font-medium text-ink [overflow-wrap:anywhere]">{sourceName(o)}</span>
+                    {o.source === "tcgplayer" ? <TcgSaleChip className="ml-2" /> : null}
                     <StoreVote url={o.url} name={sourceName(o)} className="ml-2 hidden text-muted sm:inline-flex" />
                     {/* Phones: the cart list's add button as a line under the store, where the row has no width to spare. */}
                     {o.inStock && (

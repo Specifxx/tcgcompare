@@ -46,6 +46,8 @@ export interface BoardRow {
   now?: string;
   /** the click out to the store (/go), while it has stock */
   go?: string;
+  /** the spread between stores in this store's market right now, as one sentence (gapLine); absent when there is none */
+  gap?: string;
 }
 
 /** What our latest import says about a posted drop. `cents` is the store's cheapest in-stock price for the product now. */
@@ -100,3 +102,32 @@ export function sortHot<T extends Pick<BoardRow, "id" | "at" | "state">>(rows: r
 }
 
 export const KIND_LABEL: Record<BoardRow["kind"], string> = { drop: "Price drop", restock: "Back in stock", preorder: "First pre-order" };
+
+// THE PRICE GAP (owner's COO, 2026-11-26; Cluely study, move 1): the board's banner and every shared drop lead with ONE real
+// number, the spread between the cheapest and the dearest in-stock STORE for the same product in one market today. Never eBay,
+// TCGplayer or Amazon, never converted, never a word about a store beyond its price. Shared links carry utm_campaign=price-gap.
+export const GAP_CAMPAIGN = "price-gap";
+/** A spread under this share of the dearest price is not worth a sentence. */
+export const GAP_MIN_PCT = 5;
+
+export interface StoreGap {
+  low: string;
+  high: string;
+  /** the difference, formatted in the market's currency */
+  diff: string;
+  diffCents: number;
+  pct: number;
+  stores: number;
+  /** "US", "UK", "Canadian"… as the sentence says it */
+  where: string;
+}
+
+/** "X ranges $A to $B across N US stores today. Same sealed product." */
+export const gapLine = (name: string, g: StoreGap): string => `${name} ranges ${g.low} to ${g.high} across ${g.stores} ${g.where} stores today. Same sealed product.`;
+
+/** The board's one headline gap: US first (the default market), then the widest in money. */
+export function pickGap<T extends { gap: StoreGap; market: Market }>(rows: readonly T[]): T | null {
+  const ok = rows.filter((r) => r.gap.pct >= GAP_MIN_PCT);
+  const pool = ok.some((r) => r.market === "US") ? ok.filter((r) => r.market === "US") : ok;
+  return pool.slice().sort((a, b) => b.gap.diffCents - a.gap.diffCents)[0] ?? null;
+}

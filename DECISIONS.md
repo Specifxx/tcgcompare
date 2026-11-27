@@ -2033,7 +2033,6 @@ keep the list in this browser (`lib/vault.ts`, as it always was underneath); one
 links sign-in, never a pop-up or a second prompt. Signing in merges the browser's list into the account: the first sync has an empty
 base, so it is a union and nothing is lost (`lib/vault-sync.ts`). The weekly email and Premium history stay account-only.
 `tests/card-collection.test.ts` pins that neither page sends a signed-out visitor to sign-in.
-<<<<<<< HEAD
 
 ## 2026-11-26: Sealed Sniper drops lead with one real price gap through the TCGplayer sale
 
@@ -2045,6 +2044,153 @@ data (what the product page shows). A spread needs 3+ stores, the high 15%+ and 
 than the one posted; otherwise no hook (never a made-up or converted number, and the dear store is never named). Every
 product link in the drop is tagged `utm_campaign=price-gap` while it runs, so its clicks read apart from `sealed-sniper`.
 Game-room copies (TCGEmpire discord-publish.ts) carry the embeds only, so the hook stays in #sealed-sniper and Telegram.
+## 2026-11-26 — Member rewards on the account page
+
+Owner (26 Nov): "we really, really need a loyalty system ... on all of our Empire websites", one that never runs at a loss. The
+shared account service keeps one points balance (RiftCompare `lib/loyalty.ts`, `/api/loyalty`, DECISIONS there, "Compounding daily
+streaks, and member rewards"); this site draws it in its own name on the account page (`components/account/MemberRewards.tsx`),
+posting the member's token as every other account call does. A daily check-in is 1 point on day 1 of a streak, one more each day in
+a row, up to 10 a day; points buy 7 days of Premium (300 points, once a month, never for paying subscribers). It loads after render,
+opens nothing by itself and shows on no other page (one prompt a visit at most). Points have no cash value and never change giveaway
+entries.
+
+## 2026-11-26: Foreign words in a shop's own language, and single-card codes, refuse a crawl listing
+
+The Haiku 5.5 shadow trial (strategy/claude-capabilities-log.md, 26 Nov) hand-read 25 listings the guards passed: three
+Japanese boxes titled in Dutch, French and German ("Japans", "japonais", "Japanisch") and two singles from a starter deck
+or mastery pack ("(ST02-002)", "(MPW088)") would have been placed on English sealed products. `isForeign` now also reads
+the European words for Japanese, Korean and Chinese (`FOREIGN_NAMED`; it applies to every path, Amazon's included), and
+`namesCardCode` refuses a title or raw handle carrying a single card's code (letters and digits, hyphen, three digits;
+"LOB-EN001"; "BLC-1-001"; a bracketed "(MPW088)") in the id, title and AI picks and in the shadow guard. Set and deck
+codes ("OP-09", "OP09", "[ST-02]", "UE25BT", "SV10") are not card codes. No catalogue name matches either pattern. An id
+TCGplayer's own photo proves is still taken, since a promo collection may name its card. Rules only refuse. The Haiku
+re-trial (both models on the same candidates, 50 graded) comes after the next crawl reads with these rules.
+
+## 2026-11-26 — Deal board: the banner and the shares lead with one price gap
+
+**Asked:** the COO's Cluely study, move 1: every surface that is shared leads with ONE real, surprising number, tracked
+with `utm_campaign=price-gap`.
+
+**Now:** `/drops` opens with today's widest gap between stores for a product on the board ("X ranges $A to $B across N US
+stores today. Same sealed product."), with the difference as the big figure, a link to that product's stores and a share
+button. A drop's own share text leads with its product's gap, then says where the low end is. The gap is
+`lib/share.ts` `bragGap` (in-stock STORES in one market, never eBay, TCGplayer or Amazon, never converted) through
+`storeGap`; under 5% of the dearest price (`GAP_MIN_PCT`) nothing is said, and with no gap the banner is absent and the
+share falls back to the drop's own line. US first, then the widest in money (`pickGap`). Both share links carry
+`utm_campaign=price-gap` beside the usual `utm_source=share&utm_medium=drop`. No word about any store beyond its price.
+`tests/drop-board.test.ts`.
+
+## 2026-11-27 — Trustpilot domain verified; review link on About and How we compare
+
+tcgprices.app was verified on Trustpilot through the meta tag above (26 Nov, Bill's account). A plain text link
+"Review us on Trustpilot" (trustpilot.com/review/tcgprices.app) now sits at the foot of /about and /methodology only.
+No widget, no script, no stars on product or home pages, no prompt (UX guard). We never filter or ask only happy
+buyers for reviews.
+## 2026-11-27: The Empire design system replaces the 2050 layer's effects
+
+A visitor wrote to Compare Empire asking us to "hire a graphic designer so it wasn't giving claudeslop", and the owner asked
+for a design agent to lift every site. The tells were ours: a glow and a perspective grid behind a centred hero, a pill above
+the headline, gradient words and wordmark, a spinning ring of light round the search, glass tiles with a pointer spotlight, a
+breathing gradient button, a pulsing dot. The `empire-ds` block at the end of `globals.css` (the same block on Dex and MTG;
+rules in the project's `design-system/README.md`) takes those off and sets a price guide's type and rules: the brand
+colour solid, a left-aligned masthead hero from 640px (centred on phones), a hairline between sections, 10px radius on cards,
+inputs and buttons and 6px on badges, hover as a firmer edge. CSS only: no markup, words, order, URL or heading changes. The
+paintings behind the hero (owner, 2026-11-14) and the Santa hat stay.
+
+## 2026-11-26: Embed visits and the /data page are now counted (traffic plan rows 5 and 6)
+
+The 26 Nov check could not score "+200 visits from embeds" because nothing counted them. Every widget already links back with
+`utm_source=embed` (`utm_medium` = widget, daily or index; the index widget lands on /data). `EmbedArrival` sends one Vercel Web
+Analytics event, `embed_visit { medium, page }`, once per browser tab, the same way `share_visit` works: no id, no referrer, no
+address stored. Read it in Vercel → Analytics → Events; /data's own visits are in Pages. Returning visitors were already counted
+by `return_visit` (ReturnBeacon). Not counted: how often a widget LOADS on someone else's page (it is a cached script-free
+document, so no function runs); only clicks through to us are. `tests/embed-arrival.test.ts`.
+
+## 2026-11-27: A release event, tournament or advance-deck title never lands on the set's plain pack or case
+
+A self-test of the crawl's matcher (each sealed product's own TCGplayer name read as a shop title, 26 Nov catalogue) put 21
+products on ANOTHER product: every Union Arena, One Piece, Fusion World and Digimon "Release Event Pack" on that set's plain
+"Booster Pack" (the event pack's set is "<Set> Release Event Cards", so a title without "cards" missed its own set and the plain
+pack won with only a small penalty), OP's "3rd Anniversary Tournament" packs on the Carrying On His Will pack, Bleach's "Advance
+Deck Display Case" on the booster box case, and a Secret Lair bundle on "The Hobbit - Bundle". A shop's event pack at US$8
+sits inside the 40-250% band of a US$5 pack, so pickByTitle and the sisters' store pass would have shown it as that pack's price.
+The Amazon matcher's kind words (`OTHER_KIND`, 2026-11-14) now live in `match.ts` and `matchSealed` itself applies them, with
+"anniversary tournament", "advance deck" and "secret lair" added: a title naming such a kind only matches a product whose
+name, or whose set's name, names it too. A kind is its words side by side and in order ("Booster Box (24 Pack) + Promo" is
+no promo pack), and "advanced" reads as "advance" (TCGplayer's "Advance Deck" is the set's "Advanced Deck"). It only refuses.
+After: 0 wrong of 4,570 (was 21), and every product still matches its own TCGplayer name; real shop spellings were not
+available here, so read crawl takenByLine ua/op/fw/dg after the next import.
+`tests/match.test.ts`.
+
+## 2026-11-27 — Empire design language v2, "Ledger"
+
+Bill (2026-11-27): rework the sites so they look state of the art and expert-designed, not vibe-coded or AI slop. The v1
+pass (empire-ds, the day before) took the template tells off; v2 gives the site a point of view, a price ledger:
+
+- One family: Geist for words, Geist Mono for every figure (prices, counts, badges, table heads, the game ticker). Bundled
+  variable fonts, `display: optional` as before; Bricolage Grotesque and Inter are gone.
+- Colour: near-black with neutral greys in dark (no blue cast), warm paper in light; the brand blue only where you act.
+  The dark tokens moved, so `tests/contrast.test.ts` pins the new surface and green.
+- Product photos sit on one paper plate (multiply blend, so a white JPEG's box reads as the plate); the price is the
+  largest type on a card; the "% under median" badge is a mono label.
+- Price tables: mono right-aligned figures, uppercase mono heads, hairline rows with a hover tint. The "View deal"
+  buttons stay solid (Cyber Weekend, and the A/B reads frozen to 2 Dec); every row's is the same (owner 2026-11-14).
+- Header: ghost Premium (gold star only) and a solid ink Sign in, instead of a gradient amber pill and a filled blue one.
+- The hero keeps its words, search and ways in (minimal look); its figures become a mono ledger line, the game marquee a
+  mono ticker, and nothing blurs, rises or draws itself in on scroll any more.
+
+CSS, fonts and one test only: no word, order, URL, heading, ranking or link changed. The canonical rules live in the
+project's design-system/README.md for the other sites.
+
+## 2026-11-27 — Black Friday mode for one day (owner)
+
+Owner, 27 Nov: "for one day, have the site turn into Black Friday mode … advertising way more about products and links". For
+Black Friday in every time zone (00:00 UTC 27 Nov to 10:00 UTC 28 Nov, `lib/bf-mode.ts`) the promo line under the header becomes
+one bold Black Friday bar: the Black Friday deals page, and a labelled TCGplayer sale link (/go from=bf_mode). Same
+place as the line, in the server HTML, never a pop-up, fixed or floating; ✕ hides it for the visit. The browser re-reads the
+clock, so a cached page reverts on time with no build; the files can go after Cyber Monday.
+
+## 2026-11-27 — Penny, the mascot who suggests a first search
+
+Owner, 27 Nov: "cute little things that are smiling, welcoming, inviting … a little mascot saying, hey, search this term
+here … people really like being told what to do". Penny, a smiling ginger cat who waves (our own flat SVG, no game or
+character art), sits under the home page's search with "New here? Search your first item. Try one of these:" and three
+example searches for this game. A tap types the example into the search box and runs it (a plain GET form is sent).
+`components/MascotGuide.tsx` is the same file on every card site; only the examples differ.
+
+- Inline in the hero, server-rendered, no layout shift. Never a pop-up, an overlay or a second prompt (one prompt per visit).
+- One short wave on load and on hover, none under reduced motion. Neutral bubble that reads on dark and light.
+- The h1, title, meta, URLs and order of the page are unchanged; the hero gains one line of text and three buttons.
+
+## 2026-11-27 — Black Friday mode runs to the end of TCGplayer's sale (owner)
+
+The owner asked the same day for "a lot more effort this weekend into Black Friday and Cyber Monday … capture this
+opportunity with TCG Player", so the bar (`lib/bf-mode.ts`, `BfModeBar`) no longer stops at 10:00 UTC on 28 Nov: it runs
+until 04:00 UTC on 1 Dec, when TCGplayer's sale ends (11PM 30 Nov New York). Its label follows the weekend (Black Friday,
+Cyber Weekend from 28 Nov 10:00 UTC, Cyber Monday from 30 Nov 05:00 UTC), and on Cyber Monday it links the Cyber Monday page.
+Same place, same ✕, no pop-up; it still switches itself off with no build. Delete the files after the sale.
+
+## 2026-11-27 — "Sale: 10% store credit" on the TCGplayer row while its sale runs (owner)
+
+The first hourly read of Black Friday (27 Nov, 00:00 to 12:00 UTC) had buy clickers up 48% across the card sites, but TCGplayer
+was only 9 to 20% of them, and the owner asked to "capture this opportunity with TCG Player". So TCGplayer's own row in every
+product price table carries a small chip saying what its sale is (`TcgSaleChip`, 9AM 27 Nov to 11PM 30 Nov New York time,
+`lib/bf-mode.ts`). It is drawn only in the browser after the clock is read, so cached HTML never shows it outside the sale. It
+ranks nothing and marks no row the cheapest. Delete it with the bar after the sale.
+Released at 12:28 UTC on 27 Nov once the 8-hour gate opened (the 12:13 merge was two minutes early).
+
+## 2026-11-27: Godzilla's "Booster Set 4: " is a code, not words every title needs
+
+TCGplayer names every Godzilla Card Game set "Booster Set N: <name>" ("Booster Set 4: Endless Wars"), while its own product
+names and shop titles say "Endless Wars Booster Box". The set's words are words every title must carry, so 12 of 17 Godzilla
+products could not even match their own TCGplayer name (a self-test over the 26 Nov catalogue), and no shop title either.
+A game now lists its numbered set phrases (`GameLine.numberedSets`, off by default; Godzilla: "Booster Set"), and under
+`stripSetCodes` (crawl and Amazon indexes, as the release codes since #194) `splitSetCode` reads "Booster Set 4: " as the
+code "BOOSTER SET 4". A title that spells "Booster Set 3" / "#3" / "No. 3" names that set, so another set's number is still
+refused, and a number no set has refuses too (as the number word did before). "Starter Deck 23: " stays part of the name.
+Self-test: Godzilla 5 -> 13 of 17 (the rest are promotion packs), 0 wrong of 4,574 across every game. Side effect to watch:
+Godzilla titles now reach the matcher, so pickId's "matcher-disagrees" can refuse an id listing whose title reads as a
+sibling product; read crawl refusals for gz after the next import.
 
 ## 2026-11-26: TCG Prices' launch draw (/giveaway) and home-screen points
 
@@ -2054,5 +2200,3 @@ Compare's giveaway page and panel ported (`components/giveaway/`, `lib/giveaway.
 addition: 25 points for the first 500 entrants who open My collection from a home-screen icon, signed in, once each. `/collection`
 asks for them itself (`VaultAppPoints.tsx`) only in display-mode standalone, as this visit's one prompt; closing or claiming keeps it
 away on that device. The install card never shows inside the app, so the two never meet. The page is ad-free like every giveaway page.
-=======
->>>>>>> 17f9af5160d50622361c5181e510dc62632a3700

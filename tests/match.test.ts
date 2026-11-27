@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { Product, SetInfo } from "@/lib/site-types";
-import { buildIndex, matchCard, matchSealed, markersAgree, numbersInTitle, printingOf } from "@/lib/import/match";
+import { buildIndex, kindAgrees, matchCard, matchSealed, markersAgree, numbersInTitle, printingOf } from "@/lib/import/match";
 
 const set = (id: number, name: string): SetInfo => ({ id, name, code: String(id), slug: name, releasedOn: "2026-01-01", productCount: 1, upcoming: false });
 const card = (id: number, name: string, number: string, setId: number, rarity = "Rare"): Product => ({ id, slug: String(id), name, kind: "card", setId, number, rarity, attrs: {}, sealedType: null, image: null, tcgUrl: "", printings: [] });
@@ -149,6 +149,35 @@ test("ygo: real store title formats from the 2026-10-26 probe", () => {
   assert.equal(matchCard("Yu-Gi-Oh! Crackle Blitzclique CORI-EN012 1st Edition NM", i), null);
 });
 
+test("Japanese named in a European shop's language is foreign; card codes read as singles (Haiku trial, 2026-11-26)", async () => {
+  const { isForeign, namesCardCode } = await import("@/lib/import/match");
+  // The three Japanese listings the 26 Nov trial placed on English products.
+  assert.ok(isForeign("One Piece Card Game OP-09 Booster Box Japans"));
+  assert.ok(isForeign("Display 24 boosters One Piece OP-09 japonais"));
+  assert.ok(isForeign("One Piece Card Game OP-09 Display Japanisch"));
+  assert.ok(isForeign("Booster Box Coreano"));
+  assert.ok(isForeign("Display chinoise"));
+  assert.ok(isForeign("Japanse Booster Box One Piece OP-09"));
+  assert.ok(isForeign("Koreaanse Booster Box"));
+  assert.ok(isForeign("Booster Box Coreana"));
+  assert.ok(isForeign("Japansk Booster Display"));
+  // English titles are untouched.
+  assert.equal(isForeign("One Piece Card Game Emperors in the New World Booster Box [OP-09]"), false);
+  assert.equal(isForeign("Dragon Ball Super Fusion World Booster Box [FB11]"), false);
+  // Singles from starter decks and mastery packs carry their card code.
+  assert.ok(namesCardCode("Monkey.D.Luffy (ST02-002) - Starter Deck 2: Worst Generation"));
+  assert.ok(namesCardCode("Mastery Pack Warrior Card (MPW088)"));
+  assert.ok(namesCardCode("Son Goku FB11-084 SR"));
+  assert.ok(namesCardCode("Blue-Eyes White Dragon LOB-EN001"));
+  assert.ok(namesCardCode("Asta UE01BT/BLC-1-001"));
+  const { rawHandleOf } = await import("@/lib/import/match");
+  assert.ok(namesCardCode(rawHandleOf("https://shop.test/products/monkey-d-luffy-st02-002?variant=1")));
+  assert.equal(namesCardCode(rawHandleOf("https://shop.test/products/one-piece-op-09-booster-box-713237")), false);
+  // Set and deck codes are not card codes.
+  for (const t of ["One Piece OP-09 Booster Box", "OP09 Booster Box", "Starter Deck [ST-02]", "Union Arena UE25BT My Hero Academia Booster Box", "Pokemon SV10 Elite Trainer Box", "Digimon BT-27 Booster Box", "Gundam Card Game Booster Box [GD06]"])
+    assert.equal(namesCardCode(t), false, t);
+});
+
 test("Japanese boxes and wrong set codes never match (Gundam Compare, live 2026-11-08)", async () => {
   const { handleOf, isForeign } = await import("@/lib/import/match");
   const gsets: SetInfo[] = [
@@ -178,4 +207,44 @@ test("Japanese boxes and wrong set codes never match (Gundam Compare, live 2026-
   assert.equal(matchSealed("Gundam Freedom Ascension Booster Box GD06", gidx), null);
   // The deck build box carries its parent set's code.
   assert.equal(matchSealed("Gundam Freedom Ascension Deck Build Box [GD05]", gidx)?.product.id, 693625);
+});
+
+// 2026-11-27: a store title of another kind of product (release event pack, tournament pack, advance deck) must not
+// land on the set's plain pack or box case. Real TCGplayer names; titles as shops spell them.
+test("a release event or tournament pack is never the set's booster pack", () => {
+  const ss = [
+    { ...set(23986, "UE23BT: Inuyasha"), line: "ua" },
+    { ...set(23987, "UE23BT: Inuyasha Release Event Cards"), line: "ua" },
+    { ...set(23300, "Carrying On His Will: 3rd Anniversary Tournament Cards"), line: "op" },
+    { ...set(23301, "Carrying On His Will"), line: "op" },
+    { ...set(23400, "UE10DC: Bleach: Thousand Year Blood War Advanced Deck"), line: "ua" },
+    { ...set(23401, "UE01BT: BLEACH: Thousand-Year Blood War"), line: "ua" },
+  ];
+  const ps = [
+    { ...sealed(1, "Inuyasha - Booster Pack", 23986), sealedType: "Booster Pack" },
+    { ...sealed(2, "Inuyasha - Release Event Pack", 23987), sealedType: "Booster Pack" },
+    { ...sealed(3, "Carrying On His Will Booster Pack", 23301), sealedType: "Booster Pack" },
+    { ...sealed(4, "Carrying On His Will - 3rd Anniversary Tournament 3 Brothers Pack", 23300), sealedType: "Booster Pack" },
+    { ...sealed(5, "BLEACH: Thousand-Year Blood War - Booster Box Case", 23401), sealedType: "Case" },
+    { ...sealed(6, "Bleach: Thousand Year Blood War - Advance Deck Display Case", 23400), sealedType: "Case" },
+    { ...sealed(7, "Inuyasha - Booster Box", 23986), sealedType: "Booster Box" },
+  ];
+  const ix = buildIndex(ps, ss, "series", { stripSetCodes: true });
+  assert.equal(matchSealed("Inuyasha - Booster Pack", ix)?.product.id, 1);
+  assert.notEqual(matchSealed("Union Arena Inuyasha Release Event Pack", ix)?.product.id, 1);
+  assert.notEqual(matchSealed("Inuyasha - Release Event Pack", ix)?.product.id, 1);
+  assert.equal(matchSealed("Carrying On His Will Booster Pack", ix)?.product.id, 3);
+  assert.notEqual(matchSealed("One Piece Carrying On His Will - 3rd Anniversary Tournament 3 Brothers Pack", ix)?.product.id, 3);
+  assert.notEqual(matchSealed("Bleach: Thousand Year Blood War - Advance Deck Display Case", ix)?.product.id, 5);
+  // The set's own spelling, "Advanced Deck", is the same kind as TCGplayer's "Advance Deck": it finds its product.
+  assert.equal(matchSealed("Union Arena Bleach: Thousand Year Blood War Advanced Deck Display Case", ix)?.product.id, 6);
+  // A kind's words apart are no kind: a box with a promo is still the box.
+  assert.equal(matchSealed("Union Arena Inuyasha - Booster Box (24 Pack) + Promo", ix)?.product.id, 7);
+});
+
+test("kindAgrees reads a kind as words side by side, from the product or its set", () => {
+  assert.ok(kindAgrees("One Piece OP-09 Booster Box (24 Pack) + Promo", "The Four Emperors Booster Box"));
+  assert.ok(!kindAgrees("Inuyasha - Release Event Pack", "Inuyasha - Booster Pack", "Inuyasha"));
+  assert.ok(kindAgrees("Digimon Beatbreak Release Event Welcome Tamers Pack Vol.2", "Welcome Tamers Pack Vol.2 (ST-23 & ST-24)", "Starter Deck 23: Beatbreak Release Event Cards"));
+  assert.ok(kindAgrees("Bleach Advanced Deck Display Case", "Bleach: Thousand Year Blood War - Advance Deck Display Case"));
 });
