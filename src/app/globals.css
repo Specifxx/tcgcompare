@@ -2144,7 +2144,7 @@ header .chip, header button, header a.rounded-full {
 .pc-price { font-size: 1.2rem !important; font-weight: 600 !important; color: rgb(var(--ink)) !important; }
 .pc-stock { font-size: 12px !important; color: rgb(var(--muted)) !important; }
 
-/* 7. Price tables: a ledger. Mono figures right-aligned, hairline rows, quiet buttons that fill on hover. */
+/* 7. Price tables: a ledger. Mono figures right-aligned, hairline rows, a hover tint. */
 table thead th {
   font-size: 11px !important;
   font-weight: 500 !important;
@@ -2157,18 +2157,12 @@ table tbody tr:hover { background: rgb(var(--raised) / 0.7); }
 table td.tabular-nums { font-size: 15px; font-weight: 600; }
 table td .btn, table td a, table td button { font-family: var(--v2-sans); }
 table .btn-primary, table .btn-tcg {
-  background: transparent !important;
-  color: rgb(var(--brand-strong)) !important;
-  border: 1px solid rgb(var(--brand) / 0.45) !important;
   box-shadow: none !important;
+  background-image: none !important;
   border-radius: var(--v2-r-sm) !important;
   font-weight: 600 !important;
 }
-table tr:hover .btn-primary, table .btn-primary:hover, table .btn-primary:focus-visible {
-  background: rgb(var(--brand)) !important;
-  color: rgb(var(--brand-ink)) !important;
-  border-color: rgb(var(--brand)) !important;
-}
+/* The buy buttons stay solid (Cyber Weekend and the frozen A/B reads, 2026-11-27): v2 changes their shape, never their weight. */
 
 /* 8. Shape and surface everywhere else: 12 / 8 / 6, no shadows on cards, no glows. */
 .card, .card-surface { border-radius: var(--v2-r) !important; box-shadow: none !important; border-color: rgb(var(--line)) !important; }

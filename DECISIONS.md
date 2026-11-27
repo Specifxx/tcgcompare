@@ -2133,8 +2133,8 @@ pass (empire-ds, the day before) took the template tells off; v2 gives the site 
   The dark tokens moved, so `tests/contrast.test.ts` pins the new surface and green.
 - Product photos sit on one paper plate (multiply blend, so a white JPEG's box reads as the plate); the price is the
   largest type on a card; the "% under median" badge is a mono label.
-- Price tables: mono right-aligned figures, uppercase mono heads, hairline rows with a hover tint, and outline
-  "View deal" buttons that fill on hover. Every row's button is the same (no row marked the cheapest, owner 2026-11-14).
+- Price tables: mono right-aligned figures, uppercase mono heads, hairline rows with a hover tint. The "View deal"
+  buttons stay solid (Cyber Weekend, and the A/B reads frozen to 2 Dec); every row's is the same (owner 2026-11-14).
 - Header: ghost Premium (gold star only) and a solid ink Sign in, instead of a gradient amber pill and a filled blue one.
 - The hero keeps its words, search and ways in (minimal look); its figures become a mono ledger line, the game marquee a
   mono ticker, and nothing blurs, rises or draws itself in on scroll any more.

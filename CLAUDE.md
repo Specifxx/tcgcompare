@@ -139,7 +139,7 @@ solid; a left-aligned masthead hero from 640px; hairline section rules; 10px / 6
 Since 2026-11-27 (owner: "state of the art … what an expert would do") the Empire design language v2, "Ledger", sits on
 top (`empire-v2` block, last in `globals.css`; tokens set in place at the top): Geist for words and Geist Mono for every
 figure (bundled in `src/app/fonts`, `layout.tsx`), near-black with neutral greys (warm paper in light), product photos on one
-paper plate, prices as the loudest thing on a card or row, quiet outline "View deal" buttons that fill on hover (no row is
+paper plate, prices as the loudest thing on a card or row, solid "View deal" buttons in one shape (no row is
 ever marked the cheapest), a mono ticker for the game strip, and nothing that blurs or rises in on scroll.
 
 ## The site watches itself
