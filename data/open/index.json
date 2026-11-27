@@ -1756,8 +1756,8 @@
   {
    "d": "2026-11-27",
    "all": {
-    "n": 3214,
-    "median": 4995,
+    "n": 3204,
+    "median": 4949,
     "level": 100
    },
    "games": {
@@ -1773,7 +1773,7 @@
     },
     "cardfight-vanguard": {
      "n": 85,
-     "median": 4499,
+     "median": 4000,
      "level": 100
     },
     "cookierun-braverse": {
@@ -1783,7 +1783,7 @@
     },
     "cyberpunk-tcg": {
      "n": 11,
-     "median": 2375,
+     "median": 2495,
      "level": 100
     },
     "digimon-card-game": {
@@ -1792,13 +1792,13 @@
      "level": 100
     },
     "disney-lorcana": {
-     "n": 110,
-     "median": 2837,
+     "n": 109,
+     "median": 2875,
      "level": 100
     },
     "dragon-ball-super-fusion-world": {
-     "n": 26,
-     "median": 15735,
+     "n": 25,
+     "median": 12999,
      "level": 100
     },
     "dragon-ball-super-masters": {
@@ -1813,7 +1813,7 @@
     },
     "final-fantasy-tcg": {
      "n": 32,
-     "median": 4750,
+     "median": 4500,
      "level": 100
     },
     "flesh-and-blood": {
@@ -1842,12 +1842,12 @@
      "level": 100
     },
     "magic-the-gathering": {
-     "n": 1080,
-     "median": 6160,
+     "n": 1077,
+     "median": 6199,
      "level": 100
     },
     "one-piece": {
-     "n": 119,
+     "n": 115,
      "median": 4000,
      "level": 100
     },
@@ -1867,7 +1867,7 @@
      "level": 100
     },
     "riftbound": {
-     "n": 40,
+     "n": 39,
      "median": 2999,
      "level": 94.52
     },
@@ -1878,12 +1878,12 @@
     },
     "sorcery-contested-realm": {
      "n": 9,
-     "median": 10999,
+     "median": 10995,
      "level": 100
     },
     "star-wars-unlimited": {
      "n": 68,
-     "median": 2299,
+     "median": 2234,
      "level": 95.59
     },
     "union-arena": {
@@ -1908,7 +1908,7 @@
     },
     "yugioh": {
      "n": 157,
-     "median": 1799,
+     "median": 1955,
      "level": 100
     }
    }
