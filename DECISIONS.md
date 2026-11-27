@@ -2191,3 +2191,12 @@ refused, and a number no set has refuses too (as the number word did before). "S
 Self-test: Godzilla 5 -> 13 of 17 (the rest are promotion packs), 0 wrong of 4,574 across every game. Side effect to watch:
 Godzilla titles now reach the matcher, so pickId's "matcher-disagrees" can refuse an id listing whose title reads as a
 sibling product; read crawl refusals for gz after the next import.
+
+## 2026-11-26: TCG Prices' launch draw (/giveaway) and home-screen points
+
+Owner's tap, 26 Nov ("Run a TCG Prices launch draw for home-screen installs?": "Yes, one pack, closes 14 Dec"). `/giveaway` is MTG
+Compare's giveaway page and panel ported (`components/giveaway/`, `lib/giveaway.ts`), run by RiftCompare's draw like the other five
+(TCGEmpire "tcgprices-app-launch-2026-12": one Delta Reign booster pack, closes 14 Dec 23:59 Sydney, drawn 15 Dec). The one
+addition: 25 points for the first 500 entrants who open My collection from a home-screen icon, signed in, once each. `/collection`
+asks for them itself (`VaultAppPoints.tsx`) only in display-mode standalone, as this visit's one prompt; closing or claiming keeps it
+away on that device. The install card never shows inside the app, so the two never meet. The page is ad-free like every giveaway page.
