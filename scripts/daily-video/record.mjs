@@ -5,7 +5,8 @@
 //
 // demos.json: [{ "id": "cw-banner", "steps": [ {"goto": "https://..."}, {"wait": 1200},
 //   {"scroll": 900, "ms": 2500}, {"click": "text=Booster Box"}, {"type": ["input[type=search]", "surging"]},
-//   {"press": "Enter"}, {"hover": "css"}, {"scrollTo": "text=Cyber Weekend", "ms": 1500} ] }]
+//   {"press": "Enter"}, {"hover": "css"}, {"scrollTo": "text=Cyber Weekend", "ms": 1500},
+//   {"upload": ["input[type=file]", "collection.csv", "csv text"]} ] }]
 // Every clip is 432x768 CSS px (9:16), captured sharp at 1080x1920 through Chrome's screencast
 // (--force-device-scale-factor: Playwright's own recordVideo keeps CSS pixels) and written as
 // outdir/<id>.mp4 (H.264, 30 fps) when ffmpeg is on the PATH, else as JPEG frames + ffconcat. A step that fails is logged and
@@ -70,6 +71,11 @@ for (const demo of demos) {
       else if (s.hover) await page.locator(s.hover).first().hover({ timeout: 6000 });
       else if (s.type) await page.locator(s.type[0]).first().pressSequentially(s.type[1], { delay: 90, timeout: 6000 });
       else if (s.press) await page.keyboard.press(s.press);
+      else if (s.upload) {
+        // A file chosen in a file input (hidden ones too), e.g. a collection export for the import demo.
+        const [sel, name, text] = s.upload;
+        await page.locator(sel).first().setInputFiles({ name, mimeType: "text/csv", buffer: Buffer.from(String(text)) }, { timeout: 6000 });
+      }
       else if (s.expect) {
         // A text the page must show, so a caption never claims something the page does not have.
         await page.getByText(s.expect, { exact: false }).locator("visible=true").first().waitFor({ timeout: 6000 });
