@@ -2178,3 +2178,16 @@ product price table carries a small chip saying what its sale is (`TcgSaleChip`,
 `lib/bf-mode.ts`). It is drawn only in the browser after the clock is read, so cached HTML never shows it outside the sale. It
 ranks nothing and marks no row the cheapest. Delete it with the bar after the sale.
 Released at 12:28 UTC on 27 Nov once the 8-hour gate opened (the 12:13 merge was two minutes early).
+
+## 2026-11-27: Godzilla's "Booster Set 4: " is a code, not words every title needs
+
+TCGplayer names every Godzilla Card Game set "Booster Set N: <name>" ("Booster Set 4: Endless Wars"), while its own product
+names and shop titles say "Endless Wars Booster Box". The set's words are words every title must carry, so 12 of 17 Godzilla
+products could not even match their own TCGplayer name (a self-test over the 26 Nov catalogue), and no shop title either.
+A game now lists its numbered set phrases (`GameLine.numberedSets`, off by default; Godzilla: "Booster Set"), and under
+`stripSetCodes` (crawl and Amazon indexes, as the release codes since #194) `splitSetCode` reads "Booster Set 4: " as the
+code "BOOSTER SET 4". A title that spells "Booster Set 3" / "#3" / "No. 3" names that set, so another set's number is still
+refused, and a number no set has refuses too (as the number word did before). "Starter Deck 23: " stays part of the name.
+Self-test: Godzilla 5 -> 13 of 17 (the rest are promotion packs), 0 wrong of 4,574 across every game. Side effect to watch:
+Godzilla titles now reach the matcher, so pickId's "matcher-disagrees" can refuse an id listing whose title reads as a
+sibling product; read crawl refusals for gz after the next import.

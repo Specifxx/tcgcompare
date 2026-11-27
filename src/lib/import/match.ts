@@ -42,6 +42,8 @@ export interface MatchIndex {
   editions: SetEdition[] | null;
   /** set id → the edition word its name carries ("beta"), or null. */
   setEdition: Map<number, string | null>;
+  /** IndexOptions.numberedSets, when the index read them. */
+  numberedSets?: readonly string[];
 }
 
 /** A game that prints one set in several editions with the same card and
@@ -210,13 +212,28 @@ export interface IndexOptions {
    *  word of the set name every title needs, those sets could never match. Off by default (the Amazon matcher sets
    *  it, lib/import/amazon-match.ts). */
   stripSetCodes?: boolean;
+  /** Under stripSetCodes, the game's numbered set phrases (GameLine.numberedSets): "Booster Set 4: Endless Wars" is
+   *  read as "Endless Wars", its "Booster Set 4" kept as a code a title names only by spelling it. Off by default. */
+  numberedSets?: readonly string[];
 }
 
 // A release code in front of a set name: "ME06: ", "SWSH10: ", "DZ-BT16: ", "SV: ", "MEZ: ". A word with a digit, or a
 // short all-capital one; "Commander: ", "Tarkir: " and "CookieRun: " are names, not codes.
 const SET_CODE_PREFIX = /^([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*):\s+(?=\S)/;
-/** A set name without its release-code prefix, and the code ("" when it has none). */
-export function splitSetCode(name: string): { name: string; code: string } {
+/** A numbered set phrase ("Booster Set") as a regex source: words joined by any space. */
+const phraseSource = (phrase: string) =>
+  phrase.trim().split(/\s+/).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("\\s+");
+/** The code a numbered set phrase keeps: "BOOSTER SET 4". */
+const numberedCode = (phrase: string, n: string) => `${phrase.trim().split(/\s+/).join(" ").toUpperCase()} ${Number(n)}`;
+
+/** A set name without its release-code prefix, and the code ("" when it has none). `numbered` are a game's own
+ *  numbered set phrases (GameLine.numberedSets, "Booster Set"): "Booster Set 4: Endless Wars" is read as "Endless
+ *  Wars", its code "BOOSTER SET 4". */
+export function splitSetCode(name: string, numbered: readonly string[] = []): { name: string; code: string } {
+  for (const ph of numbered) {
+    const n = name.match(new RegExp(`^${phraseSource(ph)}\\s+0*(\\d{1,2}):\\s+(?=\\S)`, "i"));
+    if (n) return { name: name.slice(n[0].length), code: numberedCode(ph, n[1]) };
+  }
   const m = name.match(SET_CODE_PREFIX);
   if (!m || !(/\d/.test(m[1]) || /^[A-Z]{2,5}$/.test(m[1]))) return { name, code: "" };
   return { name: name.slice(m[0].length), code: m[1] };
@@ -245,7 +262,7 @@ export function buildIndex(products: Product[], setList: SetInfo[], style: Numbe
   const prefixes = new Map<number, string>();
   const sets = opts.stripSetCodes
     ? setList.map((s) => {
-        const { name, code } = splitSetCode(s.name);
+        const { name, code } = splitSetCode(s.name, opts.numberedSets);
         if (code) prefixes.set(s.id, code);
         return { ...s, name };
       })
@@ -298,7 +315,8 @@ export function buildIndex(products: Product[], setList: SetInfo[], style: Numbe
     ? rarityPatterns(products.map((p) => p.rarity).filter((r): r is string => !!r), opts.rarityAliases)
     : null;
   const setTitle = new Map(sets.map((s) => [s.id, s.name]));
-  return { byNumber, bySetNumber, bySetName, setByCode, sealed, setName, setTitle, style, rarities, editions, setEdition };
+  const numberedSets = opts.stripSetCodes && opts.numberedSets?.length ? opts.numberedSets : undefined;
+  return { byNumber, bySetNumber, bySetName, setByCode, sealed, setName, setTitle, style, rarities, editions, setEdition, ...(numberedSets ? { numberedSets } : {}) };
 }
 
 function overlap(need: string[], have: Set<string>): number {
@@ -442,6 +460,16 @@ export function setCodesInTitle(title: string, idx: MatchIndex): Set<number> {
     if (!/\d/.test(w) || !/[A-Z]/.test(w)) continue;
     for (const k of new Set([w, w.replace(/-/g, "")])) for (const id of idx.setByCode.get(k) ?? []) out.add(id);
   }
+  // A numbered set named in words ("Booster Set 3", "Booster Set 03", "Booster Set #3", "Booster Set No. 3"): the code
+  // splitSetCode kept for it. Any number a title gives counts, so a title naming another set's number is refused, and one
+  // naming a number the catalogue has no set for gets an id no product has (-1): the set's number was a word every such
+  // title needed before the phrase was read as a code, and it still refuses as it did then.
+  for (const ph of idx.numberedSets ?? [])
+    for (const m of title.matchAll(new RegExp(`(?<![A-Za-z0-9])${phraseSource(ph)}\\s*(?:#|no\\.?|:)?\\s*(\\d{1,3})(?![0-9])`, "gi"))) {
+      const ids = idx.setByCode.get(numberedCode(ph, m[1])) ?? [];
+      for (const id of ids) out.add(id);
+      if (!ids.length) out.add(-1);
+    }
   return out;
 }
 
