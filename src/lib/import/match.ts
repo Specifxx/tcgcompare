@@ -218,6 +218,9 @@ export interface IndexOptions {
   /** Under stripSetCodes, the game's numbered set phrases (GameLine.numberedSets): "Booster Set 4: Endless Wars" is
    *  read as "Endless Wars", its "Booster Set 4" kept as a code a title names only by spelling it. Off by default. */
   numberedSets?: readonly string[];
+  /** Under stripSetCodes, the game's set series names (GameLine.seriesSets): "Divine Champions: Snowshade" is read as
+   *  "Snowshade". The series is left out of the words a title needs, never kept as a code. Off by default. */
+  seriesSets?: readonly string[];
 }
 
 // A release code in front of a set name: "ME06: ", "SWSH10: ", "DZ-BT16: ", "SV: ", "MEZ: ". A word with a digit, or a
@@ -232,9 +235,14 @@ const numberedCode = (phrase: string, n: string) => `${phrase.trim().split(/\s+/
 /** A set name without its release-code prefix, and the code ("" when it has none). `numbered` are a game's own
  *  numbered set phrases (GameLine.numberedSets, "Booster Set"): "Booster Set 4: Endless Wars" is read as "Endless
  *  Wars", its code "BOOSTER SET 4". */
-export function splitSetCode(name: string, numbered: readonly string[] = []): { name: string; code: string } {
+export function splitSetCode(name: string, numbered: readonly string[] = [], series: readonly string[] = []): { name: string; code: string } {
+  for (const ph of series) {
+    const m = name.match(new RegExp(`^${phraseSource(ph)}:\\s+(?=\\S)`, "i"));
+    if (m) return splitSetCode(name.slice(m[0].length), numbered);
+  }
   for (const ph of numbered) {
-    const n = name.match(new RegExp(`^${phraseSource(ph)}\\s+0*(\\d{1,2}):\\s+(?=\\S)`, "i"));
+    // "Starter Deck Assortment 1" is all phrase and number: no name words left, the code alone.
+    const n = name.match(new RegExp(`^${phraseSource(ph)}\\s+0*(\\d{1,2})(?::\\s+(?=\\S)|\\s*$)`, "i"));
     if (n) return { name: name.slice(n[0].length), code: numberedCode(ph, n[1]) };
   }
   const m = name.match(SET_CODE_PREFIX);
@@ -265,7 +273,7 @@ export function buildIndex(products: Product[], setList: SetInfo[], style: Numbe
   const prefixes = new Map<number, string>();
   const sets = opts.stripSetCodes
     ? setList.map((s) => {
-        const { name, code } = splitSetCode(s.name, opts.numberedSets);
+        const { name, code } = splitSetCode(s.name, opts.numberedSets, opts.seriesSets);
         if (code) prefixes.set(s.id, code);
         return { ...s, name };
       })
@@ -323,6 +331,15 @@ export function buildIndex(products: Product[], setList: SetInfo[], style: Numbe
     ? new Map(setList.map((s) => [s.id, tokens(s.name).filter((t) => !STOP.has(t) && !editionWords.has(t))]))
     : undefined;
   return { byNumber, bySetNumber, bySetName, setByCode, sealed, setName, setTitle, style, rarities, editions, setEdition, ...(numberedSets ? { numberedSets, codeSetName } : {}) };
+}
+
+/** A set name word a title has, its plural met by the singular: shops write "Mortal Ambition Starter Deck - Jin" and
+ *  "Distorted Reflection Booster Box" for TCGplayer's sets "Mortal Ambition Starter Decks" and "Distorted Reflections"
+ *  (2026-11-28). Only set name words; a product's own name words stay exact. */
+const COUNT_NOUNS = new Set(["deck", "pack", "box", "bundle", "display", "case", "tin", "kit", "blister", "booster", "collection", "sleeve"]);
+
+export function hasWord(have: ReadonlySet<string>, w: string): boolean {
+  return have.has(w) || (w.length > 4 && w.endsWith("s") && !w.endsWith("ss") && have.has(w.slice(0, -1)));
 }
 
 function overlap(need: string[], have: Set<string>): number {
@@ -539,11 +556,15 @@ export function matchSealed(title: string, idx: MatchIndex): MatchResult | null 
     // "Pack Bundle Magnificent Maestros" is several packs, not one.
     if (/\bbundle\b/i.test(title) && !/\bbundle\b/i.test(p.name)) continue;
     const setTokens = idx.setName.get(p.setId) ?? [];
-    if (setTokens.length && overlap(setTokens, have) < 1) continue;
+    if (setTokens.length && !setTokens.every((t) => hasWord(have, t))) continue;
     if (!codesAgree(p, codes, idx)) continue;
     const own = idx.editions ? idx.setEdition.get(p.setId) : null;
     const need = tokens(p.name).filter((t) => !STOP.has(t) && t !== own);
-    const s = overlap(need, have);
+    // The other way round, a product name word whose plural is a word of its set: TCGplayer's "Distorted Reflection
+    // Alter Edition Booster Box" in the set "Distorted Reflections Alter Edition" is met by a title saying "Reflections".
+    // Never a word that counts ("decks", "packs", "boxes" are several), and short words stay exact as in hasWord.
+    const plural = need.filter((t) => t.length > 4 && !COUNT_NOUNS.has(t) && !have.has(t) && have.has(`${t}s`) && setTokens.includes(`${t}s`));
+    const s = overlap(need, plural.length ? new Set([...have, ...plural]) : have);
     // Near-complete: "Collector Booster Display" must not take a plain
     // "Booster Display" (one missing word of four is 0.75).
     if (s < (need.length >= 6 ? 0.8 : 0.99)) continue;

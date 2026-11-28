@@ -91,6 +91,11 @@ export interface GameLine {
    *  number as a code of the set (lib/import/match.ts splitSetCode), so a title need not spell it and one naming
    *  another number is refused. Off by default. DECISIONS.md 2026-11-27. */
   numberedSets?: string[];
+  /** Series names this game puts in front of TCGplayer's set names ("Divine Champions" for "Divine Champions:
+   *  Snowshade", "UniVersus" for "UniVersus: My Hero Academia: Girl Power"), when product names and shop titles leave
+   *  them out. The crawl and Amazon matchers drop the series from the words a title needs (lib/import/match.ts
+   *  splitSetCode). Off by default. DECISIONS.md 2026-11-28. */
+  seriesSets?: string[];
   /** How this game's players name it and its sets in a search (lib/game-seo.ts; Cardmarket's "metadata by game in the
    *  community's own words", DECISIONS.md 2026-11-18). `name` leads every set and product title ("One Piece", "MTG");
    *  `codes` adds the set code players type ("OP18", "GD06", "BT27"); `terms` swaps a product type for the word the

@@ -557,8 +557,10 @@ function mergeOwnCrawl(a: {
     if (!indexes.has(line)) {
       const ss = sets.filter((st) => st.line === line);
       const ids = new Set(ss.map((st) => st.id));
-      const numberedSets = (SITE.lines ?? []).find((l) => l.id === line)?.numberedSets;
-      indexes.set(line, crawlIndex(products.filter((p) => ids.has(p.setId)), ss, SITE.numberStyle, { rarityMustAgree: SITE.rarityMustAgree, rarityAliases: SITE.rarityAliases, setEditions: SITE.setEditions, numberedSets }));
+      const own = (SITE.lines ?? []).find((l) => l.id === line);
+      const numberedSets = own?.numberedSets;
+      const seriesSets = own?.seriesSets;
+      indexes.set(line, crawlIndex(products.filter((p) => ids.has(p.setId)), ss, SITE.numberStyle, { rarityMustAgree: SITE.rarityMustAgree, rarityAliases: SITE.rarityAliases, setEditions: SITE.setEditions, numberedSets, seriesSets }));
     }
     return indexes.get(line)!;
   };

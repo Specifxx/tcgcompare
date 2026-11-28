@@ -2311,3 +2311,29 @@ the other data pages (`CDN_PAGES`). The backlink thread hands this link to store
 Also on 28 Nov: each game's product-type page (`/games/<game>/<type>`: booster boxes, packs, starter decks, troves…) gets the
 same kind of answer for its own type ("How much is a Gundam starter deck?", `typeAnswer`), under its grid, with FAQPage JSON-LD.
 Search Console shows those pages for "digimon packs", "riftbound deck prices" and "how much is a pokemon booster pack".
+
+## 2026-11-28: Set series names and plural set words in the crawl matcher
+
+A crawl title must carry every word of its product's set name (`matchSealed`). Read each sealed product's own TCGplayer name
+as a shop title through the crawl index (28 Nov catalogue) and three set-name shapes stopped products matching even their own
+name, so no shop title could either:
+
+- A series in front of the set: every Elestrals set is "Divine Champions: Snowshade", UniVersus' main sets "UniVersus: My Hero
+  Academia: Girl Power"; product names and shop titles leave the series out. `GameLine.seriesSets` (ele "Divine Champions", uvs
+  "UniVersus") drops it in `splitSetCode`, never as a code: a title that names it is no different from one that does not.
+- A plural set word: "Mortal Ambition Starter Decks", "Distorted Reflections", "Challenger Decks", "SVM: Generations Start
+  Decks", "FAIRY TAIL 100 YEARS QUEST" against "... Starter Deck - Jin", "Distorted Reflection ...", "Challenger Deck 2021: ...".
+  A set name word of five letters or more ending in a single s is met by its singular. The other way round, a product name word
+  is met by its plural only when that plural is a word of its own set ("Distorted Reflections" in a title, "Reflection" in the
+  product name), never for a word that counts (deck, pack, box, bundle, display, case…: "Starter Decks" is several). Other
+  product name words stay exact. `namesSet` (pickId's "the title names its set") reads set words the same way.
+- CookieRun's "Starter Deck Assortment 1" is all phrase and number: `numberedSets` cr adds "Starter Deck Assortment", and a set
+  name that is the phrase and its number alone leaves no name words, only the code (a title naming assortment 2 refuses).
+
+Self-test: Elestrals 20 -> 42 of 42, UniVersus 52 -> 64 of 76 (the rest are Challenger Series decks whose set sub-name the
+product never repeats), Grand Archive 45 -> 60 of 64, CookieRun 19 -> 27 of 33; also Magic 701 -> 728 and Pokémon Japan
+104 -> 109 (sister games, used by the Amazon matcher). 0 products land on another product, with the product name alone or set
+name plus product name (4,588 products). Rules elsewhere unchanged: type, kind, edition, multi, codes and the 0.99 name bar
+still refuse. Like #194, #221 and #225, this widens what `pickByTitle` takes (owner's yes for title picks at every crawled shop,
+2026-11-16) only where a product could not match its own name; a set name left with no words ("Starter Deck Assortment 1")
+asks nothing of a title, as any numbered set's code may be left out. `tests/crawl.test.ts`.

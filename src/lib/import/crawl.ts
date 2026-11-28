@@ -16,7 +16,7 @@
 // Everything here is pure: tests/crawl.test.ts pins it with fixtures.
 import type { GameLine, Market, Meta, Offer, Product, SetInfo, StoreConfig } from "@/lib/site-types";
 import { CURRENCY } from "@/lib/site-types";
-import { buildIndex, handleOf, isForeign, isMulti, isPreorder, isUnfitListing, matchSealed, namesCardCode, rawHandleOf, type IndexOptions, type MatchIndex, type NumberStyle } from "./match";
+import { buildIndex, handleOf, hasWord, isForeign, isMulti, isPreorder, isUnfitListing, matchSealed, namesCardCode, rawHandleOf, type IndexOptions, type MatchIndex, type NumberStyle } from "./match";
 import { sealedTypeOf } from "./tcgcsv";
 import { launchReferenceCents } from "./sanity";
 import { tokens } from "@/lib/slug";
@@ -284,14 +284,15 @@ const NOT_SEALED_AS_SOLD = /\bopened\b|\bopen[- ]box\b|\bpre-?owned\b|\bsecond[-
 // Another quantity than one: "(6 Boxes)", "6 boxes", "Display of 6", "Half Booster Box".
 const OTHER_QUANTITY = /\(\d+\s*(boxes|displays)\)|\b\d+\s*boxes\b|display of \d+|\bhalf\b/i;
 
-/** Every word of the set's name (its code-like words aside) is in the title. */
+/** Every word of the set's name (its code-like words aside) is in the title, a plural met by its singular as in
+ *  matchSealed (hasWord). A set with no name words left ("Starter Deck Assortment 1") is never named this way. */
 function namesSet(title: string, p: Product, idx: MatchIndex): boolean {
   const setTokens = idx.setName.get(p.setId) ?? [];
   const words = setTokens.filter((t) => !/\d/.test(t));
   const need = words.length ? words : setTokens;
   if (!need.length) return false;
   const have = new Set(tokens(title));
-  return need.every((t) => have.has(t));
+  return need.every((t) => hasWord(have, t));
 }
 
 export function pickId(l: CrawlListing, ctx: PickContext): IdPick {
