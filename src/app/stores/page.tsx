@@ -7,6 +7,7 @@ import { kitStoreStatus } from "@/lib/kits";
 import { SuggestStore } from "@/components/ReportForms";
 import { FoldFinder } from "@/components/FoldFinder";
 import { Flag } from "@/components/Flag";
+import { storePath } from "@/lib/store-pages";
 
 export const revalidate = 86400;
 export const metadata: Metadata = { title: `${SITE.gameShort} stores we compare`, description: `Every online ${SITE.game} store ${SITE.name} compares, by country.`, ...canon("/stores") };
@@ -46,7 +47,7 @@ export default function Stores() {
             <ul className="set-list">
               {list.map((s, i) => (
                 <li key={s.key} data-ff={s.name.toLowerCase()} className={i >= FIRST ? "set-row ff-x" : "set-row"}>
-                  <a href={s.base} rel="noopener nofollow" className="set-row-link">
+                  <a href={storePath(s.key)} className="set-row-link">
                     <span className="set-row-name">{s.name}</span>
                     <span className="set-row-meta">{matched(s.key) ? `${matched(s.key).toLocaleString()} listing${matched(s.key) === 1 ? "" : "s"} matched` : "Listed, no match today"}</span>
                   </a>

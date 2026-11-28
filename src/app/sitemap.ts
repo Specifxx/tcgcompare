@@ -12,6 +12,8 @@ import { creatorsOn } from "@/lib/creators";
 import { cardIndexable, rankForSitemap, sitemapProductCap } from "@/lib/indexing";
 import { GAME_TYPE_MIN, gameTypeHubs, gameViews } from "@/lib/game-hubs";
 import { withoutOffSeasonSales } from "@/lib/sale-seasons";
+import { SITE } from "@/site.config";
+import { storeIndexable, storePath, storeStats } from "@/lib/store-pages";
 
 export const revalidate = 86400;
 
@@ -35,6 +37,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...sealedHubs().map((h) => ({ url: `${SITE_URL}/sealed/${h.slug}`, lastModified: at, changeFrequency: "daily" as const, priority: 0.8 })),
     ...preorderSetList().map((s) => ({ url: `${SITE_URL}${preorderPath(s)}`, lastModified: at, changeFrequency: "daily" as const, priority: 0.8 })),
     ...sealedSets().map((s) => ({ url: `${SITE_URL}/sets/${s.slug}`, lastModified: at, priority: 0.7 })),
+    // Store pages with enough in stock to say something of their own (lib/store-pages.ts, DECISIONS.md 2026-11-28).
+    ...SITE.stores.filter((st) => storeIndexable(storeStats().get(st.key))).map((st) => ({ url: `${SITE_URL}${storePath(st.key)}`, lastModified: at, priority: 0.5 })),
     ...posts().map((p) => ({ url: `${SITE_URL}/blog/${p.slug}`, lastModified: new Date(p.updated ?? p.date), priority: 0.6 })),
     ...rankForSitemap(
       products()
