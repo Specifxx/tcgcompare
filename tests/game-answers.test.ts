@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { gameAnswers, type AnswerInput } from "@/lib/game-answers";
+import { gameAnswers, typeAnswer, type AnswerInput } from "@/lib/game-answers";
 import type { HubItem } from "@/lib/hub-snippet";
 import type { Offer } from "@/lib/site-types";
 
@@ -45,4 +45,18 @@ test("a question today's data cannot answer is left out", () => {
   assert.deepEqual(out, []);
   const tcgOnly = gameAnswers(base({ items: [box("Only", "2026-10-01", [o("tcgplayer", 1)])], stores: [], storesAnywhere: 0 }));
   assert.equal(tcgOnly[0].a, "The newest, Only, is $90.00 on TCGplayer's market. These are what stores charge today, not a list price, and we update them every day.");
+});
+
+test("a type hub's answer uses its own words and skips what is not out yet", () => {
+  const items = [box("Old Deck", "2025-01-01", [o("a", 1500)], { sealedType: "Starter Deck" }), box("A Box", "2026-01-01", [o("a", 9000)])];
+  const qa = typeAnswer({ short: "Gundam", items, today: "2026-11-28", storeName: (x) => x.source }, { type: "Starter Deck", one: "starter deck", many: "starter decks" })!;
+  assert.equal(qa.q, "How much is a Gundam starter deck?");
+  assert.match(qa.a, /^Today one Gundam starter deck is in stock at a US store we track: Old Deck, \$15\.00 at a\./);
+  assert.equal(typeAnswer({ short: "Lorcana", items, today: "2026-11-28", storeName: (x) => x.source }, { type: "Illumineer's Trove", one: "Illumineer's Trove", many: "Illumineer's Troves" }), null);
+  assert.equal(typeAnswer({ short: "X", items: [box("E", "2026-01-01", [o("a", 1)], { sealedType: "Elite Trainer Box" })], today: "2026-11-28", storeName: (x) => x.source }, { type: "Elite Trainer Box", one: "elite trainer box", many: "elite trainer boxes" })!.q, "How much is a X elite trainer box?");
+  const boxW = { type: "Booster Box", one: "booster box", many: "booster boxes" };
+  const ask = (short: string) => typeAnswer({ short, items, today: "2026-11-28", storeName: (x) => x.source }, boxW)!.q;
+  assert.equal(ask("Union Arena"), "How much is a Union Arena booster box?");
+  assert.equal(ask("One Piece"), "How much is a One Piece booster box?");
+  assert.equal(ask("Elestrals"), "How much is an Elestrals booster box?");
 });
