@@ -44,6 +44,9 @@ export interface MatchIndex {
   setEdition: Map<number, string | null>;
   /** IndexOptions.numberedSets, when the index read them. */
   numberedSets?: readonly string[];
+  /** Under numberedSets, set id → the set's name words with its number kept ("starter deck 2 vegeta"), for codesAgree:
+   *  "Vegeta", deck 2's name once its number is off, is every word of deck 8's "Vegeta (Mini) Super Saiyan 3". */
+  codeSetName?: Map<number, string[]>;
 }
 
 /** A game that prints one set in several editions with the same card and
@@ -316,7 +319,10 @@ export function buildIndex(products: Product[], setList: SetInfo[], style: Numbe
     : null;
   const setTitle = new Map(sets.map((s) => [s.id, s.name]));
   const numberedSets = opts.stripSetCodes && opts.numberedSets?.length ? opts.numberedSets : undefined;
-  return { byNumber, bySetNumber, bySetName, setByCode, sealed, setName, setTitle, style, rarities, editions, setEdition, ...(numberedSets ? { numberedSets } : {}) };
+  const codeSetName = numberedSets
+    ? new Map(setList.map((s) => [s.id, tokens(s.name).filter((t) => !STOP.has(t) && !editionWords.has(t))]))
+    : undefined;
+  return { byNumber, bySetNumber, bySetName, setByCode, sealed, setName, setTitle, style, rarities, editions, setEdition, ...(numberedSets ? { numberedSets, codeSetName } : {}) };
 }
 
 function overlap(need: string[], have: Set<string>): number {
@@ -465,7 +471,7 @@ export function setCodesInTitle(title: string, idx: MatchIndex): Set<number> {
   // naming a number the catalogue has no set for gets an id no product has (-1): the set's number was a word every such
   // title needed before the phrase was read as a code, and it still refuses as it did then.
   for (const ph of idx.numberedSets ?? [])
-    for (const m of title.matchAll(new RegExp(`(?<![A-Za-z0-9])${phraseSource(ph)}\\s*(?:#|no\\.?|:)?\\s*(\\d{1,3})(?![0-9])`, "gi"))) {
+    for (const m of title.matchAll(new RegExp(`(?<![A-Za-z0-9])${phraseSource(ph)}\\s*(?:#|no\\.?|:)?\\s*(\\d{1,3})(?![0-9])(?!\\s*-?\\s*(?:packs?|pk|pcs|ct|count|x|decks?|box(?:es)?)\\b)`, "gi"))) {
       const ids = idx.setByCode.get(numberedCode(ph, m[1])) ?? [];
       for (const id of ids) out.add(id);
       if (!ids.length) out.add(-1);
@@ -478,9 +484,10 @@ export function setCodesInTitle(title: string, idx: MatchIndex): Set<number> {
  *  Freedom Ascension", SC01). "Stardust Trails Booster Box [GD05]" is no match. */
 function codesAgree(p: Product, codes: Set<number>, idx: MatchIndex): boolean {
   if (!codes.size || codes.has(p.setId)) return true;
-  const own = new Set(idx.setName.get(p.setId) ?? []);
+  const names = idx.codeSetName ?? idx.setName;
+  const own = new Set(names.get(p.setId) ?? []);
   for (const id of codes) {
-    const t = idx.setName.get(id) ?? [];
+    const t = names.get(id) ?? [];
     if (t.length && t.every((w) => own.has(w))) return true;
   }
   return false;
@@ -510,8 +517,13 @@ export function kindAgrees(title: string, productName: string, setName = ""): bo
   const t = kindWords(title);
   const n = kindWords(productName);
   const s = kindWords(setName);
-  return OTHER_KIND.every((k) => !hasPhrase(t, k) || hasPhrase(n, k) || hasPhrase(s, k));
+  if (!OTHER_KIND.every((k) => !hasPhrase(t, k) || hasPhrase(n, k) || hasPhrase(s, k))) return false;
+  return OWN_KIND.every((k) => !hasPhrase(n, k) || hasPhrase(s, k) || hasPhrase(t, k));
 }
+// The other way round: a product whose name says one of these is only a title that says it too. Gundam's "Starter Deck:
+// Heroic Beginnings Bonus Pack" is a promo TCGplayer types as a starter deck, and with six name words one may be missing
+// (matchSealed's 0.8), so "Heroic Beginnings Starter Deck Pack" would land on it (2026-11-28).
+const OWN_KIND = ["bonus pack"].map((k) => kindWords(k));
 
 export function matchSealed(title: string, idx: MatchIndex): MatchResult | null {
   if (isForeign(title)) return null;

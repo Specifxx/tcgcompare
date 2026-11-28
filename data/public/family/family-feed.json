@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-27T05:36:58.331Z",
+ "generatedAt": "2026-11-27T20:29:18.346Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -33,9 +33,9 @@
    "currency": "USD",
    "store": "Primepull TCG",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/679558_200w.jpg",
-   "refCents": 158217,
+   "refCents": 157041,
    "refLabel": "TCGplayer market price",
-   "savingPct": 32
+   "savingPct": 31
   },
   {
    "kind": "deal",
@@ -47,9 +47,9 @@
    "currency": "USD",
    "store": "Primepull TCG",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/580708_200w.jpg",
-   "refCents": 196466,
+   "refCents": 194866,
    "refLabel": "TCGplayer market price",
-   "savingPct": 32
+   "savingPct": 31
   },
   {
    "kind": "deal",
@@ -75,23 +75,23 @@
    "currency": "USD",
    "store": "Apollo's Vault",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/692964_200w.jpg",
-   "refCents": 467188,
+   "refCents": 449508,
    "refLabel": "TCGplayer market price",
-   "savingPct": 19
+   "savingPct": 15
   },
   {
    "kind": "deal",
    "cluster": "cards",
    "region": "US",
-   "title": "Carrying On His Will Booster Box Case",
-   "url": "https://tcgprices.app/card/carrying-on-his-will-booster-box-case",
-   "cents": 480000,
+   "title": "Premium Trainer's XY Collection",
+   "url": "https://tcgprices.app/card/premium-trainers-xy-collection",
+   "cents": 274999,
    "currency": "USD",
-   "store": "Fabricator's Forge",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/628353_200w.jpg",
-   "refCents": 561498,
+   "store": "Sweets and Geeks",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/148226_200w.jpg",
+   "refCents": 312500,
    "refLabel": "TCGplayer market price",
-   "savingPct": 15
+   "savingPct": 12
   },
   {
    "kind": "preorder",
@@ -133,9 +133,9 @@
    "region": "US",
    "title": "Gift of the Rift Bundle Bundle",
    "url": "https://tcgprices.app/preorders/gift-of-the-rift-bundle",
-   "cents": 14999,
+   "cents": 11999,
    "currency": "USD",
-   "store": "Double Infinity Gaming",
+   "store": "Miniature Market",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/714486_200w.jpg",
    "releaseDate": "2026-12-04"
   },
