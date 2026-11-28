@@ -1,0 +1,78 @@
+{
+ "v": 1,
+ "site": "tcgprices.app",
+ "at": "2026-11-28T08:23:45.514Z",
+ "overall": "warn",
+ "checks": [
+  {
+   "name": "Live site",
+   "status": "warn",
+   "detail": "SITE_URL repository variable not set — live checks skipped"
+  },
+  {
+   "name": "The sealed hub",
+   "status": "warn",
+   "detail": "SITE_URL repository variable not set — live checks skipped"
+  },
+  {
+   "name": "Retired card URLs redirect",
+   "status": "warn",
+   "detail": "SITE_URL repository variable not set — live checks skipped"
+  },
+  {
+   "name": "Best Basket shipping",
+   "status": "ok",
+   "detail": "925 of 1365 stores measured, 12h old"
+  },
+  {
+   "name": "Daily price import",
+   "status": "ok",
+   "detail": "12.0h old"
+  },
+  {
+   "name": "Restock tracker",
+   "status": "ok",
+   "detail": "800 restocks kept, 11.9h old"
+  },
+  {
+   "name": "Sealed Sniper",
+   "status": "ok",
+   "detail": "8 posted of 61 new candidates, 11.9h ago"
+  },
+  {
+   "name": "Store imports",
+   "status": "ok",
+   "detail": "1365 stores"
+  },
+  {
+   "name": "No eBay prices",
+   "status": "ok",
+   "detail": "no eBay price in the published data"
+  },
+  {
+   "name": "Own store crawl",
+   "status": "ok",
+   "detail": "1040 of 1060 stores read, 8160/12000 requests, 11775 of 296465 listings taken, 11348 offers, 248 carried, stopped {\"currency-unknown\":7,\"blocked\":5,\"currency-mismatch\":6,\"robots-unreachable\":1,\"challenge\":1}, 12.0h old"
+  },
+  {
+   "name": "Search Console weekly",
+   "status": "ok",
+   "detail": "last week recorded 2026-11-23, 3105 impressions in 28 days"
+  },
+  {
+   "name": "Index gate",
+   "status": "ok",
+   "detail": "1087 of 4587 sealed product pages qualify for the index and sitemap"
+  },
+  {
+   "name": "Family feed",
+   "status": "ok",
+   "detail": "12 items, 11.9h old; 8 sister feeds (rift, op, dex, mtg, gundam, lorcana, ygo, cyberpunk)"
+  },
+  {
+   "name": "Amazon ASIN finder",
+   "status": "ok",
+   "detail": "AU: off, 12h ago; CA: off, 12h ago; EU: off, 12h ago; UK: off, 12h ago; US: off, 12h ago"
+  }
+ ]
+}
