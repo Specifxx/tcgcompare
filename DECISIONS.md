@@ -2218,3 +2218,22 @@ can be taken down a little because we already have enough feedback". The rate-us
 more (`AUTO_ASK = false`); a "Rate us" link still opens it. During Cyber Weekend the visit's one prompt goes to the sale card.
 
 Released at 20:35 UTC: TCGplayer's sale chip and sale card, owner asked for urgent releases.
+
+## 2026-11-28 — "Starter Deck N:" is a numbered set phrase too (Digimon, Gundam, Fusion World, CookieRun, Battle Spirits)
+
+TCGplayer names starter-deck sets "Starter Deck 25: Rubeusdramon" and "Starter Deck 11: Aquatic Assault", while its own
+product names and shop titles say "Rubeusdramon Starter Deck" or "Starter Deck: Aquatic Assault": the set number was a word
+every title needed, so only a title carrying the right [ST-25] code could land. Godzilla's "Booster Set N:" option
+(`GameLine.numberedSets`, 2026-11-27) now also holds "Starter Deck" for dg, gun, fw, cr and bss. Matching each sealed
+product's own TCGplayer name through the crawl index (28 Nov catalogue): Digimon 89 -> 113 of 121, Gundam 67 -> 75 of 86,
+CookieRun 18 -> 19, Fusion World and Battle Spirits unchanged, 0 landing on another product in any game. A title naming
+another starter deck's number, or a number no set has, is refused as before. Among the products it frees are the Digimon
+ST-25 and ST-26 decks and displays, which had no store row.
+
+Three guards came with it (review, 28 Nov), all refusals only. A title's set code is checked against the set names WITH
+their number (`codeSetName`), so "Starter Deck 2 Vegeta …" can never take deck 8's "Vegeta (Mini) Super Saiyan 3", whose
+name holds every word of deck 2's once the number is off. A number followed by pack, pk, pcs, ct, count, x, deck(s) or
+box ("Starter Deck 6 Pack") is a count, not a set number. And a product whose name says "Bonus Pack" (Gundam's promo
+"Starter Deck: Heroic Beginnings Bonus Pack", typed as a starter deck) is only a title that says it too (`OWN_KIND` in
+`kindAgrees`), since its six name words let a deck title missing one word land on it. The option also feeds the Amazon
+matcher (`amazon-match.ts`): "Beatbreak Starter Deck" now finds the ST-23 deck there, and another deck's number refuses.
