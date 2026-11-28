@@ -160,7 +160,11 @@ const ALSO_IN: Record<string, string[]> = { fw: ["dbs"] };
 // Booster Box" (GameLine.numberedSets, DECISIONS.md 2026-11-27). The same for "Starter Deck 25: Rubeusdramon" (Digimon,
 // Gundam, Fusion World, CookieRun, Battle Spirits): shops write "Rubeusdramon Starter Deck [ST-25]" (2026-11-28).
 const SD = "Starter Deck";
-const NUMBERED_SETS: Record<string, string[]> = { gz: ["Booster Set"], dg: [SD], gun: [SD], fw: [SD], cr: [SD], bss: [SD] };
+const NUMBERED_SETS: Record<string, string[]> = { gz: ["Booster Set"], dg: [SD], gun: [SD], fw: [SD], cr: [SD, "Starter Deck Assortment"], bss: [SD] };
+// TCGplayer puts a series name in front of every Elestrals set ("Divine Champions: Snowshade") and of UniVersus' main
+// sets ("UniVersus: My Hero Academia: Girl Power"); product names and shop titles leave it out (GameLine.seriesSets,
+// DECISIONS.md 2026-11-28).
+const SERIES_SETS: Record<string, string[]> = { ele: ["Divine Champions"], uvs: ["UniVersus"] };
 
 const LINES: GameLine[] = [
   g("mtg", 1, "Magic: The Gathering", "Magic", "magic-the-gathering", "magic", "magic the gathering", "#b8742a", "Play Booster and Collector Booster boxes, bundles, Commander decks and Secret Lair-era sealed product."),
@@ -194,7 +198,7 @@ const LINES: GameLine[] = [
   g("wx", 67, "WIXOSS", "WIXOSS", "wixoss", "all", "wixoss", "#9a5a9a", "English booster boxes and starter decks."),
   g("bss", 72, "Battle Spirits Saga", "Battle Spirits", "battle-spirits-saga", "all", "battle spirits saga", "#b0553c", "Booster boxes and starter decks."),
   g("ac", 78, "Alpha Clash", "Alpha Clash", "alpha-clash", "all", "alpha clash tcg", "#5a8a4a", "Booster boxes and starter decks."),
-].map((l) => ({ ...l, ...(LOGOS.has(l.id) ? { logo: `/games/${l.id}.webp` } : {}), ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}), ...(OWN_CRAWL[l.id] ? { ownCrawl: OWN_CRAWL[l.id] } : {}), ...(GAP_CRAWL.has(l.id) && OWN_CRAWL[l.id] ? { gapCrawl: true } : {}), ...(ALSO_IN[l.id] ? { alsoIn: ALSO_IN[l.id] } : {}), ...(NUMBERED_SETS[l.id] ? { numberedSets: NUMBERED_SETS[l.id] } : {}), ...(SEO[l.id] ? { seo: SEO[l.id] } : {}) }));
+].map((l) => ({ ...l, ...(LOGOS.has(l.id) ? { logo: `/games/${l.id}.webp` } : {}), ...(AMAZON[l.id] ? { amazon: AMAZON[l.id] } : {}), ...(CRAWL[l.id] ? { crawl: CRAWL[l.id] } : {}), ...(OWN_CRAWL[l.id] ? { ownCrawl: OWN_CRAWL[l.id] } : {}), ...(GAP_CRAWL.has(l.id) && OWN_CRAWL[l.id] ? { gapCrawl: true } : {}), ...(ALSO_IN[l.id] ? { alsoIn: ALSO_IN[l.id] } : {}), ...(NUMBERED_SETS[l.id] ? { numberedSets: NUMBERED_SETS[l.id] } : {}), ...(SERIES_SETS[l.id] ? { seriesSets: SERIES_SETS[l.id] } : {}), ...(SEO[l.id] ? { seo: SEO[l.id] } : {}) }));
 
 export const SITE: SiteConfig = {
   // The affiliate sub-id prefix (eBay customid, Impact subId1): `tcgprices-us-card_pinned-1234`.

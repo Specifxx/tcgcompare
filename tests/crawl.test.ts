@@ -986,3 +986,66 @@ test("numbered starter decks: a title naming deck 2 never lands on deck 8, a pac
   assert.equal(setCodesInTitle("Gundam Heroic Beginnings Starter Deck 6-pack", gun).size, 0);
   assert.deepEqual([...setCodesInTitle("Gundam Starter Deck 06 Clan Unity", gun)], [24226]);
 });
+
+test("set series ('Divine Champions: ', 'UniVersus: '), plural set words and 'Starter Deck Assortment 1': real catalogue names (28 Nov) land on their own product, and only it", async () => {
+  const { crawlIndex } = await import("../src/lib/import/crawl");
+  const { matchSealed, splitSetCode, setCodesInTitle } = await import("../src/lib/import/match");
+  const { SITE } = await import("../src/site.config");
+  assert.deepEqual(SITE.lines?.find((l) => l.id === "ele")?.seriesSets, ["Divine Champions"]);
+  assert.deepEqual(SITE.lines?.find((l) => l.id === "uvs")?.seriesSets, ["UniVersus"]);
+  assert.ok(SITE.lines?.find((l) => l.id === "cr")?.numberedSets?.includes("Starter Deck Assortment"));
+  assert.deepEqual(splitSetCode("Divine Champions: Snowshade", [], ["Divine Champions"]), { name: "Snowshade", code: "" });
+  assert.deepEqual(splitSetCode("UniVersus: My Hero Academia: Girl Power", [], ["UniVersus"]), { name: "My Hero Academia: Girl Power", code: "" });
+  assert.deepEqual(splitSetCode("Divine Champions: Snowshade"), { name: "Divine Champions: Snowshade", code: "" }, "off by default");
+  assert.deepEqual(splitSetCode("Starter Deck Assortment 1", ["Starter Deck Assortment"]), { name: "", code: "STARTER DECK ASSORTMENT 1" });
+  assert.deepEqual(splitSetCode("Starter Deck Assortment 2: Legendary Cookie", ["Starter Deck Assortment"]), { name: "Legendary Cookie", code: "STARTER DECK ASSORTMENT 2" });
+
+  // Elestrals: the series is no word a title needs; another set's box is still refused.
+  const ele = crawlIndex(
+    [
+      prod(700001, "Snowshade - Booster Box", 50001, "Booster Box"),
+      prod(700002, "Sunstrike - Booster Box", 50002, "Booster Box"),
+      prod(700003, "Snowshade - Hades vs. Demeter Double Starter Deck Bundle with 4 Packs", 50003, "Starter Deck"),
+    ],
+    [set(50001, "Divine Champions: Snowshade", "ele"), set(50002, "Divine Champions: Sunstrike", "ele"), set(50003, "Divine Champions: Snowshade Starter Decks", "ele")],
+    "code",
+    { seriesSets: ["Divine Champions"] },
+  );
+  assert.equal(matchSealed("Elestrals Snowshade Booster Box", ele)?.product.id, 700001);
+  assert.equal(matchSealed("Elestrals Divine Champions Snowshade Booster Box", ele)?.product.id, 700001);
+  assert.equal(matchSealed("Elestrals Sunstrike Booster Box", ele)?.product.id, 700002);
+  assert.equal(matchSealed("Elestrals Booster Box", ele), null, "no set named");
+  assert.equal(matchSealed("Elestrals Snowshade Hades vs Demeter Double Starter Deck Bundle with 4 Packs", ele)?.product.id, 700003, "'Starter Decks' met by 'Starter Deck'");
+
+  // Grand Archive: "Distorted Reflections" is met by "Distorted Reflection"; a product's own words stay exact.
+  const ga = crawlIndex(
+    [
+      prod(710001, "Distorted Reflection Alter Edition Booster Box", 51001, "Booster Box"),
+      prod(710002, "Mortal Ambition Starter Deck - Jin", 51002, "Starter Deck"),
+      prod(710003, "Mortal Ambition Starter Deck - Kongming", 51002, "Starter Deck"),
+    ],
+    [set(51001, "Distorted Reflections Alter Edition", "ga"), set(51002, "Mortal Ambition Starter Decks", "ga")],
+    "code",
+  );
+  assert.equal(matchSealed("Grand Archive Distorted Reflection Alter Edition Booster Box", ga)?.product.id, 710001);
+  assert.equal(matchSealed("Grand Archive Distorted Reflections Alter Edition Booster Box", ga)?.product.id, 710001);
+  assert.equal(matchSealed("Grand Archive Mortal Ambition Starter Deck - Jin", ga)?.product.id, 710002);
+  assert.equal(matchSealed("Grand Archive Mortal Ambition Starter Deck Kongming", ga)?.product.id, 710003);
+  assert.equal(matchSealed("Grand Archive Mortal Ambition Starter Deck", ga), null, "no deck named: a tie");
+  assert.equal(matchSealed("Grand Archive Distort Alter Edition Booster Box", ga), null, "only a final s is dropped");
+
+  // CookieRun: "Starter Deck Assortment 1" leaves no name words; a title naming assortment 2 is refused.
+  const cr = crawlIndex(
+    [
+      prod(720001, "Starter Deck: Red", 52001, "Starter Deck"),
+      prod(720002, "Starter Deck: Flames of Immortality", 52002, "Starter Deck"),
+    ],
+    [set(52001, "Starter Deck Assortment 1", "cr"), set(52002, "Starter Deck Assortment 2: Legendary Cookie", "cr")],
+    "code",
+    { numberedSets: ["Starter Deck", "Starter Deck Assortment"] },
+  );
+  assert.equal(matchSealed("CookieRun Braverse Starter Deck Red", cr)?.product.id, 720001);
+  assert.equal(matchSealed("CookieRun Braverse Starter Deck Assortment 1 Red", cr)?.product.id, 720001);
+  assert.equal(matchSealed("CookieRun Braverse Starter Deck Assortment 2 Red", cr), null, "another assortment's number");
+  assert.deepEqual([...setCodesInTitle("CookieRun Starter Deck Assortment 2 Flames of Immortality", cr)], [52002]);
+});

@@ -63,7 +63,7 @@ export function amazonMatcher(products: Product[], sets: SetInfo[], lines: GameL
   }
   for (const p of products) byLine.get(setById.get(p.setId)?.line ?? "")?.products.push(p);
   const indexes = new Map<string, MatchIndex>();
-  for (const [k, v] of byLine) indexes.set(k, buildIndex(v.products, v.sets, style, { ...opts, stripSetCodes: true, numberedSets: lineById.get(k)?.numberedSets }));
+  for (const [k, v] of byLine) indexes.set(k, buildIndex(v.products, v.sets, style, { ...opts, stripSetCodes: true, numberedSets: lineById.get(k)?.numberedSets, seriesSets: lineById.get(k)?.seriesSets }));
   const multi = lines.length > 0;
 
   const find = (title: string): Product | null => {
@@ -92,7 +92,7 @@ export function amazonMatcher(products: Product[], sets: SetInfo[], lines: GameL
     keywords(p) {
       const set = setById.get(p.setId);
       const line = multi ? lineOf(p.setId) : null;
-      const setName = set ? splitSetCode(set.name, line?.numberedSets).name : "";
+      const setName = set ? splitSetCode(set.name, line?.numberedSets, line?.seriesSets).name : "";
       const own = new Set(fold(p.name));
       const parts = [
         line && !namesGame(own, line) ? line.name : "",
