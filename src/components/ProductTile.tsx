@@ -93,9 +93,9 @@ export function TileGrid({ items, roomy = false }: { items: Product[]; roomy?: b
 }
 
 /** The home page's deals: one card a product, the store's price against TCGplayer's market price. */
-export function DealGrid({ items }: { items: Deal[] }) {
+export function DealGrid({ items, strip = false }: { items: Deal[]; strip?: boolean }) {
   return (
-    <div className="pc-grid pc-grid-4">
+    <div className={strip ? "pc-grid pc-strip" : "pc-grid pc-grid-4"}>
       {items.map((d) => (
         <ProductTile key={d.p.id} p={d.p} deal={d} />
       ))}

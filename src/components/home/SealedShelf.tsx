@@ -50,8 +50,11 @@ function ShelfCard({ i, market }: { i: HeroItem; market: Market }) {
   );
 }
 
-/** One list of the shelf. `sub`: a fact about the list ("Out 4 Dec"), said after what the prices are. */
-export function SealedShelf({ items, sub }: { items: HeroItem[]; sub?: string }) {
+/**
+ * One list of the shelf. `sub`: a fact about the list ("Out 4 Dec"), said after what the prices are. `strip`: one row that scrolls
+ * sideways, six cards wide on a desktop, like a shop's best-seller row (the home page, 2026-11-28).
+ */
+export function SealedShelf({ items, sub, strip = false }: { items: HeroItem[]; sub?: string; strip?: boolean }) {
   const { market } = useMarket();
   // The products this market's stores sell first, the rest in their order.
   const list = [...items].sort((a, b) => Number(!a.prices[market]) - Number(!b.prices[market]));
@@ -60,7 +63,7 @@ export function SealedShelf({ items, sub }: { items: HeroItem[]; sub?: string })
       <p className="-mt-1 mb-5 text-sm text-muted">
         Each at its cheapest store in {MARKET_LABEL[market]} today.{sub ? ` ${sub}.` : ""}
       </p>
-      <div className="pc-grid pc-grid-4">
+      <div className={strip ? "pc-grid pc-strip" : "pc-grid pc-grid-4"}>
         {list.map((i) => (
           <ShelfCard key={i.id} i={i} market={market} />
         ))}

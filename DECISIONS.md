@@ -2259,3 +2259,25 @@ print and shop signage: headings a little wide (`font-stretch` 106%, the hero 11
 figure is IBM Plex Mono, keeping the ledger idea. Both are bundled in `src/app/fonts` with their licences, preloaded with
 `display: optional` as before, so no request goes to a font host and nothing shifts. The logo is changing too: six options went to
 the owner (`/mnt/project-files/design-system/tcgprices-logo-options-2026-11-28/`), and the one he picks replaces the gradient card mark.
+
+## 2026-11-28 — The hand-of-cards logo, and the home page as a shop window
+
+Owner, 28 Nov, after seeing six logo options: "I think I like option 5 the best … if it looks similar to the TCG player logo, then
+that'll be really good … I like the different colors … maybe like we can have like a price symbol, that's very subtle". And: "the
+site itself … should look more like a store, similar to how TCG Player structures their homepage" (with a screenshot of it).
+
+- **Logo.** Three flat cards fanned like a hand, red and yellow behind a blue one, one dark outline and a white cut line so it reads on
+  a dark page too, and a small price tag in the front card's window. It shares TCGplayer's spirit (bright fanned cards) but none of its
+  drawing: outlined sticker cards, three of them, a tag where theirs has a bolt. Wordmark: "TCG PRICES" in Archivo 800, a little wide,
+  "TCG" in the brand blue. The favicon, app icons and share image are redrawn from the same SVG; the brand colour moves from indigo to
+  the logo's blue (`#2457e0`). The Chrome extension's icons are left for its next store upload.
+- **Home page.** It reverses the minimal look of 2026-11-13 ("never a product in the hero"): the owner now wants a store. The order
+  is a banner hero (headline, search, Penny; today's three most-opened products beside them from lg up), two feature banners (the
+  release on pre-order, today's deals), rows of products (best sellers first, as the owner set on 2026-11-20, then booster boxes,
+  pre-orders, deals, the newest set), every game, the one ad block, the guides folded and the questions. The tabs and the game
+  ticker are gone; the region row left the hero (the header's region button does it). The h1, title, description and JSON-LD are
+  unchanged. Ads stay out of the hero; one prompt per visit still holds.
+- **Game bar.** A dark row of the games people shop most under the header on every page from md up, then "All N games"; on a phone the
+  home page shows the same games as one sideways row of chips under the hero.
+- **Light by default.** `SITE.theme.defaultMode` is "light" (it was dark since 2026-11-14): a shop reads light. A visitor who chose
+  dark keeps it; the toggle stays in the header.
