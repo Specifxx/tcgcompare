@@ -1,7 +1,7 @@
 {
  "v": 1,
  "site": "sealed",
- "generatedAt": "2026-11-27T20:29:18.346Z",
+ "generatedAt": "2026-11-28T08:53:44.892Z",
  "links": {
   "US": {
    "deals": "https://tcgprices.app/black-friday",
@@ -99,9 +99,9 @@
    "region": "US",
    "title": "Starter Deck 25: Rubeusdramon Starter Deck",
    "url": "https://tcgprices.app/preorders/starter-deck-25-rubeusdramon",
-   "cents": 1999,
+   "cents": 1600,
    "currency": "USD",
-   "store": "Many Realms",
+   "store": "Trading Card Market",
    "releaseDate": "2026-12-04"
   },
   {
@@ -110,9 +110,9 @@
    "region": "US",
    "title": "Starter Deck 26: Yukinamon Starter Deck",
    "url": "https://tcgprices.app/preorders/starter-deck-26-yukinamon",
-   "cents": 1999,
+   "cents": 1600,
    "currency": "USD",
-   "store": "Many Realms",
+   "store": "Trading Card Market",
    "releaseDate": "2026-12-04"
   },
   {
