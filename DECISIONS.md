@@ -2307,3 +2307,7 @@ price tables still mark no row the cheapest. A store is listed whether it links 
 its page (the page links out to the store). A page is indexed and in the sitemap only with 100 or more products in stock (194
 stores on 28 Nov; 668 at 25 was too many new URLs for a two-week-old domain); the rest are noindex, follow. CDN-cached like
 the other data pages (`CDN_PAGES`). The backlink thread hands this link to stores in its asks. `tests/store-pages.test.ts`.
+
+Also on 28 Nov: each game's product-type page (`/games/<game>/<type>`: booster boxes, packs, starter decks, troves…) gets the
+same kind of answer for its own type ("How much is a Gundam starter deck?", `typeAnswer`), under its grid, with FAQPage JSON-LD.
+Search Console shows those pages for "digimon packs", "riftbound deck prices" and "how much is a pokemon booster pack".

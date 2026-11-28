@@ -48,10 +48,15 @@ const released = (i: { upcoming: boolean; releasedOn: string | null }, today: st
 const s = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
 const list = (xs: string[]) => (xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
 
-function boxAnswer(i: AnswerInput): QA | null {
-  const boxes = i.items.filter((x) => x.sealedType === "Booster Box" && released(x, i.today));
-  const priced = boxes.map((item) => ({ item, offer: usStoreLow(item.best) })).filter((x): x is { item: HubItem; offer: Offer } => !!x.offer);
-  const newest = [...boxes].filter((b) => b.tcgCents || usStoreLow(b.best)).sort((a, b) => b.releasedOn!.localeCompare(a.releasedOn!))[0];
+/** "booster box" / "booster boxes" for a product type; the plural is the type's hub label when it has one. */
+export interface TypeWords { type: string; one: string; many: string }
+const BOX: TypeWords = { type: "Booster Box", one: "booster box", many: "booster boxes" };
+
+/** "How much is a <game> <type>?": today's US in-stock store range across the type, then its newest product. */
+export function typeAnswer(i: Pick<AnswerInput, "short" | "items" | "today" | "storeName">, w: TypeWords): QA | null {
+  const all = i.items.filter((x) => x.sealedType === w.type && released(x, i.today));
+  const priced = all.map((item) => ({ item, offer: usStoreLow(item.best) })).filter((x): x is { item: HubItem; offer: Offer } => !!x.offer);
+  const newest = [...all].filter((b) => b.tcgCents || usStoreLow(b.best)).sort((a, b) => b.releasedOn!.localeCompare(a.releasedOn!))[0];
   if (!priced.length && !newest) return null;
   const parts: string[] = [];
   if (priced.length) {
@@ -59,8 +64,8 @@ function boxAnswer(i: AnswerInput): QA | null {
     const high = [...priced].sort((a, b) => b.offer.cents - a.offer.cents)[0];
     parts.push(
       priced.length === 1
-        ? `Today one ${i.short} booster box is in stock at a US store we track: ${low.item.name}, ${money(low.offer.cents)} at ${i.storeName(low.offer).trim()}.`
-        : `Today ${s(priced.length, `${i.short} booster box`, `${i.short} booster boxes`)} are in stock at US stores we track, from ${money(low.offer.cents)} (${low.item.name} at ${i.storeName(low.offer).trim()}) to ${money(high.offer.cents)} (${high.item.name}).`,
+        ? `Today one ${i.short} ${w.one} is in stock at a US store we track: ${low.item.name}, ${money(low.offer.cents)} at ${i.storeName(low.offer).trim()}.`
+        : `Today ${s(priced.length, `${i.short} ${w.one}`, `${i.short} ${w.many}`)} are in stock at US stores we track, from ${money(low.offer.cents)} (${low.item.name} at ${i.storeName(low.offer).trim()}) to ${money(high.offer.cents)} (${high.item.name}).`,
     );
   }
   if (newest) {
@@ -69,8 +74,13 @@ function boxAnswer(i: AnswerInput): QA | null {
     if (bits.length) parts.push(`The newest, ${newest.name}, is ${bits.join(" and ")}.`);
   }
   parts.push("These are what stores charge today, not a list price, and we update them every day.");
-  return { q: `How much is a ${i.short} booster box?`, a: parts.join(" ") };
+  return { q: `How much is ${an(i.short) ? "an" : "a"} ${i.short} ${w.one}?`, a: parts.join(" ") };
 }
+
+/** "an Elestrals", "a One Piece", "a Union Arena": a vowel sound, not a vowel letter. */
+const an = (w: string) => /^[aeiou]/i.test(w) && !/^(uni|one|eu)/i.test(w);
+
+const boxAnswer = (i: AnswerInput) => typeAnswer(i, BOX);
 
 function setAnswer(i: AnswerInput): QA | null {
   const out = i.sets.filter((x) => released(x, i.today)).sort((a, b) => b.releasedOn!.localeCompare(a.releasedOn!))[0];
