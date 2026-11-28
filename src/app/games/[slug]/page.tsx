@@ -131,6 +131,8 @@ export default function GamePage({ params }: { params: { slug: string } }) {
               </div>
             ))}
           </dl>
+          {/* One link to the cross-game guide (page two for "how much is a booster box", Search Console 28 Nov). */}
+          <p className="mt-4 text-sm"><Link className="link" href="/blog/how-much-does-a-booster-box-cost">How booster box prices compare across every game →</Link></p>
         </section>
       )}
 
