@@ -128,19 +128,17 @@ on `main` and ride the next import. Previews are off.
 
 ## Design
 
-The minimal look (owner, 2026-11-13): the hero is words, the search and six ways in, never a product; one tabbed
-shelf; the game list; one ad block. No pop-ups, default region US. `tests/minimal-look.test.ts`. On top of it sits the
-2050 layer (owner, 2026-11-14; `globals.css`, `Neo.tsx`, `GameMarquee.tsx`): dark by default, three lights, scroll
-animations. Keep its rules: CSS only, no layout shift, hidden-until-scrolled only inside `@supports` for scroll
-timelines, everything off under reduced motion, never a product in the hero.
-Since 2026-11-27 the Empire design system (`empire-ds` block at the end of `globals.css`, canonical copy and rules in the
-project's `design-system/`) takes the 2050 layer's glows, glass, gradient words and gradient button off: one brand colour,
-solid; a left-aligned masthead hero from 640px; hairline section rules; 10px / 6px radii. Never add those tells back.
-Since 2026-11-27 (owner: "state of the art … what an expert would do") the Empire design language v2, "Ledger", sits on
-top (`empire-v2` block, last in `globals.css`; tokens set in place at the top): Geist for words and Geist Mono for every
-figure (bundled in `src/app/fonts`, `layout.tsx`), near-black with neutral greys (warm paper in light), product photos on one
-paper plate, prices as the loudest thing on a card or row, solid "View deal" buttons in one shape (no row is
-ever marked the cheapest), a mono ticker for the game strip, and nothing that blurs or rises in on scroll.
+**A shop window, light by default (owner, 2026-11-28: "it should look more like a store, similar to how TCG Player structures
+their homepage"; DECISIONS.md).** The logo is the hand of cards (`public/icon.svg`: three flat outlined cards, red, yellow and
+blue, a small price tag in the front one; the owner picked it from six options), never TCGplayer's own mark. Under the header a dark
+game bar (`GameBar.tsx`, md up; chips under the hero on a phone). The home page: a dark banner hero with the headline, the search
+and Penny, and today's three most-opened products beside them from lg up (`home/Store.tsx`, `home/Showcase.tsx`); two feature
+banners (the release on pre-order, today's deals); rows of products (best sellers first, booster boxes, pre-orders, deals, the
+newest set), each a kicker, a title and "See all"; every game; one ad block (never in the hero); the guides folded; the questions.
+Type: Archivo for words, IBM Plex Mono for figures (no Geist). Brand blue `#2457e0`, the logo's red and yellow only as accents.
+The `store` block at the end of `globals.css` draws it; `tests/minimal-look.test.ts` pins the order. Keep the earlier rules that
+still hold: no glows, glass or gradient words, no layout shift, nothing that blurs or rises in on scroll, no row ever marked the
+cheapest, one prompt per visit, and check every change at phone width.
 
 ## The site watches itself
 

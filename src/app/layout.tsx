@@ -15,6 +15,7 @@ import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import { Neo } from "@/components/Neo";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { Header } from "@/components/Header";
+import { GameBar } from "@/components/GameBar";
 import { Footer } from "@/components/Footer";
 import { PreorderStrip } from "@/components/PreorderStrip";
 import { HolidayStrip } from "@/components/HolidayStrip";
@@ -114,6 +115,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NavBoost warm={["/", "/sealed", "/sets", "/games", "/tools/deal-finder"]} />
         <PrefsProvider>
           <Header />
+          <GameBar />
           {/* ONE line under the header at most (the minimal look, 2026-11-13: two promo bars sat above every headline): the sale's
               in season, else the open pre-order's. The other keeps its link on every page in the header's Deals menu (lib/nav.ts). */}
           {holidayNav() ? <HolidayStrip /> : <PreorderStrip />}

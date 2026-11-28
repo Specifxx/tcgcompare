@@ -1,6 +1,6 @@
 import { SITE } from "@/site.config";
 
-// The site's mark (public/icon.svg, drawn by scripts/og) and the wordmark.
+// The site's mark (public/icon.svg: the hand of cards with a price tag, owner's pick 2026-11-28) and the wordmark.
 export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
   return (
     <span className="relative inline-flex shrink-0 xmas-cap">
@@ -17,7 +17,7 @@ export function Logo({ wordmark = "" }: { wordmark?: string }) {
   return (
     <span className="inline-flex items-center gap-2">
       <LogoMark className="h-8 w-8" />
-      <span className={`whitespace-nowrap font-display text-[19px] font-extrabold tracking-tight ${wordmark}`}>
+      <span className={`whitespace-nowrap font-display text-[19px] font-extrabold tracking-tight ${wordmark}`} style={{ fontStretch: "110%" }}>
         <span className="wordmark">{SITE.wordmark[0]}</span> <span className="text-ink">{SITE.wordmark[1]}</span>
       </span>
       <span className="season-only ml-0.5 inline" aria-hidden>🎃</span>

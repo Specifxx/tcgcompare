@@ -10,17 +10,17 @@
    (lib/theme.ts THEME_BOOT_SCRIPT), decided before first paint from the visitor's
    saved choice, so one CDN copy of each page serves everyone. */
 :root {
-  --bg: 247 246 242;
+  --bg: 245 246 248;
   --surface: 255 255 255;
-  --raised: 242 241 236;
-  --line: 226 224 217;
+  --raised: 238 240 244;
+  --line: 224 227 233;
   --ink: 17 18 22;
   --muted: 88 91 101;
   --faint: 104 107 117; /* 5.2:1 on --bg, 5.6:1 on --surface (WCAG AA for small text) */
-  --brand: 67 56 202; /* indigo #4338ca; white on it is 8.6:1 */
+  --brand: 36 87 224; /* the logo's blue, #2457e0 (2026-11-28); white on it is 5.9:1 */
   --brand-ink: 255 255 255;
-  --brand-soft: 233 234 255;
-  --brand-strong: 55 48 163; /* brand as TEXT on --brand-soft and on --surface: chips and .btn-soft */
+  --brand-soft: 230 237 255;
+  --brand-strong: 28 66 176; /* brand as TEXT on --brand-soft and on --surface: chips and .btn-soft */
   --accent: 229 48 63; /* the red of the mobile suit's chest: highlights only */
   --spark: 229 48 63;
   --open: 20 118 56; /* 5.0:1 on --open-soft, 5.7:1 on --surface: the 12px stock pill is AA */
@@ -36,7 +36,7 @@
   --ad: 243 246 252; /* sponsored units: a cool tint no store row or product card uses */
   --ad-line: 120 128 148;
   --shadow: 24 22 18;
-  --wordmark: linear-gradient(90deg, #0284c7 0%, #4338ca 55%, #7c3aed 100%);
+  --wordmark: none;
   /* The sticky header's height: sticky offsets (top-[var(--hdr)]) and anchor jumps (scroll-padding-top below) follow it. */
   --hdr: 60px;
   color-scheme: light;
@@ -56,10 +56,10 @@
   --ink: 237 237 239;
   --muted: 156 159 168;
   --faint: 128 131 141; /* 6.0:1 on --bg, 5.6:1 on --surface */
-  --brand: 140 150 255;
-  --brand-ink: 12 14 40;
-  --brand-soft: 30 33 66;
-  --brand-strong: 178 186 255; /* on --brand-soft and on --surface */
+  --brand: 125 160 255;
+  --brand-ink: 10 16 40;
+  --brand-soft: 28 36 70;
+  --brand-strong: 178 198 255; /* on --brand-soft and on --surface */
   --accent: 255 102 118;
   --spark: 255 102 118;
   --open: 92 214 140;
@@ -2172,3 +2172,194 @@ table .btn-primary, table .btn-tcg {
 .chip, .tag, .ad-pill { border-radius: var(--v2-r-xs) !important; }
 .btn-primary { box-shadow: none !important; background-image: none !important; }
 /* empire-v2:end */
+
+/* store:start — the home page as a shop window, and the game bar (owner, 2026-11-28: "it should look more like a store, similar to
+   how TCG Player structures their homepage"; DECISIONS.md). Light by default, a dark game bar under the header, a banner hero with
+   today's most-opened products, wide feature banners and rows of products. The brand colours are the logo's: blue for actions,
+   with the logo's red and yellow only as accents. Last in the file, so it wins over the blocks above for the parts it draws. */
+
+/* 1. The game bar. */
+.game-bar {
+  background: #14161c;
+  color: #f2f3f5;
+  border-bottom: 1px solid #000;
+}
+.game-bar-in {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+  height: 44px;
+  overflow: hidden;
+}
+@media (min-width: 640px) { .game-bar-in { padding: 0 1.5rem; } }
+.game-bar-link {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 0.85rem;
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+  color: #f2f3f5;
+  border-bottom: 3px solid transparent;
+  transition: border-color 140ms ease, color 140ms ease;
+}
+.game-bar-link:hover { border-bottom-color: #ffc928; color: #fff; }
+.game-bar-all { color: #b9bdc7; font-weight: 550; }
+.game-bar li:first-child .game-bar-link { padding-left: 0; }
+
+/* 2. The banner hero: a dark panel in the column, words left, the product window right from lg up. Its own dark tokens, so the
+   search, the region control and Penny inside it draw as they do on a dark page, whatever the page's theme. */
+.store-hero {
+  --bg: 18 22 38;
+  --surface: 27 32 52;
+  --raised: 34 40 62;
+  --line: 52 59 86;
+  --ink: 244 245 248;
+  --muted: 182 188 204;
+  --faint: 150 157 176;
+  --brand: 125 160 255;
+  --brand-ink: 10 16 40;
+  --brand-soft: 34 44 82;
+  --brand-strong: 178 198 255;
+  margin: 1rem 0 0 !important;
+  border: 0 !important;
+  border-radius: 16px;
+  /* The logo's three colours as one rule along the top edge, clipped by the panel's corners. */
+  background: linear-gradient(90deg, #ef4a2e 0 33.3%, #ffc928 33.3% 66.6%, #2f66f0 66.6% 100%) top / 100% 5px no-repeat, rgb(18 22 38) !important;
+  color: rgb(var(--ink));
+  overflow: visible;
+  position: relative;
+}
+.store-hero-in {
+  display: grid;
+  gap: 2rem;
+  padding: 2rem 1.25rem 1.75rem;
+}
+@media (min-width: 640px) { .store-hero-in { padding: 2.75rem 2.25rem 2.25rem; } }
+@media (min-width: 1024px) {
+  .store-hero-in { grid-template-columns: minmax(0, 1fr) 440px; align-items: center; gap: 2.5rem; padding: 3rem 2.75rem; }
+}
+.store-hero-copy { display: flex; flex-direction: column; align-items: flex-start; text-align: left; min-width: 0; }
+.store-hero .hero-h1 { color: #fff; font-size: clamp(2.2rem, 5vw, 3.6rem) !important; }
+:root .store-hero .hero-h1 .text-brand, :root[data-theme] .store-hero .hero-h1 .text-brand { color: #ffc928 !important; }
+.store-hero .hero-sub { color: rgb(var(--muted)) !important; max-width: 36rem; font-size: 1rem; line-height: 1.6; }
+.store-hero .hero-search { max-width: 36rem; margin-top: 1.5rem; }
+.store-hero .hero-search input,
+.store-hero .hero-search form.border {
+  background: #fff !important;
+  color: #16141a !important;
+  border: 0 !important;
+  box-shadow: 0 10px 30px -14px rgb(0 0 0 / 0.7) !important;
+}
+.store-hero .hero-search input::placeholder { color: #6b6f7b !important; }
+.store-hero .hero-search input:focus,
+.store-hero .hero-search form.border:focus-within { box-shadow: 0 0 0 4px rgb(255 201 40 / 0.55) !important; }
+.store-hero .hero-meta { border-top-color: rgb(var(--line)); color: rgb(var(--faint)); justify-content: flex-start; max-width: none; }
+.store-hero .hero-pill { margin-bottom: 1rem; }
+.store-hero .chip[aria-pressed="true"], .store-hero .chip[aria-current], .store-hero .chip.is-on { background: #fff !important; color: #16141a !important; border-color: #fff !important; }
+
+/* The product window: three white plates, the middle one raised. */
+.showcase { display: none; }
+@media (min-width: 1024px) {
+  .showcase { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; }
+}
+.showcase-item { min-width: 0; }
+.showcase-1 { transform: translateY(-18px); }
+.showcase-link {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: #fff;
+  color: #16141a;
+  overflow: hidden;
+  box-shadow: 0 18px 40px -20px rgb(0 0 0 / 0.8);
+  transition: transform 160ms ease;
+}
+.showcase-link:hover { transform: translateY(-3px); }
+.showcase-plate { display: block; aspect-ratio: 1; background: #f3f2ee; padding: 10px; }
+.showcase-plate img { width: 100%; height: 100%; object-fit: contain; }
+.showcase-cap { display: flex; flex-direction: column; gap: 4px; padding: 10px 11px 12px; }
+.showcase-name { font-size: 12.5px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; }
+.showcase-price { font-family: var(--v2-mono); font-size: 15px; font-weight: 700; }
+.showcase-from { font-family: var(--v2-sans); font-size: 11px; font-weight: 500; color: #6b6f7b; }
+
+/* The games under the hero on a phone: one sideways row of chips. */
+.store-ways .ways { margin-top: 1rem; opacity: 1; animation: none; }
+.game-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 12px -1rem 0; padding: 2px 1rem; }
+.game-chips::-webkit-scrollbar { display: none; }
+.game-chip { flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 0 14px; border-radius: 999px; background: rgb(var(--surface)); border: 1px solid rgb(var(--line)); font-size: 14px; font-weight: 650; white-space: nowrap; color: rgb(var(--ink)); }
+.game-chip-dot { width: 8px; height: 8px; border-radius: 99px; }
+@media (max-width: 639.98px) {
+  .store-hero-in { padding-bottom: 1.25rem; }
+  .feature-line { display: none; }
+  .feature-banner { min-height: 0; padding: 1rem 1rem 1rem 1.25rem; }
+}
+
+/* 3. Feature banners. */
+.feature-grid { display: grid; gap: 12px; margin-top: 1.25rem; }
+@media (min-width: 768px) { .feature-grid { grid-template-columns: 1fr 1fr; gap: 16px; } .feature-grid-1 { grid-template-columns: 1fr; } }
+.feature-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 168px;
+  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+  border-radius: 14px;
+  overflow: hidden;
+  color: #fff;
+  transition: transform 160ms ease;
+}
+.feature-banner:hover { transform: translateY(-2px); }
+.feature-ink { background: #1b1d24; }
+.feature-brand { background: #2457e0; }
+.feature-warm { background: #c8361f; }
+.feature-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; z-index: 1; }
+.feature-kicker { font-family: var(--v2-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #ffc928; }
+.feature-brand .feature-kicker { color: #fff3c4; }
+.feature-title { font-size: clamp(1.25rem, 2.4vw, 1.6rem); font-weight: 800; font-stretch: 106%; line-height: 1.1; letter-spacing: -0.02em; }
+.feature-line { font-size: 14px; line-height: 1.45; color: rgb(255 255 255 / 0.8); max-width: 24rem; }
+.feature-cta { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: 8px; background: #fff; color: #16141a; font-size: 14px; font-weight: 700; }
+.feature-art { position: relative; flex: none; width: 150px; height: 130px; }
+@media (max-width: 420px) { .feature-art { width: 96px; height: 100px; } }
+.feature-plate { position: absolute; width: 92px; height: 92px; border-radius: 10px; background: #fff; padding: 6px; box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.7); }
+.feature-plate img { width: 100%; height: 100%; object-fit: contain; }
+.feature-plate-0 { right: 0; top: 0; transform: rotate(6deg); }
+.feature-plate-1 { right: 46px; top: 26px; transform: rotate(-5deg); }
+.feature-plate-2 { right: 8px; bottom: -4px; transform: rotate(2deg); }
+@media (max-width: 420px) { .feature-plate { width: 70px; height: 70px; } .feature-plate-1 { right: 26px; top: 22px; } .feature-plate-2 { display: none; } }
+
+/* 4. Rows of products: a kicker, a title, "See all", one sideways row. */
+.store-row { margin-top: 3rem; }
+@media (min-width: 640px) { .store-row { margin-top: 3.75rem; } }
+.store-row-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+.store-row-kicker { font-family: var(--v2-mono); font-size: 11.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(var(--muted)); }
+.store-row-title { font-size: clamp(1.15rem, 2vw, 1.4rem) !important; font-weight: 800 !important; letter-spacing: -0.015em; line-height: 1.2; margin-top: 2px; }
+.store-row-all { flex: none; font-size: 14px; font-weight: 650; color: rgb(var(--brand)); white-space: nowrap; }
+.store-row-all:hover { text-decoration: underline; }
+.pc-grid.pc-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: none;
+  grid-auto-columns: 44%;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 6px;
+}
+.pc-grid.pc-strip::-webkit-scrollbar { display: none; }
+.pc-grid.pc-strip > * { scroll-snap-align: start; }
+@media (min-width: 640px) { .pc-grid.pc-strip { grid-auto-columns: calc((100% - 3 * 16px) / 4); gap: 16px; } }
+@media (min-width: 1024px) { .pc-grid.pc-strip { grid-auto-columns: calc((100% - 5 * 16px) / 6); } }
+/* In a store row every card is a white card on the page, like a shop's product grid. */
+.store-row .pc-link { background: rgb(var(--surface)); border: 1px solid rgb(var(--line)); border-radius: 12px; overflow: hidden; }
+.store-row .pc-link:hover { border-color: rgb(var(--ink) / 0.35); }
+.store-row .pc-body { padding: 10px 12px 12px; }
+/* store:end */

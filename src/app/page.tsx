@@ -10,7 +10,6 @@ import { posts } from "@/lib/posts";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_URL } from "@/lib/site";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import type { SetInfo } from "@/lib/site-types";
 import { fitTitle } from "@/lib/seo-title";
 import { featuredSealed, sealedHubs, sealedInSet, sealedSets } from "@/lib/hubs";
@@ -19,15 +18,16 @@ import { openPreorder } from "@/lib/preorder-nav";
 import { imageAt } from "@/lib/image";
 import { heroItem, sealedHero } from "@/lib/sealed-hero";
 import { SealedShelf } from "@/components/home/SealedShelf";
-import { Hero, HeroPill, riseAt, WaysIn, type Way, type WayShape } from "@/components/home/Hero";
-import { Tabs, type Tab } from "@/components/Tabs";
+import { HeroPill, riseAt, WaysIn, type Way, type WayShape } from "@/components/home/Hero";
+import { FeatureBanner, Row, StoreHero } from "@/components/home/Store";
+import { Showcase } from "@/components/home/Showcase";
+import { GameBar } from "@/components/GameBar";
 import { Fold, Folds } from "@/components/Fold";
 import { InlineAds } from "@/components/InlineAds";
 import { inlineReady } from "@/lib/inline-ads";
 import { Section } from "@/components/Section";
 import { adSearch, cardAds } from "@/lib/card-ads";
 import { GameRows } from "@/components/GameRows";
-import { GameMarquee } from "@/components/GameMarquee";
 import { MascotGuide } from "@/components/MascotGuide";
 import { gameViews } from "@/lib/game-hubs";
 import { homeDescription } from "@/lib/site-copy";
@@ -67,12 +67,11 @@ const TYPE_WAYS: [slug: string, icon: WayShape][] = [
 const shortDate = (iso: string | null) => (iso ? new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }) : "date to be announced");
 
 /**
- * The home page, the minimal look (owner, 2026-11-13: "we're making things too complicated … get rid of the products on the hero
- * … cull the features that we show"; DECISIONS.md). Six blocks and no more: the hero (words, the search, the markets, six ways in,
- * never a product), ONE shelf with its lists behind tabs (the newest booster boxes, the pre-orders, today's deals), the latest
- * sets, the page's one ad block, then the guides folded to a line and the questions. What left the page is one click away in the
- * header's menus and the footer: the creators bubble, the trending chips, the featured boxes in the hero, the sale links (the
- * strip under the header has them) and the reviews row (the footer's "Rate us").
+ * The home page as a shop window (owner, 2026-11-28: "it should look more like a store, similar to how TCG Player structures their
+ * homepage"; DECISIONS.md). In order: the banner hero (words, the search and Penny, with today's three most-opened products beside
+ * them from lg up), the game tiles on a phone (the game bar under the header does it from md up), two feature banners (the release
+ * on pre-order and today's deals), rows of products (best sellers, booster boxes, pre-orders, deals, the newest set), every game,
+ * the page's one ad block, the guides folded to a line and the questions. This replaces the minimal look of 2026-11-13.
  */
 export default function Home() {
   const m = meta();
@@ -135,70 +134,18 @@ export default function Home() {
   const releasedSets = newestSets.filter((s) => !isPreorder(s));
   const latestSets = [...releasedSets.slice(0, 1), ...upcomingSets, ...releasedSets.slice(1)];
 
-  // The one shelf (components/Tabs.tsx): every list is server-rendered and stays in the HTML; a tab only chooses which is shown.
   const boxes = hubs.some((h) => h.slug === "booster-box");
-  const onShelf = new Set(hero.featured.map((i) => i.id));
-  const shelfTabs: Tab[] = [
-    ...(popular.length
-      ? [
-          {
-            label: "Most popular",
-            panel: (
-              <Shelf heading={`The most popular ${SITE.gameShort} sealed products right now, each at its cheapest store today`} note="What shoppers open and buy most, refreshed daily." links={[{ href: "/sealed", label: "All sealed products" }]}>
-                <SealedShelf items={popular} />
-              </Shelf>
-            ),
-          },
-        ]
-      : []),
-    ...(hero.featured.length
-      ? [
-          {
-            label: boxes ? "Booster boxes" : "Sealed",
-            panel: (
-              <Shelf heading={boxes ? "The most in-demand booster boxes across every game, each at its cheapest store today" : `The newest ${SITE.gameShort} sealed products, each at its cheapest store today`} links={[{ href: boxes ? "/sealed/booster-box" : "/sealed", label: boxes ? "All booster boxes" : "All sealed products" }]}>
-                <SealedShelf items={hero.featured} />
-              </Shelf>
-            ),
-          },
-        ]
-      : []),
-    ...(hero.preorders.length
-      ? [
-          {
-            label: "Pre-orders",
-            panel: (
-              <Shelf heading={`${SITE.gameShort} sets open for pre-order`} links={hero.preorders.map((s) => ({ href: s.href, label: `${s.name} pre-orders` }))}>
-                <SealedShelf items={hero.preorders.flatMap((s) => s.items)} sub={hero.preorders.map((s) => `${s.name} is out ${shortDate(s.releasesOn)}`).join(", ")} />
-              </Shelf>
-            ),
-          },
-        ]
+  const onShelf = new Set([...popular, ...hero.featured].map((i) => i.id));
+  // The hero's product window: the three most-opened products with a photo.
+  const showcase = popular.filter((i) => i.image).slice(0, 3);
+  // The feature banners: the release on pre-order and today's deals, each only when it has products to show. Real data only.
+  const pre = hero.preorders[0];
+  const banners: Parameters<typeof FeatureBanner>[0][] = [
+    ...(pre && pre.items.length
+      ? [{ href: pre.href, kicker: "Pre-order now", title: `${pre.name}`, line: `Out ${pre.releasesOn ? longDate(pre.releasesOn) : "soon"}. Every store's pre-order price, cheapest first.`, cta: "Compare pre-orders", images: pre.items.filter((i) => i.image).map((i) => ({ src: i.image!, alt: i.name })), tone: "ink" as const }]
       : []),
     ...(topDeals.length
-      ? [
-          {
-            label: "Deals",
-            panel: (
-              <Shelf heading="Today's top deals" note="In-stock listings below TCGplayer market, refreshed daily." links={[{ href: "/tools/deal-finder", label: "Browse all deals" }]}>
-                <DealGrid items={topDeals} />
-              </Shelf>
-            ),
-          },
-        ]
-      : []),
-    // The newest set has its own list only when it adds a product the first list does not already show.
-    ...(latest && chase.some((p) => !onShelf.has(p.id))
-      ? [
-          {
-            label: latest.name,
-            panel: (
-              <Shelf heading={`${latest.name} booster boxes and sealed`} note="The newest set's sealed product, with every store's price." links={[{ href: `/sets/${latest.slug}`, label: "Every product in the set" }]}>
-                <TileGrid items={chase} roomy />
-              </Shelf>
-            ),
-          },
-        ]
+      ? [{ href: "/tools/deal-finder", kicker: "Today's deals", title: "Sealed under TCGplayer market", line: "In-stock sealed product below TCGplayer's market price, checked twice a day.", cta: "See today's deals", images: topDeals.flatMap((d) => (d.p.image ? [{ src: imageAt(d.p.image, "200w") ?? d.p.image, alt: d.p.name }] : [])), tone: "brand" as const }]
       : []),
   ];
 
@@ -212,17 +159,15 @@ export default function Home() {
       )}
       <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) }} />
 
-      {/* The hero: words, the search and six ways in, never a product (components/home/Hero.tsx). The h1 is the one the old hero carried. */}
-      <Hero>
-        {/* The one small line above the headline. */}
-        {(
-          preorder && (
-            <HeroPill href={preorderPath(preorder)}>
-              <span>
-                <b>{preorder.name}</b> pre-orders · out {longDate(preorder.releasedOn)}
-              </span>
-            </HeroPill>
-          )
+      {/* The banner hero (owner, 2026-11-28: "more like a store, similar to how TCG Player structures their homepage"): the words and
+          the search on one side, the three products shoppers open most today on the other (components/home/Store.tsx). */}
+      <StoreHero aside={showcase.length ? <Showcase items={showcase} /> : undefined}>
+        {preorder && (
+          <HeroPill href={preorderPath(preorder)}>
+            <span>
+              <b>{preorder.name}</b> pre-orders · out {longDate(preorder.releasedOn)}
+            </span>
+          </HeroPill>
         )}
         <h1 className="hero-h1 rise-solid">
           <span className="text-brand">{SITE.gameShort}</span> Booster Box Prices
@@ -235,13 +180,6 @@ export default function Home() {
         </div>
         {/* Penny suggests a first search (owner, 2026-11-27: "a little mascot saying, hey, search this term here"). */}
         <MascotGuide examples={["Prismatic Evolutions", "Elite Trainer Box", "OP-13"]} />
-        {/* Phone hero, 2026-11-19 (owner: "way too much going on in the mobile version of the home page"): the region row shows
-            from sm up; the header's own region button does the same job on a phone. */}
-        <div className="rise mt-6 hidden sm:block" style={riseAt(3)}>
-          <MarketChooser className="justify-center" />
-        </div>
-        <WaysIn links={ways} label={`Popular ${SITE.gameShort} pages`} />
-        {/* One quiet line of facts (it was three chips). */}
         <p className="hero-meta rise" style={riseAt(5)}>
           {m ? (
             <>
@@ -252,7 +190,6 @@ export default function Home() {
               <span>
                 <b>{storeCount.toLocaleString("en")}</b> stores
               </span>
-              {/* On a phone the freshness is the line's second row, by design: a wrapped line would end on a stray dot. */}
               <span aria-hidden="true" className="hidden sm:inline">
                 ·
               </span>
@@ -262,27 +199,65 @@ export default function Home() {
             <span>Prices update daily</span>
           )}
         </p>
-      </Hero>
+      </StoreHero>
 
+      {/* On a phone the game bar is hidden: the same games as one sideways row of chips under the hero. One game: its ways in. */}
+      {games.length > 1 ? (
+        <GameBar chips />
+      ) : (
+        <div className="store-ways md:hidden">
+          <WaysIn links={ways} label={`Popular ${SITE.gameShort} pages`} />
+        </div>
+      )}
 
-      {/* Every game, in one moving line. */}
-      <GameMarquee />
+      {banners.length > 0 && (
+        <div className={`feature-grid${banners.length === 1 ? " feature-grid-1" : ""}`}>
+          {banners.map((b) => (
+            <FeatureBanner key={b.href} {...b} />
+          ))}
+        </div>
+      )}
 
-      {shelfTabs.length > 0 && (
-        <Section title={`${SITE.gameShort} booster boxes and sealed`} className="home-shelf reveal mt-8 sm:mt-12">
-          <Tabs tabs={shelfTabs} label={`${SITE.gameShort} sealed products`} />
-        </Section>
+      {popular.length > 0 && (
+        <Row id="best-h" kicker="Best sellers" title="What shoppers are buying" href="/sealed" linkLabel="All sealed products">
+          <SealedShelf items={popular} strip />
+        </Row>
+      )}
+
+      {hero.featured.length > 0 && (
+        <Row id="boxes-h" kicker={boxes ? "Booster boxes" : "Sealed"} title={boxes ? "The most in-demand booster boxes" : `The newest ${SITE.gameShort} sealed products`} href={boxes ? "/sealed/booster-box" : "/sealed"} linkLabel={boxes ? "All booster boxes" : "All sealed products"}>
+          <SealedShelf items={hero.featured} strip />
+        </Row>
+      )}
+
+      {hero.preorders.length > 0 && (
+        <Row id="pre-h" kicker="Pre-orders" title={`${SITE.gameShort} sets open for pre-order`} href="/preorders" linkLabel="All pre-orders">
+          <SealedShelf items={hero.preorders.flatMap((s) => s.items)} sub={hero.preorders.map((s) => `${s.name} is out ${shortDate(s.releasesOn)}`).join(", ")} strip />
+        </Row>
+      )}
+
+      {topDeals.length > 0 && (
+        <Row id="deals-h" kicker="Deals" title="Today's top deals" href="/tools/deal-finder" linkLabel="Browse all deals">
+          <p className="-mt-1 mb-5 text-sm text-muted">In-stock listings below TCGplayer market, refreshed daily.</p>
+          <DealGrid items={topDeals} strip />
+        </Row>
+      )}
+
+      {latest && chase.some((p) => !onShelf.has(p.id)) && (
+        <Row id="newest-h" kicker="Newest set" title={`${latest.name} booster boxes and sealed`} href={`/sets/${latest.slug}`} linkLabel="Every product in the set">
+          <TileGrid items={chase.slice(0, 8)} roomy />
+        </Row>
       )}
 
       {games.length > 0 && (
-        <div className="reveal mt-16 sm:mt-24">
+        <div className="mt-16 sm:mt-20">
           <GameRows />
         </div>
       )}
 
       {/* With many games the game list is the second block; one game shows its latest sets. */}
       {games.length === 0 && latestSets.length > 0 && (
-        <Section title="Latest sets" href="/sets" linkLabel="All sets" className="reveal mt-16 sm:mt-24">
+        <Section title="Latest sets" href="/sets" linkLabel="All sets" className="mt-16 sm:mt-20">
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {latestSets.map((s) => (
               <li key={s.id} className="flex">
@@ -337,24 +312,6 @@ export default function Home() {
       </section>
       <p className="sr-only">{products().length} products tracked</p>
     </div>
-  );
-}
-
-/** One list of the shelf: its products, then the way to all of them. The heading is for a screen reader's outline (the tab says it). */
-function Shelf({ heading, note, links, children }: { heading: string; note?: string; links: { href: string; label: string }[]; children: ReactNode }) {
-  return (
-    <>
-      <h3 className="sr-only">{heading}</h3>
-      {note && <p className="-mt-1 mb-5 text-sm text-muted">{note}</p>}
-      {children}
-      <p className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10">
-        {links.map((l) => (
-          <Link key={l.href} href={l.href} className="btn-ghost min-h-11 px-5">
-            {l.label} <span aria-hidden="true">→</span>
-          </Link>
-        ))}
-      </p>
-    </>
   );
 }
 
