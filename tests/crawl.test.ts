@@ -946,3 +946,43 @@ test("crawlIndex: 'Starter Deck 25: Rubeusdramon' (Digimon, Gundam, Fusion World
   assert.equal(matchSealed("Digimon Card Game Starter Deck 9 Rubeusdramon", idx), null, "a number no set has");
   assert.equal(matchSealed("Digimon Card Game Yukinamon Starter Deck", idx)?.product.id, 900026);
 });
+
+test("numbered starter decks: a title naming deck 2 never lands on deck 8, a pack count is not a deck number, and the Bonus Pack needs 'bonus'", async () => {
+  const { crawlIndex } = await import("../src/lib/import/crawl");
+  const { matchSealed, setCodesInTitle } = await import("../src/lib/import/match");
+  const S = ["Starter Deck"];
+  // Real catalogue names (28 Nov): Fusion World decks 2 and 8, Gundam ST01 and its promo Bonus Pack.
+  const fw = crawlIndex(
+    [
+      prod(535552, "Starter Deck 2: Vegeta", 23409, "Starter Deck"),
+      prod(620102, "Starter Deck 8: Vegeta (Mini) Super Saiyan 3", 24239, "Starter Deck"),
+    ],
+    [set(23409, "Starter Deck 2: Vegeta", "fw"), set(24239, "Starter Deck 8: Vegeta (Mini) Super Saiyan 3", "fw")],
+    "code",
+    { numberedSets: S },
+  );
+  assert.notEqual(matchSealed("Fusion World Starter Deck 2 Vegeta Mini Super Saiyan 3", fw)?.product.id, 620102, "names deck 2, is not deck 8");
+  assert.equal(matchSealed("Dragon Ball Super Fusion World Starter Deck 8: Vegeta (Mini) Super Saiyan 3", fw)?.product.id, 620102);
+  assert.equal(matchSealed("Dragon Ball Super Fusion World Starter Deck 2: Vegeta", fw)?.product.id, 535552);
+  const gun = crawlIndex(
+    [
+      prod(619080, "Starter Deck 01: Heroic Beginnings", 24222, "Starter Deck"),
+      prod(643141, "Starter Deck: Heroic Beginnings Bonus Pack", 24222, "Starter Deck"),
+    ],
+    [set(24222, "Starter Deck 01: Heroic Beginnings", "gun"), set(24226, "Starter Deck 06: Clan Unity", "gun")],
+    "code",
+    { numberedSets: S },
+  );
+  for (const t of [
+    "Gundam Card Game Heroic Beginnings Starter Deck 1 Pack",
+    "Gundam Card Game Heroic Beginnings Starter Deck (1 Pack)",
+    "Gundam Card Game Heroic Beginnings Starter Deck Pack",
+    "Gundam Card Game Heroic Beginnings Starter Deck Single Pack",
+  ])
+    assert.notEqual(matchSealed(t, gun)?.product.id, 643141, t);
+  assert.equal(matchSealed("Gundam Card Game Starter Deck Heroic Beginnings Bonus Pack", gun)?.product.id, 643141);
+  // "Starter Deck 6 Pack" is six decks, not Starter Deck 06.
+  assert.equal(setCodesInTitle("Gundam Heroic Beginnings Starter Deck 6 Pack", gun).size, 0);
+  assert.equal(setCodesInTitle("Gundam Heroic Beginnings Starter Deck 6-pack", gun).size, 0);
+  assert.deepEqual([...setCodesInTitle("Gundam Starter Deck 06 Clan Unity", gun)], [24226]);
+});

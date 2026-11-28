@@ -2229,3 +2229,11 @@ product's own TCGplayer name through the crawl index (28 Nov catalogue): Digimon
 CookieRun 18 -> 19, Fusion World and Battle Spirits unchanged, 0 landing on another product in any game. A title naming
 another starter deck's number, or a number no set has, is refused as before. Among the products it frees are the Digimon
 ST-25 and ST-26 decks and displays, which had no store row.
+
+Three guards came with it (review, 28 Nov), all refusals only. A title's set code is checked against the set names WITH
+their number (`codeSetName`), so "Starter Deck 2 Vegeta …" can never take deck 8's "Vegeta (Mini) Super Saiyan 3", whose
+name holds every word of deck 2's once the number is off. A number followed by pack, pk, pcs, ct, count, x, deck(s) or
+box ("Starter Deck 6 Pack") is a count, not a set number. And a product whose name says "Bonus Pack" (Gundam's promo
+"Starter Deck: Heroic Beginnings Bonus Pack", typed as a starter deck) is only a title that says it too (`OWN_KIND` in
+`kindAgrees`), since its six name words let a deck title missing one word land on it. The option also feeds the Amazon
+matcher (`amazon-match.ts`): "Beatbreak Starter Deck" now finds the ST-23 deck there, and another deck's number refuses.

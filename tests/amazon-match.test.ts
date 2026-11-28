@@ -118,6 +118,9 @@ test("a Double Pack Set, a release event pack or an empty box is not the product
   assert.ok(!am.matches({ id: 682056 }, "One Piece Card Game Adventure on Kami's Island Double Pack Set Vol. 10"));
   assert.ok(!am.matches({ id: 680505 }, "Digimon Card Game Starter Deck 23: Beatbreak Release Event Cards Welcome Tamers Pack Vol.2 (ST-23 & ST-24)"));
   assert.equal(found("Digimon Card Game Beatbreak Starter Deck ST-23"), 680505);
+  // "Starter Deck 23: " is Digimon's numbered set phrase (GameLine.numberedSets, 2026-11-28): the code can be left out.
+  assert.equal(found("Digimon Card Game Beatbreak Starter Deck"), 680505);
+  assert.equal(found("Digimon Card Game Starter Deck 24 Beatbreak"), null, "another deck's number");
   assert.equal(found("One Piece Card Game The World's Strongest Warriors Booster Box OP-17 EMPTY BOX"), null);
   assert.ok(!kindAgrees("Pokemon Delta Reign Booster Pack Sleeved", "Delta Reign Booster Pack"));
   assert.ok(kindAgrees("One Piece Double Pack Set Vol. 12", "Double Pack Set Vol. 12"));
