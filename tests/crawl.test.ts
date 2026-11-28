@@ -917,3 +917,32 @@ test("crawlIndex: a game's numbered set phrase ('Booster Set 4: ') is read as a 
     assert.equal(matchSealed(t, idx), null, t);
   assert.equal(matchSealed("Godzilla Resonance of Rivals Booster Box", idx)?.product.id, 800003);
 });
+
+test("crawlIndex: 'Starter Deck 25: Rubeusdramon' (Digimon, Gundam, Fusion World, CookieRun, Battle Spirits) is read as a code, so 'Rubeusdramon Starter Deck [ST-25]' lands", async () => {
+  const { crawlIndex } = await import("../src/lib/import/crawl");
+  const { matchSealed, splitSetCode } = await import("../src/lib/import/match");
+  const { SITE } = await import("../src/site.config");
+  for (const line of ["dg", "gun", "fw", "cr", "bss"])
+    assert.ok(SITE.lines?.find((l) => l.id === line)?.numberedSets?.includes("Starter Deck"), line);
+  const S = ["Starter Deck"];
+  assert.deepEqual(splitSetCode("Starter Deck 25: Rubeusdramon", S), { name: "Rubeusdramon", code: "STARTER DECK 25" });
+  assert.deepEqual(splitSetCode("Starter Deck 01: Heroic Beginnings", S), { name: "Heroic Beginnings", code: "STARTER DECK 1" });
+  assert.deepEqual(splitSetCode("Starter Deck Assortment 1", S), { name: "Starter Deck Assortment 1", code: "" }, "no number, no colon");
+  const sets = [set(40025, "Starter Deck 25: Rubeusdramon", "dg"), set(40026, "Starter Deck 26: Yukinamon", "dg")];
+  const products = [
+    prod(900025, "Rubeusdramon Starter Deck", 40025, "Starter Deck"),
+    prod(900125, "Rubeusdramon Starter Deck Display", 40025, "Deck Display"),
+    prod(900026, "Yukinamon Starter Deck", 40026, "Starter Deck"),
+  ];
+  const plain = crawlIndex(products, sets, "code");
+  const idx = crawlIndex(products, sets, "code", { numberedSets: S });
+  const title = "Digimon Card Game: Rubeusdramon Starter Deck";
+  assert.equal(matchSealed(title, plain), null, "without the option: 'starter deck 25' are words every title needs");
+  assert.equal(matchSealed(title, idx)?.product.id, 900025);
+  assert.equal(matchSealed("Digimon Card Game: Rubeusdramon Starter Deck [ST-25]", idx)?.product.id, 900025);
+  assert.equal(matchSealed("Digimon Card Game: Rubeusdramon Starter Deck Display", idx)?.product.id, 900125);
+  assert.equal(matchSealed("Digimon Card Game Starter Deck 25 Rubeusdramon", idx)?.product.id, 900025);
+  assert.equal(matchSealed("Digimon Card Game Starter Deck 26 Rubeusdramon", idx), null, "another set's number");
+  assert.equal(matchSealed("Digimon Card Game Starter Deck 9 Rubeusdramon", idx), null, "a number no set has");
+  assert.equal(matchSealed("Digimon Card Game Yukinamon Starter Deck", idx)?.product.id, 900026);
+});

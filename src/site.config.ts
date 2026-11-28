@@ -157,8 +157,10 @@ const GAP_CRAWL = new Set(["ua", "fw", "dg", "gun"]);
 // own TCGplayer id, only at a store Bandai Compare does not list.
 const ALSO_IN: Record<string, string[]> = { fw: ["dbs"] };
 // TCGplayer names every Godzilla set "Booster Set N: <name>", while its product names and shop titles say "Endless Wars
-// Booster Box" (GameLine.numberedSets, DECISIONS.md 2026-11-27).
-const NUMBERED_SETS: Record<string, string[]> = { gz: ["Booster Set"] };
+// Booster Box" (GameLine.numberedSets, DECISIONS.md 2026-11-27). The same for "Starter Deck 25: Rubeusdramon" (Digimon,
+// Gundam, Fusion World, CookieRun, Battle Spirits): shops write "Rubeusdramon Starter Deck [ST-25]" (2026-11-28).
+const SD = "Starter Deck";
+const NUMBERED_SETS: Record<string, string[]> = { gz: ["Booster Set"], dg: [SD], gun: [SD], fw: [SD], cr: [SD], bss: [SD] };
 
 const LINES: GameLine[] = [
   g("mtg", 1, "Magic: The Gathering", "Magic", "magic-the-gathering", "magic", "magic the gathering", "#b8742a", "Play Booster and Collector Booster boxes, bundles, Commander decks and Secret Lair-era sealed product."),
