@@ -11,7 +11,8 @@ import { GAME_TYPE_MIN, gameSealed, gameTypeHubs, gameView, hubItem } from "@/li
 import { gameHubDescription, gameHubTitleLadder } from "@/lib/hub-snippet";
 import { storeName } from "@/lib/share";
 import { todayIso } from "@/lib/preorders";
-import { productsInSet, refCents } from "@/lib/data";
+import { priceOf, productsInSet, refCents } from "@/lib/data";
+import { gameAnswers } from "@/lib/game-answers";
 import { money } from "@/lib/format";
 import { TileGrid } from "@/components/ProductTile";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -45,6 +46,7 @@ export default function GamePage({ params }: { params: { slug: string } }) {
   const v = gameView(line);
   // A game with no product today has no page (it comes back with its first product).
   if (!v.sealed) notFound();
+  const answers = hubAnswers(line, v);
   return (
     <div className="flex flex-col gap-8" style={{ ["--game" as string]: line.color }}>
       <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", name: `${line.name} sets`, numberOfItems: v.sets.length, itemListElement: v.sets.slice(0, 30).map((s, i) => ({ "@type": "ListItem", position: i + 1, name: s.name, url: abs(`/sets/${s.slug}`) })) }} />
@@ -117,8 +119,52 @@ export default function GamePage({ params }: { params: { slug: string } }) {
         </div>
       </section>
 
+      {answers.length > 0 && (
+        <section aria-labelledby="quick-answers">
+          <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: answers.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) }} />
+          <h2 id="quick-answers" className="mb-3 text-xl font-bold">{line.seo?.name ?? line.short} quick answers</h2>
+          <dl className="flex max-w-3xl flex-col gap-4">
+            {answers.map((x) => (
+              <div key={x.q}>
+                <dt className="font-semibold">{x.q}</dt>
+                <dd className="mt-1 text-muted">{x.a}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+
       {/* The ad banners sit below the page's own content, never under the hero (2026-11-19, core-update quality pass). */}
       <AdBanners {...adSearch(null, { line: line.id })} page="game" />
     </div>
   );
+}
+
+// The quick answers' inputs from today's data (lib/game-answers.ts): every sealed product's offers, counted per store.
+const NOT_A_STORE = new Set(["tcgplayer", "ebay", "amazon"]);
+function hubAnswers(line: NonNullable<ReturnType<typeof lineBySlug>>, v: ReturnType<typeof gameView>) {
+  const sealed = gameSealed(line);
+  const anywhere = new Set<string>();
+  const us = new Map<string, { name: string; n: number }>();
+  for (const p of sealed) {
+    const seen = new Set<string>();
+    for (const o of priceOf(p.id).offers) {
+      if (NOT_A_STORE.has(o.source)) continue;
+      anywhere.add(o.source);
+      if (o.market !== "US" || o.currency !== "USD" || !o.inStock || o.preorder || seen.has(o.source)) continue;
+      seen.add(o.source);
+      const hit = us.get(o.source) ?? { name: storeName(o), n: 0 };
+      hit.n += 1;
+      us.set(o.source, hit);
+    }
+  }
+  return gameAnswers({
+    short: line.seo?.name ?? line.short,
+    items: sealed.map(hubItem),
+    sets: v.sets.map((s) => ({ name: s.name, releasedOn: s.releasedOn ?? null, upcoming: !!s.upcoming })),
+    stores: [...us.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)),
+    storesAnywhere: anywhere.size,
+    today: todayIso(),
+    storeName,
+  });
 }

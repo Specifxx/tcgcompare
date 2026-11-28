@@ -2249,3 +2249,17 @@ shipping on Direct orders over $50, help.tcgplayer.com "Buying from TCGplayer Di
 code, credit or countdown (`tests/offer-calendar.test.ts`). The card keeps its rules: once a visit, the visit's one prompt slot,
 never while typing; after the sale its ✕ keeps it away for 7 days instead of for good. Both re-read the clock in the browser, so the
 switch needs no build. Change a partner line only after reading its page again.
+
+## 2026-11-28 — Quick answers on every game hub, written from the day's prices
+
+Owner, 28 Nov: "put a lot more effort and energy into TCG Prices … SEO … it could be one of the top sites, it covers all the
+TCGs." Search Console (90 days to 25 Nov, 615 queries) shows the game hubs for "<game> prices", "<game> booster box", "how much is a
+<game> booster box" and "<game> booster box msrp" (Yu-Gi-Oh! position 3.8, Cyberpunk 3.8, Digimon 2.1, Godzilla 12.2, Union Arena
+47, Lorcana 30.8) with almost no clicks: the page had tiles and a table but no sentence that answers the question.
+
+Each `/games/<game>` now ends with "<game> quick answers" (`lib/game-answers.ts`, FAQPage JSON-LD of the same text): how much a
+booster box costs (the US in-stock store range today and the newest box against TCGplayer's market), the newest set and the next
+one's date, and where to buy (how many stores list the game, and the three US stores with the most in stock). Rules: never an
+MSRP, a pack count or a price we do not hold; a store price is `usStoreLow` (in stock, US dollars, never TCGplayer, eBay, Amazon or
+a pre-order); "these are what stores charge today, not a list price" answers the MSRP searches honestly; a question the day's data
+cannot answer is left out. `tests/game-answers.test.ts`. Read the game hubs' clicks again on 9 Dec beside the other SEO reads.
