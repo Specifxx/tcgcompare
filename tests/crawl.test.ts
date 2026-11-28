@@ -1033,6 +1033,10 @@ test("set series ('Divine Champions: ', 'UniVersus: '), plural set words and 'St
   assert.equal(matchSealed("Grand Archive Mortal Ambition Starter Deck Kongming", ga)?.product.id, 710003);
   assert.equal(matchSealed("Grand Archive Mortal Ambition Starter Deck", ga), null, "no deck named: a tie");
   assert.equal(matchSealed("Grand Archive Distort Alter Edition Booster Box", ga), null, "only a final s is dropped");
+  // A plural that counts is never read as the singular: "Starter Decks" in a title is several decks.
+  const ga2 = crawlIndex([prod(710004, "Mortal Ambition Starter Deck Jin", 51003, "Starter Deck")], [set(51003, "Mortal Ambition Starter Decks", "ga")], "code");
+  assert.equal(matchSealed("Grand Archive Mortal Ambition Starter Decks Jin", ga2), null, "'decks' does not meet the product's 'deck'");
+  assert.equal(matchSealed("Grand Archive Mortal Ambition Starter Deck Jin", ga2)?.product.id, 710004);
 
   // CookieRun: "Starter Deck Assortment 1" leaves no name words; a title naming assortment 2 is refused.
   const cr = crawlIndex(

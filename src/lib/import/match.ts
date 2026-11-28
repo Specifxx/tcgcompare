@@ -336,7 +336,9 @@ export function buildIndex(products: Product[], setList: SetInfo[], style: Numbe
 /** A set name word a title has, its plural met by the singular: shops write "Mortal Ambition Starter Deck - Jin" and
  *  "Distorted Reflection Booster Box" for TCGplayer's sets "Mortal Ambition Starter Decks" and "Distorted Reflections"
  *  (2026-11-28). Only set name words; a product's own name words stay exact. */
-function hasWord(have: Set<string>, w: string): boolean {
+const COUNT_NOUNS = new Set(["deck", "pack", "box", "bundle", "display", "case", "tin", "kit", "blister", "booster", "collection", "sleeve"]);
+
+export function hasWord(have: ReadonlySet<string>, w: string): boolean {
   return have.has(w) || (w.length > 4 && w.endsWith("s") && !w.endsWith("ss") && have.has(w.slice(0, -1)));
 }
 
@@ -560,7 +562,8 @@ export function matchSealed(title: string, idx: MatchIndex): MatchResult | null 
     const need = tokens(p.name).filter((t) => !STOP.has(t) && t !== own);
     // The other way round, a product name word whose plural is a word of its set: TCGplayer's "Distorted Reflection
     // Alter Edition Booster Box" in the set "Distorted Reflections Alter Edition" is met by a title saying "Reflections".
-    const plural = need.filter((t) => !have.has(t) && have.has(`${t}s`) && setTokens.includes(`${t}s`));
+    // Never a word that counts ("decks", "packs", "boxes" are several), and short words stay exact as in hasWord.
+    const plural = need.filter((t) => t.length > 4 && !COUNT_NOUNS.has(t) && !have.has(t) && have.has(`${t}s`) && setTokens.includes(`${t}s`));
     const s = overlap(need, plural.length ? new Set([...have, ...plural]) : have);
     // Near-complete: "Collector Booster Display" must not take a plain
     // "Booster Display" (one missing word of four is 0.75).
