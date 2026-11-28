@@ -1,0 +1,104 @@
+{
+  "at": "2026-11-28T09:45:41.000Z",
+  "clips": [
+    {
+      "id": "dex-sale",
+      "ok": true,
+      "frames": 82,
+      "seconds": 16.394,
+      "steps": [
+        {
+          "i": 0,
+          "ok": true
+        },
+        {
+          "i": 1,
+          "ok": true
+        },
+        {
+          "i": 2,
+          "ok": true
+        },
+        {
+          "i": 3,
+          "ok": true
+        },
+        {
+          "i": 4,
+          "ok": true
+        },
+        {
+          "i": 5,
+          "ok": true
+        }
+      ],
+      "file": "dex-sale.mp4"
+    },
+    {
+      "id": "tcgp-sale",
+      "ok": true,
+      "frames": 180,
+      "seconds": 16.846,
+      "steps": [
+        {
+          "i": 0,
+          "ok": true
+        },
+        {
+          "i": 1,
+          "ok": true
+        },
+        {
+          "i": 2,
+          "ok": true
+        },
+        {
+          "i": 3,
+          "ok": true
+        },
+        {
+          "i": 4,
+          "ok": true
+        },
+        {
+          "i": 5,
+          "ok": true
+        }
+      ],
+      "file": "tcgp-sale.mp4"
+    },
+    {
+      "id": "mtg-sale",
+      "ok": true,
+      "frames": 163,
+      "seconds": 16.453,
+      "steps": [
+        {
+          "i": 0,
+          "ok": true
+        },
+        {
+          "i": 1,
+          "ok": true
+        },
+        {
+          "i": 2,
+          "ok": true
+        },
+        {
+          "i": 3,
+          "ok": true
+        },
+        {
+          "i": 4,
+          "ok": true
+        },
+        {
+          "i": 5,
+          "ok": true
+        }
+      ],
+      "file": "mtg-sale.mp4"
+    }
+  ]
+}
