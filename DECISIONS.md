@@ -2249,3 +2249,13 @@ shipping on Direct orders over $50, help.tcgplayer.com "Buying from TCGplayer Di
 code, credit or countdown (`tests/offer-calendar.test.ts`). The card keeps its rules: once a visit, the visit's one prompt slot,
 never while typing; after the sale its ✕ keeps it away for 7 days instead of for good. Both re-read the clock in the browser, so the
 switch needs no build. Change a partner line only after reading its page again.
+
+
+## 2026-11-28 — Archivo and IBM Plex Mono replace Geist
+
+Owner, 28 Nov: "my only issue of TCG prices is it looks extremely vibe coded … maybe it's the font". Geist is Vercel's own face and
+ships with every Next.js template, so it reads as a default. Words are now Archivo (Omnibus-Type, OFL), a sturdy grotesque cut for
+print and shop signage: headings a little wide (`font-stretch` 106%, the hero 112% at weight 800), body at its normal width. Every
+figure is IBM Plex Mono, keeping the ledger idea. Both are bundled in `src/app/fonts` with their licences, preloaded with
+`display: optional` as before, so no request goes to a font host and nothing shifts. The logo is changing too: six options went to
+the owner (`/mnt/project-files/design-system/tcgprices-logo-options-2026-11-28/`), and the one he picks replaces the gradient card mark.

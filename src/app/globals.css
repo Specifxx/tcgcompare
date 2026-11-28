@@ -1980,29 +1980,31 @@ a.card:hover { border-color: rgb(var(--ink) / 0.4); box-shadow: none; transform:
   --v2-r-xs: 6px;
 }
 
-/* 2. Type. Geist for words, Geist Mono for every figure. Tight display tracking, generous body. */
+/* 2. Type (owner, 2026-11-28). Archivo for words, a little wide and heavy in headings like a shop's price board; IBM Plex Mono for
+   every figure. Geist, the template face, is gone. */
 body, .font-sans {
   font-family: var(--v2-sans) !important;
-  font-feature-settings: "ss01", "cv11";
-  letter-spacing: -0.006em;
+  letter-spacing: -0.004em;
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, .font-display, .hero-h1 {
   font-family: var(--v2-sans) !important;
+  font-stretch: 106%;
 }
-h1 { letter-spacing: -0.035em; }
-h2 { letter-spacing: -0.025em; font-weight: 600 !important; }
+h1 { letter-spacing: -0.025em; }
+h2 { letter-spacing: -0.015em; font-weight: 700 !important; }
 .hero-h1 {
-  font-weight: 600 !important;
-  font-size: clamp(2.5rem, 6vw, 4.25rem) !important;
-  line-height: 0.98 !important;
-  letter-spacing: -0.05em !important;
+  font-weight: 800 !important;
+  font-stretch: 112%;
+  font-size: clamp(2.4rem, 5.6vw, 4rem) !important;
+  line-height: 1 !important;
+  letter-spacing: -0.035em !important;
 }
 .hero-h1 .text-brand { color: rgb(var(--brand)) !important; }
 .tabular-nums, .num, .pc-price, .pc-per, [data-price], .price {
   font-family: var(--v2-mono);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 .k, .kicker, .eyebrow, .hero-pill, .pc-game, th {
   font-family: var(--v2-mono);
