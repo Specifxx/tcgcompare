@@ -154,74 +154,66 @@ test("Fold: reading matter stays in the HTML as a closed <details>, its heading 
   assert.doesNotMatch(src("components/Fold.tsx"), /^"use client"|useState|onClick/m, "a native <details>: no script");
 });
 
-test("the home page in order: hero, the one shelf, the sets, one ad block, the fold, the questions; nothing the owner cut", () => {
+test("the home page as a shop window (owner, 2026-11-28): banner hero, feature banners, rows of products, the games, one ad block, the fold, the questions", () => {
   const page = src("app/page.tsx");
-  const order = ["<Hero>", "</Hero>", "<Tabs tabs={shelfTabs}", 'title="Latest sets"', "<InlineAds", "<Folds", '<Fold id="guides-h"', "Frequently asked questions"];
+  const order = ["<StoreHero", "</StoreHero>", "<FeatureBanner", 'id="best-h"', 'id="boxes-h"', 'id="deals-h"', "<GameRows", "<InlineAds", "<Folds", '<Fold id="guides-h"', "Frequently asked questions"];
   let at = -1;
   for (const k of order) {
     const i = page.indexOf(k, at + 1);
     assert.ok(i > at, `${k} comes next`);
     at = i;
   }
-  const hero = code(page.slice(page.indexOf("<Hero>"), page.indexOf("</Hero>")));
-  assert.doesNotMatch(hero, /ProductTile|TileGrid|DealGrid|SealedShelf|HeroCards|<img|InlineAds|EbayCallout|AdSlot/, "words, a search and ways in: no product and no ad in the hero");
+  const hero = code(page.slice(page.indexOf("<StoreHero"), page.indexOf("</StoreHero>")));
+  // The hero may show today's three most-opened products (owner, 2026-11-28: "like TCG Player"), never an ad.
+  assert.doesNotMatch(hero, /InlineAds|EbayCallout|AdSlot|cardAds/, "no ad in the hero");
   assert.match(hero, /<h1 className="hero-h1 rise-solid">\s*<span className="text-brand">\{SITE\.gameShort\}<\/span> Booster Box Prices\s*<\/h1>/, "the same headline");
   assert.match(hero, /<SearchBox big \/>/);
-  assert.match(hero, /<MarketChooser /);
-  assert.match(hero, /<WaysIn links=\{ways\}/);
-  // What left the page, each still a page of its own in the header's menus or the footer: the product cards and the sparks in the
-  // hero, the creators bubble, the reviews row, the other games' tiles and the kits block.
-  assert.doesNotMatch(code(page), /HeroCards|HeroSparks|CreatorsBubble|SiteReviews|GameTiles|KitGrid|SealedHero\b|hero-band|AdSlot/);
+  assert.match(hero, /<MascotGuide /);
+  // What left the page for good stays gone.
+  assert.doesNotMatch(code(page), /HeroCards|HeroSparks|CreatorsBubble|SiteReviews|GameTiles|KitGrid|SealedHero\b|hero-band|AdSlot|GameMarquee/);
   for (const f of ["components/SideNav.tsx", "components/SealedHero.tsx", "components/HeroSparks.tsx", "components/home/HeroCards.tsx", "components/creators/CreatorsBubble.tsx"])
     assert.ok(!existsSync(new URL(`../src/${f}`, import.meta.url)), `${f} is deleted, not hidden`);
   assert.equal(count(page, /<InlineAds/g), 1, "one ad block");
-  // What a crawler is told is the page's own business: untouched by the redesign.
   assert.match(page, /export (async )?function generateMetadata|export const metadata/);
   assert.match(page, /export const revalidate = 21600;/);
 });
 
-test("the home page as a crawler reads it: one h1, every shelf list and the fold in the HTML, valid JSON-LD, no ad in the server HTML", async () => {
+test("the home page as a crawler reads it: one h1, every row's products in the HTML, valid JSON-LD, no ad in the server HTML", async () => {
   const html = await home();
   assert.equal(count(html, /<h1[ >]/g), 1, "one h1");
   assert.equal(text(/<h1[^>]*>([\s\S]*?)<\/h1>/.exec(html)?.[1] ?? ""), `${SITE.gameShort} Booster Box Prices`, "the same headline");
-  const heroAt = html.indexOf('<section class="hero">');
+  const heroAt = html.indexOf('<section class="hero store-hero">');
   assert.ok(heroAt > 0);
   assert.doesNotMatch(html.slice(0, heroAt).replace(/<script[\s\S]*?<\/script>/g, ""), /<(a|img|h2|section)[ >]/, "nothing but structured data comes before the hero");
-  const hero = html.slice(heroAt, html.indexOf("</section>", heroAt));
-  assert.doesNotMatch(hero, /href="\/card\/|pc-link|<img|data-qv|<canvas/, "no product, no photo and no ad in the hero");
+  const heroEnd = html.indexOf("</section>", heroAt);
+  const hero = html.slice(heroAt, heroEnd);
   assert.match(hero, /role="search"/);
-  assert.match(hero, /role="group" aria-label="Choose your region"/, "the market control");
-  // Four to six ways in, each a hub of the site, the three that are not a product type always there.
-  const ways = [...hero.matchAll(/<a (?=[^>]*class="way flex-1")[^>]*href="([^"]+)"/g)].map((m) => m[1]);
-  assert.ok(ways.length >= 4 && ways.length <= 6, `${ways.length} ways in`);
-  // On the all-games site the ways in are the biggest games, then all of them.
-  for (const w of ways) assert.match(w, /^\/games(\/[a-z0-9-]+)?$/, w);
-  assert.ok(ways.includes("/games"), "every game is one tap away");
-  // The shelf: every list's products are in the HTML whichever tab is chosen.
-  const tabs = [...html.matchAll(/role="tab"[^>]*>([^<]+)/g)].map((m) => m[1]);
-  assert.deepEqual(tabs.slice(0, 2), ["Most popular", "Booster boxes"], "Most popular first (owner, 2026-11-20)");
-  const panels = html.split('role="tabpanel"').slice(1);
-  assert.equal(panels.length, tabs.length);
-  assert.equal(count(html, /role="tabpanel"[^>]* hidden=""/g), tabs.length - 1, "the lists not chosen are hidden, not absent");
-  for (const [i, p] of panels.entries()) assert.ok(count(p, /href="\/card\/[a-z0-9-]+"/g) >= 1, `the "${tabs[i]}" list is in the HTML`);
-  // Every product on the page is the minimal card, a link the quick view can open.
-  assert.equal(count(html, /href="\/card\/[a-z0-9-]+"/g), count(html, /class="group pc-link"/g));
-  assert.equal(count(html, /class="group pc-link"/g), count(html, /data-qv="[a-z0-9-]+"/g));
-  // The outline: the shelf, the sets, then the reading matter (folded) and the questions, by their own headings.
+  assert.doesNotMatch(hero, /ebay\.[a-z.]+\/|rel="[^"]*sponsored|<canvas/i, "no ad in the hero");
+  // The phone's game row: the biggest games, then all of them, each a hub of the site.
+  const chips = [...html.matchAll(/<a (?=[^>]*class="game-chip")[^>]*href="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(chips.length >= 3 && chips.length <= 9, `${chips.length} game chips`);
+  for (const w of chips) assert.match(w, /^\/games(\/[a-z0-9-]+)?$/, w);
+  assert.ok(chips.includes("/games"), "every game is one tap away");
+  // The rows: best sellers first, each with its products in the HTML.
+  for (const id of ["best-h", "boxes-h", "deals-h"]) {
+    const at = html.indexOf(`id="${id}"`);
+    assert.ok(at > heroEnd, `${id} is a row under the hero`);
+    const row = html.slice(at, html.indexOf("</section>", at));
+    assert.ok(count(row, /href="\/card\/[a-z0-9-]+"/g) >= 1, `the ${id} row's products are in the HTML`);
+  }
+  // Every product link the quick view can open: the row cards and the hero's three.
+  assert.equal(count(html, /data-qv="[a-z0-9-]+"/g), count(html, /class="group pc-link"/g) + count(html, /class="showcase-link"/g));
   const h2 = [...html.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/g)].map((m) => text(m[1]));
-  assert.deepEqual(h2.slice(0, 2), [`${SITE.gameShort} booster boxes and sealed`, "Pick your game"]);
+  assert.equal(h2[0], "What shoppers are buying", "best sellers first (owner, 2026-11-20: most popular first)");
+  assert.ok(h2.includes("Pick your game"));
   assert.equal(h2.at(-1), "Frequently asked questions");
-  assert.ok(h2.length <= 5, `${h2.length} headings: a page of five blocks, not twenty`);
+  assert.ok(h2.length <= 10, `${h2.length} headings`);
   if (html.includes("guides-h")) assert.match(html, /<details class="fold" data-fold="guides-h"><summary><h2 id="guides-h">Guides<\/h2>/, "the guides are folded, their heading still an h2");
   assert.doesNotMatch(html, /<details class="fold"[^>]* open/, "folds start closed");
-  if (html.includes("guides-h")) assert.ok(count(html, /<a [^>]*href="\/blog\/[a-z0-9-]+"/g) >= 1, "the guides' links are in the HTML");
-  assert.ok(count(html, /<a [^>]*href="\/sets\/[a-z0-9-]+"/g) >= 1, "the latest sets are links");
   assert.ok(count(html, /<details class="faq">/g) >= 2, "the questions open one by one");
-  // Structured data: every block parses, and the page still says what it is.
   const docs = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]) as { "@type"?: string });
   const types = docs.map((d) => d["@type"]);
   for (const t of ["Organization", "WebSite", "ItemList", "FAQPage"]) assert.ok(types.includes(t), `${t} JSON-LD`);
-  // Ads: none in the server HTML (the one block is drawn in the browser into a box of its own height), never in the hero.
   assert.doesNotMatch(html, /ebay\.[a-z.]+\/|ebayimg|rel="[^"]*sponsored/i, "no ad unit in the server HTML");
   assert.match(html, /<p class="sr-only">[\d,]+(<!-- -->)? products tracked<\/p>/);
 });

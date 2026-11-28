@@ -15,6 +15,7 @@ import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import { Neo } from "@/components/Neo";
 import { CHRISTMAS_FESTIVE_LAYER, SEASON_BOOT_SCRIPT } from "@/lib/season";
 import { Header } from "@/components/Header";
+import { GameBar } from "@/components/GameBar";
 import { Footer } from "@/components/Footer";
 import { PreorderStrip } from "@/components/PreorderStrip";
 import { HolidayStrip } from "@/components/HolidayStrip";
@@ -42,23 +43,29 @@ import { SinceLastVisit } from "@/components/SinceLastVisit";
 import { AdRouteGate } from "@/components/AdRouteGate";
 import { ImageFallback } from "@/components/ImageFallback";
 
-// The Empire design language v2 ("Ledger", 2026-11-27; globals.css empire-v2): Geist for every word and Geist Mono for every
-// figure, the variable fonts bundled (OFL, src/app/fonts/Geist-OFL.txt): no font request at build or at runtime. Display is
-// optional, not swap: the faces are preloaded, so a warm visit renders in them from the first paint, and a slow first visit
-// keeps the size-adjusted fallback for that page instead of re-wrapping every line when the font lands (MTG Compare measured
-// CLS 0.209 with swap). --font-display stays a name for the same face, so headings and the old class names keep working.
+// Type (owner, 2026-11-28: "it looks extremely vibe coded … maybe it's the font"): Archivo for every word, a sturdy grotesque
+// cut for print and retail, set a touch wide in headings, and IBM Plex Mono for every figure, so prices read like a ledger.
+// Geist (Vercel's face, on every template) is gone. Both bundled (OFL, src/app/fonts/*-OFL.txt): no font request at build or at
+// runtime. Display is optional, not swap: the faces are preloaded, so a warm visit renders in them from the first paint, and a
+// slow first visit keeps the size-adjusted fallback for that page instead of re-wrapping every line when the font lands (MTG
+// Compare measured CLS 0.209 with swap). --font-display stays a name for the same face, so headings and old class names work.
 const display = localFont({
-  src: [{ path: "./fonts/Geist-Variable.woff2", weight: "100 900" }],
+  src: [{ path: "./fonts/Archivo-Variable.woff2", weight: "100 900", style: "normal" }],
   variable: "--font-display",
   display: "optional",
 });
 const sans = localFont({
-  src: [{ path: "./fonts/Geist-Variable.woff2", weight: "100 900" }],
+  src: [{ path: "./fonts/Archivo-Variable.woff2", weight: "100 900", style: "normal" }],
   variable: "--font-sans",
   display: "optional",
 });
 const mono = localFont({
-  src: [{ path: "./fonts/GeistMono-Variable.woff2", weight: "100 900" }],
+  src: [
+    { path: "./fonts/IBMPlexMono-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/IBMPlexMono-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/IBMPlexMono-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/IBMPlexMono-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-mono",
   display: "optional",
 });
@@ -108,6 +115,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NavBoost warm={["/", "/sealed", "/sets", "/games", "/tools/deal-finder"]} />
         <PrefsProvider>
           <Header />
+          <GameBar />
           {/* ONE line under the header at most (the minimal look, 2026-11-13: two promo bars sat above every headline): the sale's
               in season, else the open pre-order's. The other keeps its link on every page in the header's Deals menu (lib/nav.ts). */}
           {holidayNav() ? <HolidayStrip /> : <PreorderStrip />}
