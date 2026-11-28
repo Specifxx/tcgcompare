@@ -2294,3 +2294,16 @@ one's date, and where to buy (how many stores list the game, and the three US st
 MSRP, a pack count or a price we do not hold; a store price is `usStoreLow` (in stock, US dollars, never TCGplayer, eBay, Amazon or
 a pre-order); "these are what stores charge today, not a list price" answers the MSRP searches honestly; a question the day's data
 cannot answer is left out. `tests/game-answers.test.ts`. Read the game hubs' clicks again on 9 Dec beside the other SEO reads.
+
+## 2026-11-28 — Store pages and the "Find us on TCG Prices" link
+
+Owner, 28 Nov: "really increase our authority for TCG Prices". Search Console and our own checks find no outside site linking to
+tcgprices.app, while it lists 1,362 stores. Each store now has a page, `/stores/<key>` (its key from `stores.json`, which never
+changes): its in-stock sealed products today by game, how many it sells for the lowest in-stock price among the stores of its own
+market (`lib/store-pages.ts`: its own currency only, never TCGplayer, eBay, Amazon or a pre-order; a store alone in its market or
+tied is nobody's lowest), up to 12 of those products, and a plain link it can paste on its own site
+(`<a href="https://tcgprices.app/stores/<key>">Find us on TCG Prices</a>`). The fact is stated on the store's own page only;
+price tables still mark no row the cheapest. A store is listed whether it links or not. The /stores list now links each name to
+its page (the page links out to the store). A page is indexed and in the sitemap only with 100 or more products in stock (194
+stores on 28 Nov; 668 at 25 was too many new URLs for a two-week-old domain); the rest are noindex, follow. CDN-cached like
+the other data pages (`CDN_PAGES`). The backlink thread hands this link to stores in its asks. `tests/store-pages.test.ts`.
